@@ -1,4 +1,5 @@
 """CLI test: connect to Gemini Live API, send a test JPEG, print audio response bytes."""
+
 import asyncio
 import io
 import os
@@ -26,6 +27,7 @@ def make_test_jpeg() -> bytes:
     """Create a minimal valid JPEG (solid gray 64x64)."""
     try:
         from PIL import Image  # type: ignore[import-untyped]
+
         img = Image.new("RGB", (64, 64), color=(128, 128, 128))
         buf = io.BytesIO()
         img.save(buf, format="JPEG")

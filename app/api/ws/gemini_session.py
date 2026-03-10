@@ -1,4 +1,5 @@
 """Gemini Live API session manager with context window compression and session resumption."""
+
 import asyncio
 import logging
 from collections.abc import Callable
@@ -59,6 +60,7 @@ class GeminiLiveSession:
         self._state = SessionState()
         self._send_lock = asyncio.Lock()
         self._reconnect_requested = False
+        self._closed = False
 
         # Set when the session is open and ready to receive media
         self.connected_event = asyncio.Event()
@@ -138,17 +140,20 @@ class GeminiLiveSession:
         Reconnection always happens here, OUTSIDE the previous session context.
         """
         current_handle = saved_handle
+        is_reconnect = False
         for attempt in range(MAX_RECONNECT_ATTEMPTS + 1):
+            if self._closed:
+                break
             self._reconnect_requested = False
             try:
-                await self._connect_once(current_handle)
+                await self._connect_once(current_handle, is_reconnect=is_reconnect)
             except Exception as e:
                 logger.error(f"Session error on attempt {attempt}: {e}")
                 self._state.is_connected = False
                 if not self._reconnect_requested:
                     raise
 
-            if not self._reconnect_requested:
+            if self._closed or not self._reconnect_requested:
                 break
 
             # GoAway was received — reconnect with the latest saved handle
@@ -161,11 +166,9 @@ class GeminiLiveSession:
                 self._on_reconnecting()
 
             await asyncio.sleep(RECONNECT_DELAY_SECONDS)
+            is_reconnect = True
 
-            if self._on_reconnected:
-                self._on_reconnected()
-
-    async def _connect_once(self, saved_handle: str | None) -> None:
+    async def _connect_once(self, saved_handle: str | None, *, is_reconnect: bool = False) -> None:
         """Open a single Gemini Live session and run its receive loop."""
         config = self._build_config(saved_handle)
         if saved_handle:
@@ -178,6 +181,9 @@ class GeminiLiveSession:
             self._state.is_connected = True
             self.connected_event.set()
             logger.info("Gemini Live session connected")
+            # Notify client only after the new session is confirmed open
+            if is_reconnect and self._on_reconnected:
+                self._on_reconnected()
 
             try:
                 async for response in session.receive():
@@ -284,7 +290,8 @@ class GeminiLiveSession:
                 logger.warning(f"Failed to send tool response: {e}")
 
     async def close(self) -> None:
-        """Signal the session to stop and close."""
+        """Signal the session to stop and close. Prevents any further reconnection."""
+        self._closed = True
         self._state.is_connected = False
         if self._session:
             try:

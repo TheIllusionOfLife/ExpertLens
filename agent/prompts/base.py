@@ -61,7 +61,7 @@ def build_system_instruction(
     parts = [BASE_PERSONA]
 
     # Coach-specific context
-    software_key = coach_id.lower().replace("-", "_")
+    software_key = coach_id.strip().lower().replace("-", "_").replace(" ", "_")
     coach_context = COACH_CONTEXT.get(software_key, "")
     if coach_context:
         parts.append(coach_context)

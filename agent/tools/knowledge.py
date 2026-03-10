@@ -37,7 +37,9 @@ DEFAULT_KNOWLEDGE = "I'm your expert coach. Ask me anything about the software y
 
 def get_coach_knowledge_stub(topic: str) -> dict[str, str]:
     """Stub: return hardcoded Blender knowledge by topic."""
-    topic_lower = topic.lower()
+    topic_lower = topic.strip().lower()
+    if not topic_lower:
+        return {"content": DEFAULT_KNOWLEDGE, "topic": topic, "source": "stub"}
     for key, content in BLENDER_KNOWLEDGE.items():
         if key in topic_lower or topic_lower in key:
             return {"content": content, "topic": topic, "source": "stub"}

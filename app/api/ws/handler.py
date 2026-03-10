@@ -1,4 +1,5 @@
 """WebSocket handler: bridges browser client ↔ Gemini Live API."""
+
 import asyncio
 import logging
 
@@ -49,18 +50,21 @@ class SessionHandler:
             await self._wait_for_start()
         except WebSocketDisconnect:
             logger.info(f"Client disconnected before session start (coach={self._coach_id})")
+            await self._cleanup()
             return
-        except Exception as e:
-            await self._send_error(str(e))
+        except Exception:
+            logger.exception("Session setup failed")
+            await self._send_error("Session setup failed")
+            await self._cleanup()
             return
 
         try:
             await self._run_media_loop()
         except WebSocketDisconnect:
             logger.info(f"Client disconnected (coach={self._coach_id})")
-        except Exception as e:
-            logger.error(f"Session error: {e}")
-            await self._send_error(str(e))
+        except Exception:
+            logger.exception("Session error")
+            await self._send_error("Session error")
         finally:
             await self._cleanup()
 

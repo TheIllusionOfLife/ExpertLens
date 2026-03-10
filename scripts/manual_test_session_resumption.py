@@ -1,4 +1,5 @@
 """CLI test: verify GoAway handling and session resumption with saved handle."""
+
 import asyncio
 import os
 import sys
@@ -63,10 +64,12 @@ async def test_resumption() -> None:
         # Even without a handle, test that we can send to the session
         await session.send(
             input=types.LiveClientRealtimeInput(
-                media_chunks=[types.Blob(
-                    data=b"\x00" * 3200,  # 100ms of silence (PCM 16kHz 16-bit mono)
-                    mime_type="audio/pcm;rate=16000"
-                )]
+                media_chunks=[
+                    types.Blob(
+                        data=b"\x00" * 3200,  # 100ms of silence (PCM 16kHz 16-bit mono)
+                        mime_type="audio/pcm;rate=16000",
+                    )
+                ]
             )
         )
         print("Sent test audio to initial session.")
@@ -89,10 +92,7 @@ async def test_resumption() -> None:
             print("Reconnected with saved handle!")
             await session.send(
                 input=types.LiveClientRealtimeInput(
-                    media_chunks=[types.Blob(
-                        data=b"\x00" * 3200,
-                        mime_type="audio/pcm;rate=16000"
-                    )]
+                    media_chunks=[types.Blob(data=b"\x00" * 3200, mime_type="audio/pcm;rate=16000")]
                 )
             )
             print("Sent test audio to resumed session. SUCCESS!")

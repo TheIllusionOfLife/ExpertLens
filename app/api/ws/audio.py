@@ -1,4 +1,5 @@
 """Audio format helpers for PCM 16-bit 16kHz input and 24kHz output."""
+
 import struct
 
 # Input from browser: PCM 16-bit signed, 16kHz, mono
@@ -23,6 +24,8 @@ def is_valid_pcm_chunk(data: bytes) -> bool:
 
 def split_audio_chunks(data: bytes, chunk_size: int = MAX_CHUNK_BYTES) -> list[bytes]:
     """Split a large audio buffer into smaller chunks for streaming."""
+    if chunk_size <= 0 or chunk_size % 2 != 0:
+        raise ValueError(f"chunk_size must be a positive even number, got {chunk_size}")
     chunks = []
     offset = 0
     while offset < len(data):
@@ -38,5 +41,7 @@ def split_audio_chunks(data: bytes, chunk_size: int = MAX_CHUNK_BYTES) -> list[b
 
 def pcm_bytes_to_samples(data: bytes) -> list[int]:
     """Convert raw PCM bytes to list of int16 samples."""
+    if len(data) % 2 != 0:
+        raise ValueError(f"PCM data length must be even, got {len(data)} bytes")
     num_samples = len(data) // 2
-    return list(struct.unpack(f"<{num_samples}h", data[: num_samples * 2]))
+    return list(struct.unpack(f"<{num_samples}h", data))
