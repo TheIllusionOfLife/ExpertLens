@@ -60,4 +60,5 @@ echo ""
 echo "==> Deployment complete!"
 echo "    Frontend: ${FRONTEND_URL}"
 echo "    Backend:  ${BACKEND_URL}"
-echo "    Health:   $(curl -s "${BACKEND_URL}/health")"
+HEALTH=$(curl -sf "${BACKEND_URL}/health") || { echo "ERROR: health check failed — service may not be reachable"; exit 1; }
+echo "    Health:   ${HEALTH}"
