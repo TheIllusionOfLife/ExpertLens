@@ -35,6 +35,7 @@ class SessionHandler:
         self._audio_queue: asyncio.Queue[bytes] = asyncio.Queue(maxsize=100)
         self._gemini_task: asyncio.Task | None = None
         self._audio_forward_task: asyncio.Task | None = None
+        self._firestore_session_id: str | None = None
         # Serialize all WebSocket writes to prevent concurrent send race conditions
         self._ws_send_lock = asyncio.Lock()
 
@@ -78,17 +79,31 @@ class SessionHandler:
 
         coach_id = msg.get("coach_id", self._coach_id)
         saved_handle = msg.get("session_handle")
+        # user_id defaults to coach_id so frontend-saved preferences load correctly.
+        # In this demo there is no auth layer; coach_id acts as the per-coach user scope.
+        user_id = msg.get("user_id", coach_id)
 
         from agent.prompts.base import build_system_instruction_from_firestore
+        from app.api.db.session_repo import create_session as create_fs_session
 
-        system_instruction = await build_system_instruction_from_firestore(
-            coach_id=coach_id, user_id=coach_id
+        # Build system instruction and create Firestore session record in parallel.
+        system_instruction, fs_session = await asyncio.gather(
+            build_system_instruction_from_firestore(coach_id=coach_id, user_id=user_id),
+            create_fs_session(coach_id),
+            return_exceptions=True,
         )
+        if isinstance(fs_session, Exception):
+            logger.warning(f"Failed to create Firestore session: {fs_session}")
+        else:
+            self._firestore_session_id = fs_session.session_id
+        if isinstance(system_instruction, Exception):
+            raise system_instruction
+        assert isinstance(system_instruction, str)
 
         gemini = GeminiLiveSession(
             system_instruction=system_instruction,
             coach_id=coach_id,
-            user_id=coach_id,
+            user_id=user_id,
             on_audio_response=self._enqueue_audio,
             on_session_handle=self._notify_session_handle,
             on_reconnecting=self._notify_reconnecting,
@@ -244,6 +259,14 @@ class SessionHandler:
                 await self._gemini_task
             except asyncio.CancelledError:
                 pass
+
+        if self._firestore_session_id:
+            try:
+                from app.api.db.session_repo import end_session as end_fs_session
+
+                await end_fs_session(self._firestore_session_id, summary="", last_topics=[])
+            except Exception as e:
+                logger.warning(f"Failed to end Firestore session: {e}")
 
 
 async def websocket_session_endpoint(websocket: WebSocket, coach_id: str) -> None:
