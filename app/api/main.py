@@ -1,10 +1,14 @@
 """FastAPI application: health endpoint, CORS middleware, WebSocket session endpoint."""
+
 import logging
 
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.config import settings
+from app.api.routers.coaches import router as coaches_router
+from app.api.routers.preferences import router as preferences_router
+from app.api.routers.sessions import router as sessions_router
 from app.api.ws.handler import websocket_session_endpoint
 
 logging.basicConfig(level=logging.INFO)
@@ -19,6 +23,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+app.include_router(coaches_router)
+app.include_router(preferences_router)
+app.include_router(sessions_router)
 
 
 @app.get("/health")

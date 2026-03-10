@@ -79,9 +79,11 @@ class SessionHandler:
         coach_id = msg.get("coach_id", self._coach_id)
         saved_handle = msg.get("session_handle")
 
-        from agent.prompts.base import build_system_instruction
+        from agent.prompts.base import build_system_instruction_from_firestore
 
-        system_instruction = build_system_instruction(coach_id=coach_id)
+        system_instruction = await build_system_instruction_from_firestore(
+            coach_id=coach_id, user_id="default"
+        )
 
         gemini = GeminiLiveSession(
             system_instruction=system_instruction,
