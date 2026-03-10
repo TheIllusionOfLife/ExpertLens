@@ -22,20 +22,35 @@ export function ScreenCapture({ active, onFrame, onStopped }: Props) {
 
   useEffect(() => {
     if (active && !prevActiveRef.current) {
+      let cancelled = false;
+
       startScreenCapture(onFrame)
         .then((h) => {
+          if (cancelled) {
+            // Component deactivated before capture resolved — stop immediately
+            h.stop();
+            return;
+          }
           handleRef.current = h;
-          // If user stops sharing via browser UI, notify parent
-          h.stream.getVideoTracks()[0]?.addEventListener("ended", stop);
+          // 'ended' listener is already registered inside startScreenCapture (lib layer)
         })
         .catch((err) => {
-          console.error("Screen capture failed:", err);
-          onStopped?.();
+          if (!cancelled) {
+            console.error("Screen capture failed:", err);
+            onStopped?.();
+          }
         });
-    } else if (!active && prevActiveRef.current) {
-      stop();
+
+      prevActiveRef.current = true;
+      return () => {
+        cancelled = true;
+      };
     }
-    prevActiveRef.current = active;
+
+    if (!active && prevActiveRef.current) {
+      stop();
+      prevActiveRef.current = false;
+    }
   }, [active, onFrame, stop, onStopped]);
 
   useEffect(() => () => stop(), [stop]);

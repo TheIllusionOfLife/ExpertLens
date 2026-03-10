@@ -108,12 +108,15 @@ export class WsClient {
   }
 
   sendImage(jpeg: Blob): void {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+    const ws = this.ws;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
     jpeg.arrayBuffer().then((buf) => {
+      // Re-check after async: socket may have closed during arrayBuffer() conversion
+      if (ws.readyState !== WebSocket.OPEN) return;
       const frame = new Uint8Array(1 + buf.byteLength);
       frame[0] = MEDIA_TAG_IMAGE;
       frame.set(new Uint8Array(buf), 1);
-      this.ws?.send(frame.buffer);
+      ws.send(frame.buffer);
     });
   }
 

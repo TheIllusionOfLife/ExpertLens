@@ -3,11 +3,18 @@
 
 export const AUDIO_WORKLET_PROCESSOR = `
 class PCMExtractorProcessor extends AudioWorkletProcessor {
-  constructor() {
+  constructor(options) {
     super();
     this._buffer = [];
-    // Flush every ~100ms: 16000 Hz × 0.1s = 1600 samples per chunk
-    this._flushSize = 1600;
+    // Use runtime sampleRate (AudioWorklet global) for correct flush size.
+    // processorOptions.sampleRate is passed as a fallback for environments
+    // where the global may differ from the AudioContext's actual rate.
+    const rate = options?.processorOptions?.sampleRate ?? sampleRate ?? 16000;
+    if (rate !== 16000) {
+      console.warn(\`[PCMExtractor] AudioContext rate \${rate}Hz != expected 16000Hz\`);
+    }
+    // Flush every ~100ms
+    this._flushSize = Math.round(rate * 0.1);
   }
 
   process(inputs) {
