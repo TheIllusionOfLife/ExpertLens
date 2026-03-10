@@ -57,6 +57,8 @@ export default function LiveSessionPage() {
     wsRef.current?.sendImage(jpeg);
   }, []);
 
+  const handleScreenStopped = useCallback(() => setScreenSharing(false), []);
+
   const handlePlaybackHandle = useCallback((handle: AudioPlaybackHandle) => {
     playbackRef.current = handle;
   }, []);
@@ -188,7 +190,7 @@ export default function LiveSessionPage() {
       <ScreenCapture
         active={screenSharing}
         onFrame={handleScreenFrame}
-        onStopped={() => setScreenSharing(false)}
+        onStopped={handleScreenStopped}
       />
 
       {/* Screen share trigger — separate button in connected state */}

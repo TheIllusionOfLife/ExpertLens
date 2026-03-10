@@ -55,8 +55,15 @@ export function AudioPlayback({ onHandle }: Props) {
     source.buffer = audioBuffer;
     source.connect(ctx.destination);
 
-    // Schedule with small jitter buffer (20ms) to smooth network variance
+    // Cap buffered audio at 3s to prevent latency drift and memory growth
+    const MAX_BUFFER_SECONDS = 3;
     const now = ctx.currentTime;
+    if (nextPlayTimeRef.current - now > MAX_BUFFER_SECONDS) {
+      // Too much queued — drop this chunk to catch up
+      return;
+    }
+
+    // Schedule with small jitter buffer (20ms) to smooth network variance
     const startAt = Math.max(now + 0.02, nextPlayTimeRef.current);
     source.start(startAt);
     nextPlayTimeRef.current = startAt + audioBuffer.duration;
