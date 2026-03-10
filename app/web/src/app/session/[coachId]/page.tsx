@@ -45,8 +45,13 @@ export default function LiveSessionPage() {
 
   const handleAudioChunk = useCallback((pcm: ArrayBuffer) => {
     wsRef.current?.sendAudio(pcm);
-    // User speaking = barge-in: clear playback queue
-    playbackRef.current?.clearQueue();
+    // Barge-in: only clear playback when there's actual voice energy (avoids clearing on silence)
+    const int16 = new Int16Array(pcm);
+    let sum = 0;
+    for (let i = 0; i < int16.length; i++) sum += Math.abs(int16[i]);
+    if (sum / int16.length > 300) {
+      playbackRef.current?.clearQueue();
+    }
   }, []);
 
   const handleAudioResponse = useCallback((pcm: ArrayBuffer) => {

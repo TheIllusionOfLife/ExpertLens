@@ -4,7 +4,9 @@
 import type { ServerMessage } from "@/types/ws-protocol";
 import { MEDIA_TAG_AUDIO, MEDIA_TAG_IMAGE } from "@/types/ws-protocol";
 
-const WS_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/^http/, "ws");
+const WS_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000")
+  .replace(/\/+$/, "") // strip trailing slashes before protocol swap
+  .replace(/^http/, "ws");
 
 export type ConnectionStatus =
   | "disconnected"
@@ -21,11 +23,14 @@ export interface WsClientOptions {
   onStatusChange: (status: ConnectionStatus) => void;
 }
 
+const MAX_RECONNECT_ATTEMPTS = 10;
+
 export class WsClient {
   private ws: WebSocket | null = null;
   private options: WsClientOptions;
   private stopped = false;
   private _currentHandle: string | undefined;
+  private _reconnectAttempts = 0;
 
   constructor(options: WsClientOptions) {
     this.options = options;
@@ -41,7 +46,7 @@ export class WsClient {
     this.stopped = false;
     this.options.onStatusChange("connecting");
 
-    const url = `${WS_URL}/ws/session/${this.options.coachId}`;
+    const url = `${WS_URL}/ws/session/${encodeURIComponent(this.options.coachId)}`;
     this.ws = new WebSocket(url);
     this.ws.binaryType = "arraybuffer";
 
@@ -65,13 +70,20 @@ export class WsClient {
     this.ws.onclose = (event) => {
       if (this.stopped) return;
       if (event.code === 1000) {
+        this._reconnectAttempts = 0;
         this.options.onStatusChange("disconnected");
       } else {
-        // Unexpected close — auto-reconnect after 2s
+        // Unexpected close — auto-reconnect with exponential backoff
+        if (this._reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+          this.options.onStatusChange("error");
+          return;
+        }
         this.options.onStatusChange("reconnecting");
+        const delay = Math.min(30000, 1000 * 2 ** this._reconnectAttempts);
+        this._reconnectAttempts++;
         setTimeout(() => {
           if (!this.stopped) this.connect();
-        }, 2000);
+        }, delay);
       }
     };
 
@@ -88,6 +100,7 @@ export class WsClient {
       }
       this.options.onMessage(msg);
       if (msg.type === "session_started" || msg.type === "reconnected") {
+        this._reconnectAttempts = 0;
         this.options.onStatusChange("connected");
       } else if (msg.type === "reconnecting") {
         this.options.onStatusChange("reconnecting");

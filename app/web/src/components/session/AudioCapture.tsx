@@ -71,7 +71,11 @@ export function AudioCapture({ active, onChunk, onBargeIn }: Props) {
       };
 
       source.connect(worklet);
-      worklet.connect(ctx.destination); // keeps worklet alive
+      // Route through a silent GainNode to keep worklet alive without routing mic to speakers
+      const silentGain = ctx.createGain();
+      silentGain.gain.value = 0;
+      worklet.connect(silentGain);
+      silentGain.connect(ctx.destination);
     },
     [onChunk, onBargeIn, stop]
   );
@@ -79,7 +83,10 @@ export function AudioCapture({ active, onChunk, onBargeIn }: Props) {
   useEffect(() => {
     if (active && !prevActiveRef.current) {
       const cancelled = { value: false };
-      start(cancelled).catch(console.error);
+      start(cancelled).catch((err) => {
+        console.error("AudioCapture start failed:", err);
+        prevActiveRef.current = false;
+      });
       prevActiveRef.current = true;
       return () => {
         cancelled.value = true;

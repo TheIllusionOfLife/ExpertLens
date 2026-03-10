@@ -27,7 +27,7 @@ export async function getCoaches(): Promise<Coach[]> {
 
 export async function getCoach(coachId: string): Promise<Coach> {
   try {
-    return await apiFetch<Coach>(`/coaches/${coachId}`);
+    return await apiFetch<Coach>(`/coaches/${encodeURIComponent(coachId)}`);
   } catch {
     const coach = DEMO_COACHES.find((c) => c.coach_id === coachId);
     if (!coach) throw new Error(`Coach not found: ${coachId}`);
@@ -46,7 +46,7 @@ export async function updatePreferences(
   coachId: string,
   prefs: Partial<UserPreferences>
 ): Promise<UserPreferences> {
-  return apiFetch<UserPreferences>(`/preferences/${coachId}`, {
+  return apiFetch<UserPreferences>(`/preferences/${encodeURIComponent(coachId)}`, {
     method: "PUT",
     body: JSON.stringify(prefs),
   });

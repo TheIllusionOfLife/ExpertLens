@@ -39,9 +39,10 @@ export function AudioPlayback({ onHandle }: Props) {
       ctxRef.current = new AudioContext({ sampleRate: OUTPUT_SAMPLE_RATE });
     }
     const ctx = ctxRef.current;
-    if (ctx.state === "suspended") ctx.resume();
+    if (ctx.state === "suspended") ctx.resume().catch(console.warn);
 
-    // PCM is 16-bit signed little-endian at 24kHz
+    // PCM is 16-bit signed little-endian at 24kHz — must be even-length
+    if (pcm.byteLength % 2 !== 0) return;
     const int16 = new Int16Array(pcm);
     const float32 = new Float32Array(int16.length);
     for (let i = 0; i < int16.length; i++) {
