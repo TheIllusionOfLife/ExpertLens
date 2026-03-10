@@ -118,7 +118,11 @@ async def build_system_instruction_from_firestore(coach_id: str, user_id: str = 
         logger.warning(f"Failed to load preferences for {user_id}: {e}")
 
     try:
-        software_name = coach.software_name.lower().replace(" ", "_") if coach else coach_id
+        software_name = (
+            coach.software_name.lower().replace(" ", "_")
+            if coach
+            else coach_id.lower().replace("-", "_").replace(" ", "_")
+        )
         chunks = await get_all_knowledge_for_software(software_name)
         knowledge_snippets = [c.content for c in chunks]
     except Exception as e:

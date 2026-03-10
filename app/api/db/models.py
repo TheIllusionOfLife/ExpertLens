@@ -48,6 +48,15 @@ class CoachCreate(BaseModel):
     icon: str = "🎯"
 
 
+class CoachUpdate(BaseModel):
+    """Only the fields callers are permitted to change on an existing coach."""
+
+    display_name: str | None = None
+    persona: str | None = None
+    focus_areas: list[str] | None = None
+    icon: str | None = None
+
+
 class PreferencesUpdate(BaseModel):
     interaction_style: str | None = None
     tone: str | None = None

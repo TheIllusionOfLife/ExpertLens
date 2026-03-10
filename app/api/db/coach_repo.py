@@ -35,8 +35,9 @@ async def create_coach(data: CoachCreate) -> Coach:
 
 async def update_coach(coach_id: str, updates: dict) -> Coach | None:
     ref = get_client().collection(COACHES_COLLECTION).document(coach_id)
-    await ref.update(updates)
     doc = await ref.get()
     if not doc.exists:
         return None
+    await ref.update(updates)
+    doc = await ref.get()
     return Coach(**doc.to_dict())

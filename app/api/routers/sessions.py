@@ -1,6 +1,6 @@
 """REST API routes for sessions."""
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 from app.api.db.models import Session
@@ -28,5 +28,7 @@ async def finish_session(session_id: str, body: EndSessionRequest) -> Session:
 
 
 @router.get("/{coach_id}", response_model=list[Session])
-async def list_sessions(coach_id: str, limit: int = 10) -> list[Session]:
+async def list_sessions(
+    coach_id: str, limit: int = Query(default=10, ge=1, le=100)
+) -> list[Session]:
     return await get_sessions(coach_id, limit=limit)

@@ -24,8 +24,13 @@ async def get_knowledge(software_name: str, topic: str, limit: int = 3) -> list[
 
 async def get_all_knowledge_for_software(software_name: str) -> list[KnowledgeChunk]:
     """Return all knowledge chunks for a software (used at session start for context stuffing)."""
+    # Order by difficulty_level then topic for stable, deterministic context stuffing results.
     query = (
-        get_client().collection(KNOWLEDGE_COLLECTION).where("software_name", "==", software_name)
+        get_client()
+        .collection(KNOWLEDGE_COLLECTION)
+        .where("software_name", "==", software_name)
+        .order_by("difficulty_level")
+        .order_by("topic")
     )
     chunks: list[KnowledgeChunk] = []
     async for doc in query.stream():

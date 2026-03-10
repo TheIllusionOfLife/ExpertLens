@@ -3,7 +3,7 @@
 from fastapi import APIRouter, HTTPException
 
 from app.api.db.coach_repo import create_coach, get_coach, list_coaches, update_coach
-from app.api.db.models import Coach, CoachCreate
+from app.api.db.models import Coach, CoachCreate, CoachUpdate
 
 router = APIRouter(prefix="/coaches", tags=["coaches"])
 
@@ -27,8 +27,9 @@ async def create_coach_endpoint(data: CoachCreate) -> Coach:
 
 
 @router.put("/{coach_id}", response_model=Coach)
-async def update_coach_endpoint(coach_id: str, updates: dict) -> Coach:
-    coach = await update_coach(coach_id, updates)
+async def update_coach_endpoint(coach_id: str, updates: CoachUpdate) -> Coach:
+    patch = {k: v for k, v in updates.model_dump().items() if v is not None}
+    coach = await update_coach(coach_id, patch)
     if not coach:
         raise HTTPException(status_code=404, detail=f"Coach '{coach_id}' not found")
     return coach

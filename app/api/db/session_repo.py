@@ -22,6 +22,9 @@ async def create_session(coach_id: str) -> Session:
 
 async def end_session(session_id: str, summary: str, last_topics: list[str]) -> Session | None:
     ref = get_client().collection(SESSIONS_COLLECTION).document(session_id)
+    doc = await ref.get()
+    if not doc.exists:
+        return None
     updates = {
         "ended_at": datetime.now(UTC).isoformat(),
         "summary": summary,
@@ -29,8 +32,6 @@ async def end_session(session_id: str, summary: str, last_topics: list[str]) -> 
     }
     await ref.update(updates)
     doc = await ref.get()
-    if not doc.exists:
-        return None
     return Session(**doc.to_dict())
 
 
