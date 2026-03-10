@@ -1,6 +1,7 @@
 """FastAPI application: health endpoint, CORS middleware, WebSocket session endpoint."""
 
 import logging
+import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -13,7 +14,19 @@ from app.api.routers.preferences import router as preferences_router
 from app.api.routers.sessions import router as sessions_router
 from app.api.ws.handler import websocket_session_endpoint
 
-logging.basicConfig(level=logging.INFO)
+# Use JSON structured logging on Cloud Run (K_SERVICE is set by the Cloud Run runtime).
+if os.getenv("K_SERVICE"):
+    _handler = logging.StreamHandler()
+    _handler.setFormatter(
+        logging.Formatter(
+            fmt='{"severity":"%(levelname)s","message":"%(message)s","logger":"%(name)s"}'
+        )
+    )
+    logging.root.handlers = [_handler]
+    logging.root.setLevel(logging.INFO)
+else:
+    logging.basicConfig(level=logging.INFO)
+
 logger = logging.getLogger(__name__)
 
 
