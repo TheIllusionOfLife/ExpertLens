@@ -13,8 +13,9 @@ from app.api.ws.audio import INPUT_MIME
 
 logger = logging.getLogger(__name__)
 
-# Image constraints
 JPEG_MIME = "image/jpeg"
+MAX_RECONNECT_ATTEMPTS = 3
+RECONNECT_DELAY_SECONDS = 1.0
 
 
 @dataclass
@@ -23,40 +24,44 @@ class SessionState:
 
     handle: str | None = None
     is_connected: bool = False
-    reconnect_attempts: int = 0
 
 
 class GeminiLiveSession:
     """
     Manages a Gemini Live API session.
 
-    Handles:
-    - Connection with contextWindowCompression (SlidingWindow) to avoid 2-min image cutoff
-    - Session resumption via saved handle (for ~10min WebSocket limit)
-    - GoAway handling: save handle → close → reconnect
-    - Streaming audio/image to Gemini and receiving audio responses
+    Lifecycle:
+    - Call `run(saved_handle=...)` — this is the top-level loop that handles reconnection.
+    - Each reconnect attempt calls `_connect_once()`, which opens a single `async with connect()`
+      context, runs the receive loop, and exits cleanly.
+    - GoAway is handled by setting `_reconnect_requested = True` and breaking out of the
+      receive loop, so reconnection always happens OUTSIDE the previous session context.
+    - `connected_event` is set once the session is open; the handler waits on this before
+      sending `session_started` to the client.
     """
-
-    MAX_RECONNECT_ATTEMPTS = 3
-    RECONNECT_DELAY_SECONDS = 1.0
 
     def __init__(
         self,
         system_instruction: str,
         on_audio_response: Callable[[bytes], None] | None = None,
+        on_session_handle: Callable[[str], None] | None = None,
         on_reconnecting: Callable[[], None] | None = None,
         on_reconnected: Callable[[], None] | None = None,
     ):
         self._system_instruction = system_instruction
         self._on_audio_response = on_audio_response
+        self._on_session_handle = on_session_handle
         self._on_reconnecting = on_reconnecting
         self._on_reconnected = on_reconnected
 
         self._client = genai.Client(api_key=settings.gemini_api_key)
         self._session: Any = None
         self._state = SessionState()
-        self._receive_task: asyncio.Task | None = None
         self._send_lock = asyncio.Lock()
+        self._reconnect_requested = False
+
+        # Set when the session is open and ready to receive media
+        self.connected_event = asyncio.Event()
 
     @property
     def session_handle(self) -> str | None:
@@ -66,26 +71,30 @@ class GeminiLiveSession:
     def is_connected(self) -> bool:
         return self._state.is_connected
 
-    def _build_config(self) -> types.LiveConnectConfig:
+    def _build_config(self, saved_handle: str | None = None) -> types.LiveConnectConfig:
         """Build Gemini Live session config."""
-        tools = self._build_tools()
+        resumption_config = (
+            types.SessionResumptionConfig(handle=saved_handle)
+            if saved_handle
+            else types.SessionResumptionConfig()
+        )
         return types.LiveConnectConfig(
             system_instruction=self._system_instruction,
             response_modalities=[types.Modality.AUDIO],
             context_window_compression=types.ContextWindowCompressionConfig(
                 sliding_window=types.SlidingWindow(),
             ),
-            session_resumption=types.SessionResumptionConfig(),
+            session_resumption=resumption_config,
             speech_config=types.SpeechConfig(
                 voice_config=types.VoiceConfig(
                     prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name="Aoede")
                 )
             ),
-            tools=tools if tools else None,
+            tools=self._build_tools(),
         )
 
     def _build_tools(self) -> list[types.Tool]:
-        """Build tool definitions for the agent."""
+        """Build tool declarations for the agent."""
         return [
             types.Tool(
                 function_declarations=[
@@ -121,90 +130,100 @@ class GeminiLiveSession:
             )
         ]
 
-    async def connect(self, saved_handle: str | None = None) -> None:
-        """Open a Gemini Live session, optionally resuming from a saved handle."""
-        config = self._build_config()
+    async def run(self, saved_handle: str | None = None) -> None:
+        """
+        Top-level run loop — handles reconnection after GoAway.
 
+        This is the method to call from the WebSocket handler as a background task.
+        Reconnection always happens here, OUTSIDE the previous session context.
+        """
+        current_handle = saved_handle
+        for attempt in range(MAX_RECONNECT_ATTEMPTS + 1):
+            self._reconnect_requested = False
+            try:
+                await self._connect_once(current_handle)
+            except Exception as e:
+                logger.error(f"Session error on attempt {attempt}: {e}")
+                self._state.is_connected = False
+                if not self._reconnect_requested:
+                    raise
+
+            if not self._reconnect_requested:
+                break
+
+            # GoAway was received — reconnect with the latest saved handle
+            current_handle = self._state.handle
+            logger.info(
+                f"GoAway reconnect {attempt + 1}/{MAX_RECONNECT_ATTEMPTS}, "
+                f"handle={'set' if current_handle else 'none'}"
+            )
+            if self._on_reconnecting:
+                self._on_reconnecting()
+
+            await asyncio.sleep(RECONNECT_DELAY_SECONDS)
+
+            if self._on_reconnected:
+                self._on_reconnected()
+
+    async def _connect_once(self, saved_handle: str | None) -> None:
+        """Open a single Gemini Live session and run its receive loop."""
+        config = self._build_config(saved_handle)
         if saved_handle:
-            config.session_resumption = types.SessionResumptionConfig(handle=saved_handle)
             logger.info("Connecting with saved handle for session resumption")
 
-        try:
-            async with self._client.aio.live.connect(
-                model=settings.gemini_live_model, config=config
-            ) as session:
-                self._session = session
-                self._state.is_connected = True
-                self._state.reconnect_attempts = 0
-                logger.info("Gemini Live session connected")
-                await self._run_session()
-        except Exception as e:
-            logger.error(f"Gemini session error: {e}")
-            self._state.is_connected = False
-            raise
+        async with self._client.aio.live.connect(
+            model=settings.gemini_live_model, config=config
+        ) as session:
+            self._session = session
+            self._state.is_connected = True
+            self.connected_event.set()
+            logger.info("Gemini Live session connected")
 
-    async def _run_session(self) -> None:
-        """Run the receive loop for the current session."""
-        try:
-            async for response in self._session.receive():
-                await self._handle_response(response)
-        except Exception as e:
-            logger.warning(f"Session receive loop ended: {e}")
-        finally:
-            self._state.is_connected = False
+            try:
+                async for response in session.receive():
+                    await self._handle_response(response)
+                    if self._reconnect_requested:
+                        # Exit receive loop cleanly so the async with can close
+                        break
+            finally:
+                self._state.is_connected = False
+                self._session = None
 
     async def _handle_response(self, response: Any) -> None:
-        """Process a response from Gemini."""
-        # Handle session resumption handle updates
+        """Dispatch a response from Gemini to the appropriate handler."""
+        # Session resumption handle — save and emit to client for persistence
         if hasattr(response, "session_resumption_update") and response.session_resumption_update:
             update = response.session_resumption_update
             if hasattr(update, "new_handle") and update.new_handle:
-                self._state.handle = update.new_handle
-                logger.debug(f"Session handle updated: {self._state.handle[:8]}...")
+                new_handle: str = update.new_handle
+                self._state.handle = new_handle
+                logger.debug(f"Session handle updated: {new_handle[:8]}...")
+                if self._on_session_handle:
+                    self._on_session_handle(new_handle)
 
-        # Handle GoAway — server is about to close the connection
+        # GoAway — request reconnection after current response processing
         if hasattr(response, "go_away") and response.go_away:
-            logger.info("Received GoAway from Gemini, initiating session resumption")
-            await self._handle_go_away()
+            logger.info("Received GoAway from Gemini")
+            self._reconnect_requested = True
             return
 
-        # Handle audio response data
+        # Audio response data
         if hasattr(response, "data") and response.data:
             if self._on_audio_response:
                 self._on_audio_response(response.data)
 
-        # Handle tool calls (NON_BLOCKING: WHEN_IDLE)
+        # Tool calls
         if hasattr(response, "tool_call") and response.tool_call:
             await self._handle_tool_call(response.tool_call)
 
-    async def _handle_go_away(self) -> None:
-        """Handle GoAway by notifying client and reconnecting with saved handle."""
-        if self._on_reconnecting:
-            self._on_reconnecting()
-
-        saved_handle = self._state.handle
-        self._state.is_connected = False
-
-        for attempt in range(self.MAX_RECONNECT_ATTEMPTS):
-            try:
-                await asyncio.sleep(self.RECONNECT_DELAY_SECONDS * (attempt + 1))
-                logger.info(f"Reconnect attempt {attempt + 1}/{self.MAX_RECONNECT_ATTEMPTS}")
-                await self.connect(saved_handle=saved_handle)
-                if self._on_reconnected:
-                    self._on_reconnected()
-                return
-            except Exception as e:
-                logger.error(f"Reconnect attempt {attempt + 1} failed: {e}")
-
-        logger.error("All reconnect attempts failed")
-
     async def _handle_tool_call(self, tool_call: Any) -> None:
-        """Handle function calls from Gemini (stub — real impl in PR3)."""
+        """Handle function calls from Gemini."""
         from agent.tools.knowledge import get_coach_knowledge_stub
         from agent.tools.preferences import get_user_preferences_stub
 
+        function_calls = tool_call.function_calls if tool_call.function_calls else []
         responses = []
-        for fc in tool_call.function_calls:
+        for fc in function_calls:
             args = fc.args or {}
             if fc.name == "get_coach_knowledge":
                 result = get_coach_knowledge_stub(args.get("topic", ""))
@@ -232,9 +251,7 @@ class GeminiLiveSession:
             try:
                 await self._session.send(
                     input=types.LiveClientRealtimeInput(
-                        media_chunks=[
-                            types.Blob(data=jpeg_bytes, mime_type=JPEG_MIME)
-                        ]
+                        media_chunks=[types.Blob(data=jpeg_bytes, mime_type=JPEG_MIME)]
                     )
                 )
             except Exception as e:
@@ -248,9 +265,7 @@ class GeminiLiveSession:
             try:
                 await self._session.send(
                     input=types.LiveClientRealtimeInput(
-                        media_chunks=[
-                            types.Blob(data=pcm_bytes, mime_type=INPUT_MIME)
-                        ]
+                        media_chunks=[types.Blob(data=pcm_bytes, mime_type=INPUT_MIME)]
                     )
                 )
             except Exception as e:
@@ -269,7 +284,7 @@ class GeminiLiveSession:
                 logger.warning(f"Failed to send tool response: {e}")
 
     async def close(self) -> None:
-        """Close the Gemini session."""
+        """Signal the session to stop and close."""
         self._state.is_connected = False
         if self._session:
             try:

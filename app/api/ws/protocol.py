@@ -11,6 +11,7 @@ class MessageType(StrEnum):
     END_SESSION = "end_session"
     # Server → Client
     SESSION_STARTED = "session_started"
+    SESSION_HANDLE = "session_handle"  # Emit latest resumption handle to client
     RECONNECTING = "reconnecting"
     RECONNECTED = "reconnected"
     ERROR = "error"
@@ -19,6 +20,10 @@ class MessageType(StrEnum):
 # Binary frame media tags (1-byte prefix)
 MEDIA_TAG_IMAGE = 0x01
 MEDIA_TAG_AUDIO = 0x02
+
+# Max payload sizes to guard against oversized frames
+MAX_IMAGE_BYTES = 2 * 1024 * 1024   # 2 MB
+MAX_AUDIO_BYTES = 64 * 1024          # 64 KB
 
 
 class StartSessionMessage(BaseModel):
@@ -34,6 +39,11 @@ class EndSessionMessage(BaseModel):
 class SessionStartedMessage(BaseModel):
     type: MessageType = MessageType.SESSION_STARTED
     session_id: str
+
+
+class SessionHandleMessage(BaseModel):
+    type: MessageType = MessageType.SESSION_HANDLE
+    handle: str
 
 
 class ReconnectingMessage(BaseModel):

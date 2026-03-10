@@ -4,15 +4,19 @@ import logging
 
 from fastapi import WebSocket, WebSocketDisconnect
 
+from app.api.config import settings
 from app.api.ws.audio import is_valid_pcm_chunk
 from app.api.ws.gemini_session import GeminiLiveSession
 from app.api.ws.protocol import (
+    MAX_AUDIO_BYTES,
+    MAX_IMAGE_BYTES,
     MEDIA_TAG_AUDIO,
     MEDIA_TAG_IMAGE,
     ErrorMessage,
     MessageType,
     ReconnectedMessage,
     ReconnectingMessage,
+    SessionHandleMessage,
     SessionStartedMessage,
     parse_control_message,
 )
@@ -29,9 +33,18 @@ class SessionHandler:
         self._gemini: GeminiLiveSession | None = None
         self._audio_queue: asyncio.Queue[bytes] = asyncio.Queue(maxsize=100)
         self._gemini_task: asyncio.Task | None = None
+        self._audio_forward_task: asyncio.Task | None = None
+        # Serialize all WebSocket writes to prevent concurrent send race conditions
+        self._ws_send_lock = asyncio.Lock()
 
     async def run(self) -> None:
-        """Main session loop: receive from client, forward to Gemini."""
+        """Main session loop."""
+        # Validate Origin header to guard WebSocket against cross-origin requests
+        origin = self._ws.headers.get("origin", "")
+        if origin and origin not in settings.cors_origins_list:
+            await self._ws.close(code=4003, reason="Origin not allowed")
+            return
+
         try:
             await self._wait_for_start()
         except WebSocketDisconnect:
@@ -52,7 +65,7 @@ class SessionHandler:
             await self._cleanup()
 
     async def _wait_for_start(self) -> None:
-        """Wait for start_session control message from client."""
+        """Wait for start_session control message, open Gemini session, confirm to client."""
         raw = await self._ws.receive_text()
         msg = parse_control_message(raw)
 
@@ -62,36 +75,44 @@ class SessionHandler:
         coach_id = msg.get("coach_id", self._coach_id)
         saved_handle = msg.get("session_handle")
 
-        # Build system instruction (minimal stub — PR3 adds full grounding)
         from agent.prompts.base import build_system_instruction
+
         system_instruction = build_system_instruction(coach_id=coach_id)
 
         gemini = GeminiLiveSession(
             system_instruction=system_instruction,
             on_audio_response=self._enqueue_audio,
+            on_session_handle=self._notify_session_handle,
             on_reconnecting=self._notify_reconnecting,
             on_reconnected=self._notify_reconnected,
         )
         self._gemini = gemini
 
-        # Start Gemini session in background
+        # Start Gemini run loop in background (handles reconnection internally)
         self._gemini_task = asyncio.create_task(
-            gemini.connect(saved_handle=saved_handle),
+            gemini.run(saved_handle=saved_handle),
             name=f"gemini-session-{coach_id}",
         )
 
-        # Give Gemini a moment to connect before sending started
-        await asyncio.sleep(0.5)
+        # Wait for Gemini to confirm connection before telling the client
+        try:
+            await asyncio.wait_for(gemini.connected_event.wait(), timeout=10.0)
+        except TimeoutError:
+            self._gemini_task.cancel()
+            raise RuntimeError("Gemini session failed to connect within 10 seconds")
 
-        await self._ws.send_text(
-            SessionStartedMessage(session_id=f"session-{coach_id}").model_dump_json()
+        await self._ws_send(
+            SessionStartedMessage(session_id=f"session-{coach_id}").model_dump_json(),
+            is_text=True,
         )
 
-        # Start background task to forward audio from Gemini to client
-        asyncio.create_task(self._forward_audio_loop(), name="audio-forward")
+        # Start managed audio forward task
+        self._audio_forward_task = asyncio.create_task(
+            self._forward_audio_loop(), name="audio-forward"
+        )
 
     async def _run_media_loop(self) -> None:
-        """Receive binary media frames from client and forward to Gemini."""
+        """Receive binary media frames (and control messages) from client."""
         while True:
             message = await self._ws.receive()
 
@@ -101,7 +122,7 @@ class SessionHandler:
                 await self._handle_media_frame(message["bytes"])
 
     async def _handle_control_message(self, raw: str) -> None:
-        """Handle JSON control messages (end_session, etc.)."""
+        """Handle JSON control messages."""
         try:
             msg = parse_control_message(raw)
             if msg.get("type") == MessageType.END_SESSION:
@@ -112,12 +133,24 @@ class SessionHandler:
             logger.warning(f"Invalid control message: {e}")
 
     async def _handle_media_frame(self, data: bytes) -> None:
-        """Route binary frames to Gemini by media type tag."""
+        """Route binary frames to Gemini by media type tag, with size validation."""
         if len(data) < 2:
             return
 
         tag = data[0]
         payload = data[1:]
+
+        if tag == MEDIA_TAG_IMAGE:
+            if len(payload) > MAX_IMAGE_BYTES:
+                logger.warning(f"Image frame too large ({len(payload)} bytes), dropping")
+                return
+        elif tag == MEDIA_TAG_AUDIO:
+            if len(payload) > MAX_AUDIO_BYTES:
+                logger.warning(f"Audio frame too large ({len(payload)} bytes), dropping")
+                return
+        else:
+            logger.debug(f"Unknown media tag: {tag:#04x}")
+            return
 
         if not self._gemini or not self._gemini.is_connected:
             return
@@ -127,23 +160,20 @@ class SessionHandler:
         elif tag == MEDIA_TAG_AUDIO:
             if is_valid_pcm_chunk(payload):
                 await self._gemini.send_audio(payload)
-        else:
-            logger.debug(f"Unknown media tag: {tag:#04x}")
 
     def _enqueue_audio(self, pcm_bytes: bytes) -> None:
-        """Callback from Gemini session — enqueue audio for forwarding to client."""
+        """Callback from Gemini session — enqueue audio for forwarding."""
         try:
             self._audio_queue.put_nowait(pcm_bytes)
         except asyncio.QueueFull:
             logger.debug("Audio queue full, dropping chunk")
 
     async def _forward_audio_loop(self) -> None:
-        """Forward Gemini audio responses to the WebSocket client as binary frames."""
+        """Forward Gemini audio to the WebSocket client as binary frames."""
         while True:
             try:
                 pcm_bytes = await asyncio.wait_for(self._audio_queue.get(), timeout=30.0)
-                # Tag byte 0x02 = audio
-                await self._ws.send_bytes(bytes([MEDIA_TAG_AUDIO]) + pcm_bytes)
+                await self._ws_send(bytes([MEDIA_TAG_AUDIO]) + pcm_bytes, is_text=False)
             except TimeoutError:
                 continue
             except WebSocketDisconnect:
@@ -152,31 +182,54 @@ class SessionHandler:
                 logger.warning(f"Audio forward error: {e}")
                 break
 
-    def _notify_reconnecting(self) -> None:
-        """Called by GeminiSession when GoAway received — notify client."""
+    async def _ws_send(self, payload: str | bytes, *, is_text: bool) -> None:
+        """Serialize all WebSocket sends to prevent concurrent write races."""
+        async with self._ws_send_lock:
+            try:
+                if is_text:
+                    await self._ws.send_text(payload)  # type: ignore[arg-type]
+                else:
+                    await self._ws.send_bytes(payload)  # type: ignore[arg-type]
+            except Exception as e:
+                logger.debug(f"WebSocket send error: {e}")
+
+    def _notify_session_handle(self, handle: str) -> None:
+        """Emit the latest session handle to the client for cross-reconnect persistence."""
         asyncio.create_task(
-            self._ws.send_text(ReconnectingMessage().model_dump_json()),
+            self._ws_send(SessionHandleMessage(handle=handle).model_dump_json(), is_text=True),
+            name="notify-handle",
+        )
+
+    def _notify_reconnecting(self) -> None:
+        """Called by GeminiSession when GoAway received."""
+        asyncio.create_task(
+            self._ws_send(ReconnectingMessage().model_dump_json(), is_text=True),
             name="notify-reconnecting",
         )
 
     def _notify_reconnected(self) -> None:
         """Called by GeminiSession after successful reconnection."""
         asyncio.create_task(
-            self._ws.send_text(ReconnectedMessage().model_dump_json()),
+            self._ws_send(ReconnectedMessage().model_dump_json(), is_text=True),
             name="notify-reconnected",
         )
 
     async def _send_error(self, message: str) -> None:
         """Send error message to client."""
-        try:
-            await self._ws.send_text(ErrorMessage(message=message).model_dump_json())
-        except Exception:
-            pass
+        await self._ws_send(ErrorMessage(message=message).model_dump_json(), is_text=True)
 
     async def _cleanup(self) -> None:
-        """Clean up Gemini session on disconnect."""
+        """Cancel all background tasks and close Gemini session."""
+        if self._audio_forward_task and not self._audio_forward_task.done():
+            self._audio_forward_task.cancel()
+            try:
+                await self._audio_forward_task
+            except asyncio.CancelledError:
+                pass
+
         if self._gemini:
             await self._gemini.close()
+
         if self._gemini_task and not self._gemini_task.done():
             self._gemini_task.cancel()
             try:
