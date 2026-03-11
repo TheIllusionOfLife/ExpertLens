@@ -5,6 +5,10 @@
 import { useCallback, useEffect, useRef } from "react";
 
 const OUTPUT_SAMPLE_RATE = 24000;
+// Max seconds of audio to buffer ahead. Gemini sends chunks faster than
+// real-time, but with barge-in clearing the queue on interruption, we
+// don't need a large buffer. 15s balances long responses vs responsiveness.
+const BUFFER_CAP_SECONDS = 15;
 
 export interface AudioPlaybackHandle {
   playChunk: (pcm: ArrayBuffer) => void;
@@ -24,6 +28,7 @@ export function AudioPlayback({ onHandle }: Props) {
     for (const node of activeNodesRef.current) {
       try {
         node.stop();
+        node.disconnect();
       } catch {
         // already stopped
       }
@@ -41,6 +46,11 @@ export function AudioPlayback({ onHandle }: Props) {
     const ctx = ctxRef.current;
     if (ctx.state === "suspended") ctx.resume();
 
+    const now = ctx.currentTime;
+    if (nextPlayTimeRef.current - now > BUFFER_CAP_SECONDS) {
+      return;
+    }
+
     // PCM is 16-bit signed little-endian at 24kHz
     const int16 = new Int16Array(pcm);
     const float32 = new Float32Array(int16.length);
@@ -55,14 +65,6 @@ export function AudioPlayback({ onHandle }: Props) {
     source.buffer = audioBuffer;
     source.connect(ctx.destination);
 
-    // Cap buffered audio at 3s to prevent latency drift and memory growth
-    const MAX_BUFFER_SECONDS = 3;
-    const now = ctx.currentTime;
-    if (nextPlayTimeRef.current - now > MAX_BUFFER_SECONDS) {
-      // Too much queued — drop this chunk to catch up
-      return;
-    }
-
     // Schedule with small jitter buffer (20ms) to smooth network variance
     const startAt = Math.max(now + 0.02, nextPlayTimeRef.current);
     source.start(startAt);
@@ -70,6 +72,7 @@ export function AudioPlayback({ onHandle }: Props) {
 
     activeNodesRef.current.push(source);
     source.onended = () => {
+      source.disconnect();
       activeNodesRef.current = activeNodesRef.current.filter((n) => n !== source);
     };
   }, []);

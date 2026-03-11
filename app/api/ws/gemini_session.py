@@ -50,6 +50,7 @@ class GeminiLiveSession:
         on_session_handle: Callable[[str], None] | None = None,
         on_reconnecting: Callable[[], None] | None = None,
         on_reconnected: Callable[[], None] | None = None,
+        on_interrupted: Callable[[], None] | None = None,
     ):
         self._system_instruction = system_instruction
         self._coach_id = coach_id
@@ -58,6 +59,7 @@ class GeminiLiveSession:
         self._on_session_handle = on_session_handle
         self._on_reconnecting = on_reconnecting
         self._on_reconnected = on_reconnected
+        self._on_interrupted = on_interrupted
 
         self._client = genai.Client(api_key=settings.gemini_api_key)
         self._session: Any = None
@@ -91,11 +93,7 @@ class GeminiLiveSession:
                 sliding_window=types.SlidingWindow(),
             ),
             session_resumption=resumption_config,
-            speech_config=types.SpeechConfig(
-                voice_config=types.VoiceConfig(
-                    prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name="Aoede")
-                )
-            ),
+            speech_config=types.SpeechConfig(),
             tools=self._build_tools(),
         )
 
@@ -190,17 +188,48 @@ class GeminiLiveSession:
                 self._on_reconnected()
 
             try:
-                async for response in session.receive():
-                    await self._handle_response(response)
-                    if self._reconnect_requested:
-                        # Exit receive loop cleanly so the async with can close
-                        break
+                logger.info("Starting receive loop")
+                # session.receive() yields messages for one model turn then
+                # exhausts.  Wrap in an outer loop so we keep listening for
+                # subsequent turns (user speaks again → new model turn).
+                while not self._closed and not self._reconnect_requested:
+                    async for response in session.receive():
+                        await self._handle_response(response)
+                        if self._reconnect_requested or self._closed:
+                            break
+                    logger.debug("receive() iterator exhausted, re-entering for next turn")
+            except Exception:
+                logger.exception("Receive loop error")
+                raise
             finally:
+                logger.info("Receive loop finished, cleaning up")
                 self._state.is_connected = False
                 self._session = None
 
     async def _handle_response(self, response: Any) -> None:
         """Dispatch a response from Gemini to the appropriate handler."""
+        # Log response types for diagnostics
+        parts = []
+        if hasattr(response, "session_resumption_update") and response.session_resumption_update:
+            parts.append("resumption")
+        if hasattr(response, "go_away") and response.go_away:
+            parts.append("go_away")
+        sc = getattr(response, "server_content", None)
+        if sc:
+            if sc.model_turn and sc.model_turn.parts:
+                part_types = []
+                for p in sc.model_turn.parts:
+                    if hasattr(p, "inline_data") and p.inline_data:
+                        part_types.append(f"audio({len(p.inline_data.data)}b)")
+                    elif hasattr(p, "text") and p.text:
+                        part_types.append("text")
+                parts.append(f"model_turn[{','.join(part_types)}]")
+            if sc.turn_complete:
+                parts.append("turn_complete")
+        if hasattr(response, "tool_call") and response.tool_call:
+            parts.append("tool_call")
+        logger.info(f"Response: {' | '.join(parts) if parts else 'empty'}")
+
         # Session resumption handle — save and emit to client for persistence
         if hasattr(response, "session_resumption_update") and response.session_resumption_update:
             update = response.session_resumption_update
@@ -217,10 +246,19 @@ class GeminiLiveSession:
             self._reconnect_requested = True
             return
 
-        # Audio response data
-        if hasattr(response, "data") and response.data:
-            if self._on_audio_response:
-                self._on_audio_response(response.data)
+        # Barge-in: model turn was interrupted by user speech
+        sc = getattr(response, "server_content", None)
+        if sc and getattr(sc, "interrupted", False):
+            logger.info("Model interrupted by user (barge-in)")
+            if self._on_interrupted:
+                self._on_interrupted()
+
+        # Audio response data — extract from inline_data parts directly
+        if sc and sc.model_turn and sc.model_turn.parts:
+            for part in sc.model_turn.parts:
+                if hasattr(part, "inline_data") and part.inline_data and part.inline_data.data:
+                    if self._on_audio_response:
+                        self._on_audio_response(part.inline_data.data)
 
         # Tool calls
         if hasattr(response, "tool_call") and response.tool_call:

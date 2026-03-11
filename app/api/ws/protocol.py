@@ -13,6 +13,7 @@ class MessageType(StrEnum):
     # Server → Client
     SESSION_STARTED = "session_started"
     SESSION_HANDLE = "session_handle"  # Emit latest resumption handle to client
+    INTERRUPTED = "interrupted"  # Model turn interrupted by user barge-in
     RECONNECTING = "reconnecting"
     RECONNECTED = "reconnected"
     ERROR = "error"
@@ -54,6 +55,10 @@ class ReconnectingMessage(BaseModel):
 
 class ReconnectedMessage(BaseModel):
     type: MessageType = MessageType.RECONNECTED
+
+
+class InterruptedMessage(BaseModel):
+    type: MessageType = MessageType.INTERRUPTED
 
 
 class ErrorMessage(BaseModel):

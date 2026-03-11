@@ -5,6 +5,7 @@ export type MessageType =
   | "end_session"
   | "session_started"
   | "session_handle"
+  | "interrupted"
   | "reconnecting"
   | "reconnected"
   | "error";
@@ -33,6 +34,10 @@ export interface SessionHandleMessage {
   handle: string;
 }
 
+export interface InterruptedMessage {
+  type: "interrupted";
+}
+
 export interface ReconnectingMessage {
   type: "reconnecting";
 }
@@ -49,6 +54,7 @@ export interface ErrorMessage {
 export type ServerMessage =
   | SessionStartedMessage
   | SessionHandleMessage
+  | InterruptedMessage
   | ReconnectingMessage
   | ReconnectedMessage
   | ErrorMessage;

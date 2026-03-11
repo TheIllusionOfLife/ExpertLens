@@ -2,6 +2,8 @@ import { getCoaches } from "@/lib/api-client";
 import type { Coach } from "@/types/coach";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardPage() {
   let coaches: Coach[] = [];
   try {

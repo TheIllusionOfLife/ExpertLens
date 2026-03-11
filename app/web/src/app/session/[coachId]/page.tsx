@@ -45,8 +45,9 @@ export default function LiveSessionPage() {
 
   const handleAudioChunk = useCallback((pcm: ArrayBuffer) => {
     wsRef.current?.sendAudio(pcm);
-    // User speaking = barge-in: clear playback queue
-    playbackRef.current?.clearQueue();
+    // Barge-in is handled server-side by Gemini's native VAD —
+    // no client-side clearQueue here (mic sends chunks constantly,
+    // including silence, which would kill playback every ~100ms).
   }, []);
 
   const handleAudioResponse = useCallback((pcm: ArrayBuffer) => {
@@ -69,7 +70,10 @@ export default function LiveSessionPage() {
       coachId,
       savedHandle: undefined,
       onMessage: (msg) => {
-        if (msg.type === "error") {
+        if (msg.type === "interrupted") {
+          // Barge-in: user spoke while model was speaking — stop stale audio
+          playbackRef.current?.clearQueue();
+        } else if (msg.type === "error") {
           console.error("Session error:", msg.message);
         }
       },

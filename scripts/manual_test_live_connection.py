@@ -15,7 +15,7 @@ load_dotenv()
 from google import genai  # noqa: E402
 from google.genai import types  # noqa: E402
 
-MODEL = os.getenv("GEMINI_LIVE_MODEL", "gemini-2.5-flash-live-preview")
+MODEL = os.getenv("GEMINI_LIVE_MODEL", "gemini-2.5-flash-native-audio-latest")
 API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 if not API_KEY:
