@@ -1,8 +1,11 @@
 FROM oven/bun:1.2-slim AS builder
 WORKDIR /app
-COPY package.json bun.lockb* ./
+COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
 COPY . .
+# NEXT_PUBLIC_* vars are inlined at build time — must be passed as a build arg.
+ARG NEXT_PUBLIC_API_URL=http://localhost:8000
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN bun run build
 
 FROM oven/bun:1.2-slim AS runner

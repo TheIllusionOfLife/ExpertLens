@@ -43,31 +43,32 @@ steps:
     waitFor: ["build-frontend"]
     id: push-frontend
 
-  # Deploy backend to Cloud Run
+  # Deploy backend to Cloud Run (update image only — Terraform manages all other config)
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: gcloud
     args:
       - run
-      - deploy
+      - services
+      - update
       - expertlens-backend
       - "--image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/expertlens/backend:${SHORT_SHA}"
       - "--region=${_REGION}"
-      - "--platform=managed"
-      - "--timeout=3600"
+      - "--project=${PROJECT_ID}"
       - "--quiet"
     waitFor: ["push-backend"]
     id: deploy-backend
 
-  # Deploy frontend to Cloud Run
+  # Deploy frontend to Cloud Run (update image only — Terraform manages all other config)
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: gcloud
     args:
       - run
-      - deploy
+      - services
+      - update
       - expertlens-frontend
       - "--image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/expertlens/frontend:${SHORT_SHA}"
       - "--region=${_REGION}"
-      - "--platform=managed"
+      - "--project=${PROJECT_ID}"
       - "--quiet"
     waitFor: ["push-frontend"]
     id: deploy-frontend
