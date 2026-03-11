@@ -17,6 +17,7 @@ from app.api.ws.protocol import (
     MEDIA_TAG_AUDIO,
     MEDIA_TAG_IMAGE,
     ErrorMessage,
+    InterruptedMessage,
     MessageType,
     ReconnectedMessage,
     ReconnectingMessage,
@@ -112,6 +113,7 @@ class SessionHandler:
             on_session_handle=self._notify_session_handle,
             on_reconnecting=self._notify_reconnecting,
             on_reconnected=self._notify_reconnected,
+            on_interrupted=self._notify_interrupted,
         )
         self._gemini = gemini
 
@@ -139,6 +141,18 @@ class SessionHandler:
         self._audio_forward_task = asyncio.create_task(
             self._forward_audio_loop(), name="audio-forward"
         )
+
+        # Monitor the Gemini task so we know if it dies
+        self._gemini_task.add_done_callback(self._on_gemini_task_done)
+
+    def _on_gemini_task_done(self, task: asyncio.Task) -> None:
+        """Log when the Gemini background task finishes."""
+        if task.cancelled():
+            logger.info("Gemini task cancelled")
+        elif task.exception():
+            logger.error(f"Gemini task failed: {task.exception()}")
+        else:
+            logger.warning("Gemini task finished (receive loop ended)")
 
     async def _run_media_loop(self) -> None:
         """Receive binary media frames (and control messages) from client."""
@@ -227,6 +241,19 @@ class SessionHandler:
         asyncio.create_task(
             self._ws_send(SessionHandleMessage(handle=handle).model_dump_json(), is_text=True),
             name="notify-handle",
+        )
+
+    def _notify_interrupted(self) -> None:
+        """Called by GeminiSession when model turn is interrupted by user barge-in."""
+        # Flush pending audio so the client doesn't keep playing stale audio
+        while not self._audio_queue.empty():
+            try:
+                self._audio_queue.get_nowait()
+            except asyncio.QueueEmpty:
+                break
+        asyncio.create_task(
+            self._ws_send(InterruptedMessage().model_dump_json(), is_text=True),
+            name="notify-interrupted",
         )
 
     def _notify_reconnecting(self) -> None:
