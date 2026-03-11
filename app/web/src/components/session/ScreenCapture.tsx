@@ -44,6 +44,10 @@ export function ScreenCapture({ active, onFrame, onStopped }: Props) {
       prevActiveRef.current = true;
       return () => {
         cancelled = true;
+        prevActiveRef.current = false;
+        // Stop any running capture so deactivation works even when cleanup fires
+        handleRef.current?.stop();
+        handleRef.current = null;
       };
     }
 

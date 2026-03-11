@@ -3,7 +3,7 @@
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class MessageType(StrEnum):
@@ -28,6 +28,7 @@ MAX_AUDIO_BYTES = 64 * 1024  # 64 KB
 
 
 class StartSessionMessage(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     type: MessageType = MessageType.START_SESSION
     coach_id: str
     session_handle: str | None = None  # For resumption

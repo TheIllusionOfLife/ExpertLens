@@ -5,7 +5,10 @@ import logging
 
 from fastapi import WebSocket, WebSocketDisconnect
 
+from agent.prompts.base import build_system_instruction_from_firestore
 from app.api.config import settings
+from app.api.db.session_repo import create_session as create_fs_session
+from app.api.db.session_repo import end_session as end_fs_session
 from app.api.ws.audio import is_valid_pcm_chunk
 from app.api.ws.gemini_session import GeminiLiveSession
 from app.api.ws.protocol import (
@@ -19,6 +22,7 @@ from app.api.ws.protocol import (
     ReconnectingMessage,
     SessionHandleMessage,
     SessionStartedMessage,
+    StartSessionMessage,
     parse_control_message,
 )
 
@@ -35,6 +39,7 @@ class SessionHandler:
         self._audio_queue: asyncio.Queue[bytes] = asyncio.Queue(maxsize=100)
         self._gemini_task: asyncio.Task | None = None
         self._audio_forward_task: asyncio.Task | None = None
+        self._firestore_session_id: str | None = None
         # Serialize all WebSocket writes to prevent concurrent send race conditions
         self._ws_send_lock = asyncio.Lock()
 
@@ -71,24 +76,38 @@ class SessionHandler:
     async def _wait_for_start(self) -> None:
         """Wait for start_session control message, open Gemini session, confirm to client."""
         raw = await self._ws.receive_text()
-        msg = parse_control_message(raw)
+        try:
+            msg = StartSessionMessage.model_validate_json(raw)
+        except Exception as e:
+            raise ValueError(f"Invalid start_session message: {e}") from e
 
-        if msg.get("type") != MessageType.START_SESSION:
-            raise ValueError(f"Expected start_session, got: {msg.get('type')}")
+        if msg.coach_id != self._coach_id:
+            raise ValueError(f"coach_id mismatch: path={self._coach_id!r}, body={msg.coach_id!r}")
 
-        coach_id = msg.get("coach_id", self._coach_id)
-        saved_handle = msg.get("session_handle")
+        # Always use the path param as authoritative identity — no client-supplied user_id.
+        # In this demo there is no auth layer; coach_id acts as the per-coach user scope.
+        coach_id = self._coach_id
+        saved_handle = msg.session_handle
+        user_id = self._coach_id
 
-        from agent.prompts.base import build_system_instruction_from_firestore
-
-        system_instruction = await build_system_instruction_from_firestore(
-            coach_id=coach_id, user_id=coach_id
+        # Build system instruction and create Firestore session record in parallel.
+        system_instruction, fs_session = await asyncio.gather(
+            build_system_instruction_from_firestore(coach_id=coach_id, user_id=user_id),
+            create_fs_session(coach_id),
+            return_exceptions=True,
         )
+        if isinstance(fs_session, BaseException):
+            logger.warning(f"Failed to create Firestore session: {fs_session}")
+        else:
+            self._firestore_session_id = fs_session.session_id
+        if isinstance(system_instruction, BaseException):
+            raise system_instruction
+        assert isinstance(system_instruction, str)
 
         gemini = GeminiLiveSession(
             system_instruction=system_instruction,
             coach_id=coach_id,
-            user_id=coach_id,
+            user_id=user_id,
             on_audio_response=self._enqueue_audio,
             on_session_handle=self._notify_session_handle,
             on_reconnecting=self._notify_reconnecting,
@@ -105,12 +124,14 @@ class SessionHandler:
         # Wait for Gemini to confirm connection before telling the client
         try:
             await asyncio.wait_for(gemini.connected_event.wait(), timeout=10.0)
-        except TimeoutError:
+        except TimeoutError as e:
             self._gemini_task.cancel()
-            raise RuntimeError("Gemini session failed to connect within 10 seconds")
+            raise RuntimeError("Gemini session failed to connect within 10 seconds") from e
 
         await self._ws_send(
-            SessionStartedMessage(session_id=f"session-{coach_id}").model_dump_json(),
+            SessionStartedMessage(
+                session_id=self._firestore_session_id or f"session-{coach_id}"
+            ).model_dump_json(),
             is_text=True,
         )
 
@@ -244,6 +265,12 @@ class SessionHandler:
                 await self._gemini_task
             except asyncio.CancelledError:
                 pass
+
+        if self._firestore_session_id:
+            try:
+                await end_fs_session(self._firestore_session_id, summary="", last_topics=[])
+            except Exception as e:
+                logger.warning(f"Failed to end Firestore session: {e}")
 
 
 async def websocket_session_endpoint(websocket: WebSocket, coach_id: str) -> None:

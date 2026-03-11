@@ -64,9 +64,10 @@ export default function LiveSessionPage() {
   }, []);
 
   const startSession = useCallback(() => {
+    if (wsRef.current) return;
     const ws = new WsClient({
       coachId,
-      savedHandle: wsRef.current?.currentHandle,
+      savedHandle: undefined,
       onMessage: (msg) => {
         if (msg.type === "error") {
           console.error("Session error:", msg.message);
@@ -101,13 +102,13 @@ export default function LiveSessionPage() {
   const coachName = coach?.display_name ?? coachId;
 
   return (
-    <div className="min-h-screen bg-[--background] flex flex-col">
+    <div className="min-h-screen bg-(--background) flex flex-col">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-[--border]">
+      <header className="flex items-center justify-between px-6 py-4 border-b border-(--border)">
         <button
           type="button"
           onClick={() => router.push("/")}
-          className="text-[--muted] hover:text-[--foreground] text-sm transition-colors"
+          className="text-(--muted) hover:text-(--foreground) text-sm transition-colors"
         >
           ← Dashboard
         </button>
@@ -128,10 +129,10 @@ export default function LiveSessionPage() {
           <div className="text-center space-y-4 max-w-md">
             <div className="text-5xl">{coach?.icon ?? "🎯"}</div>
             <h1 className="text-2xl font-semibold">{coachName}</h1>
-            <p className="text-[--muted] text-sm leading-relaxed">
+            <p className="text-(--muted) text-sm leading-relaxed">
               {coach?.persona ?? "Your AI coaching session"}
             </p>
-            <div className="text-xs text-[--muted] space-y-1">
+            <div className="text-xs text-(--muted) space-y-1">
               <p>
                 1. Click <strong>Start Session</strong>
               </p>
@@ -141,7 +142,7 @@ export default function LiveSessionPage() {
             <button
               type="button"
               onClick={startSession}
-              className="mt-4 px-6 py-3 bg-[--accent] hover:bg-[--accent-hover] text-white rounded-lg font-medium transition-colors"
+              className="mt-4 px-6 py-3 bg-(--accent) hover:bg-(--accent-hover) text-white rounded-lg font-medium transition-colors"
             >
               Start Session
             </button>
@@ -151,7 +152,7 @@ export default function LiveSessionPage() {
         {status !== "disconnected" && (
           <div className="w-full max-w-2xl space-y-4">
             {!screenSharing && status === "connected" && (
-              <div className="p-4 bg-[--surface-elevated] border border-[--border] rounded-lg text-center text-sm text-[--muted]">
+              <div className="p-4 bg-(--surface-elevated) border border-(--border) rounded-lg text-center text-sm text-(--muted)">
                 Share your {coach?.software_name ?? "app"} window to enable visual coaching.
                 <br />
                 <span className="text-xs">
@@ -161,18 +162,18 @@ export default function LiveSessionPage() {
             )}
 
             {screenSharing && (
-              <div className="p-3 bg-[--success]/10 border border-[--success]/20 rounded-lg text-sm text-[--success] text-center">
+              <div className="p-3 bg-(--success)/10 border border-(--success)/20 rounded-lg text-sm text-(--success) text-center">
                 📺 Screen shared — coach can see your {coach?.software_name ?? "app"}
               </div>
             )}
 
             {status === "reconnecting" && (
-              <div className="p-3 bg-[--warning]/10 border border-[--warning]/20 rounded-lg text-sm text-[--warning] text-center">
+              <div className="p-3 bg-(--warning)/10 border border-(--warning)/20 rounded-lg text-sm text-(--warning) text-center">
                 ⟳ Reconnecting… your session context is preserved
               </div>
             )}
 
-            <div className="p-4 bg-[--surface] border border-[--border] rounded-lg text-xs text-[--muted] space-y-1">
+            <div className="p-4 bg-(--surface) border border-(--border) rounded-lg text-xs text-(--muted) space-y-1">
               <p>
                 💡 <strong>Tips:</strong>
               </p>
@@ -199,7 +200,7 @@ export default function LiveSessionPage() {
           <button
             type="button"
             onClick={() => setScreenSharing(true)}
-            className="px-4 py-2.5 bg-[--surface-elevated] hover:bg-[--border] border border-[--border] rounded-lg text-sm font-medium transition-colors"
+            className="px-4 py-2.5 bg-(--surface-elevated) hover:bg-(--border) border border-(--border) rounded-lg text-sm font-medium transition-colors"
           >
             🖥 Share Screen
           </button>

@@ -91,15 +91,15 @@ export function PreferencesForm({ coachId, initial }: Props) {
                 onClick={() => set(key, opt.value as UserPreferences[typeof key])}
                 className={`px-3 py-1.5 rounded-lg border text-sm transition-colors ${
                   prefs[key] === opt.value
-                    ? "border-[--accent] bg-[--accent]/10 text-[--accent]"
-                    : "border-[--border] text-[--muted] hover:border-[--accent]/40 hover:text-[--foreground]"
+                    ? "border-(--accent) bg-(--accent)/10 text-(--accent)"
+                    : "border-(--border) text-(--muted) hover:border-(--accent)/40 hover:text-(--foreground)"
                 }`}
               >
                 {opt.label}
               </button>
             ))}
           </div>
-          <p className="text-xs text-[--muted] mt-1">
+          <p className="text-xs text-(--muted) mt-1">
             {options.find((o) => o.value === prefs[key])?.hint}
           </p>
         </div>
@@ -109,7 +109,7 @@ export function PreferencesForm({ coachId, initial }: Props) {
         type="button"
         onClick={handleSave}
         disabled={saving}
-        className="px-5 py-2.5 bg-[--accent] hover:bg-[--accent-hover] disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
+        className="px-5 py-2.5 bg-(--accent) hover:bg-(--accent-hover) disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
       >
         {saved ? "✓ Saved" : saving ? "Saving…" : "Save Preferences"}
       </button>
