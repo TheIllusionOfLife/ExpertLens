@@ -1,4 +1,5 @@
 """WebSocket message protocol: JSON text frames for control plane, binary frames for media."""
+
 from enum import StrEnum
 from typing import Any
 
@@ -22,8 +23,8 @@ MEDIA_TAG_IMAGE = 0x01
 MEDIA_TAG_AUDIO = 0x02
 
 # Max payload sizes to guard against oversized frames
-MAX_IMAGE_BYTES = 2 * 1024 * 1024   # 2 MB
-MAX_AUDIO_BYTES = 64 * 1024          # 64 KB
+MAX_IMAGE_BYTES = 2 * 1024 * 1024  # 2 MB
+MAX_AUDIO_BYTES = 64 * 1024  # 64 KB
 
 
 class StartSessionMessage(BaseModel):

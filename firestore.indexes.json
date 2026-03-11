@@ -1,0 +1,30 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "knowledge_chunks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "software_name", "order": "ASCENDING" },
+        { "fieldPath": "topic", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "knowledge_chunks",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "software_name", "order": "ASCENDING" },
+        { "fieldPath": "difficulty_level", "order": "ASCENDING" },
+        { "fieldPath": "topic", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "coach_id", "order": "ASCENDING" },
+        { "fieldPath": "started_at", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

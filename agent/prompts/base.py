@@ -1,50 +1,49 @@
-"""Base system prompt builder: assembles persona + policy + knowledge for a coaching session."""
+"""System instruction builder: assembles persona + coach profile + preferences + knowledge."""
 
-BASE_PERSONA = """You are ExpertLens, a real-time AI coach for desktop software.
-You watch the user's screen and listen to their voice to provide instant, accurate guidance.
+import logging
 
-## Core Behavior
-- Observe what's visible on screen before responding
-- Keep responses SHORT: 1-3 sentences maximum unless the user asks for detail
-- Response template: (1) What you see → (2) The issue/action → (3) Next step
-- Prioritize keyboard shortcuts over menu navigation
-- Never guess — if you can't see enough context, ask the user to show more of the screen
+from agent.prompts.templates.affinity import AFFINITY_PROMPT
+from agent.prompts.templates.blender import BLENDER_PROMPT
+from agent.prompts.templates.system import SYSTEM_PROMPT
+from agent.prompts.templates.unreal import UNREAL_PROMPT
 
-## Response Policy
-- Speak naturally, as if talking to someone beside you
-- Avoid lengthy explanations unless asked
-- When you see an error: name it, explain why it happens, give the fix
-- When asked "how do I...": give the direct answer first, context second
-"""
+logger = logging.getLogger(__name__)
 
-BLENDER_COACH = """
-## Software Context: Blender 4.x
-You are an expert Blender coach. You know every shortcut, modifier, and workflow.
-Focus areas: 3D modeling, UV unwrapping, materials, rendering, animation basics.
-Always prefer keyboard shortcuts. Mention the shortcut BEFORE the menu path.
-"""
-
-AFFINITY_PHOTO_COACH = """
-## Software Context: Affinity Photo 2
-You are an expert Affinity Photo coach. Focus on non-destructive editing workflows.
-Focus areas: layers, adjustments, selections, retouching, export.
-Mention pixel vs vector persona context when relevant.
-"""
-
-UNREAL_ENGINE_COACH = """
-## Software Context: Unreal Engine 5
-You are an expert Unreal Engine coach. Focus on practical game development tasks.
-Focus areas: Blueprints, materials, lighting, level design, asset management.
-Distinguish between Blueprint visual scripting and C++ when giving advice.
-"""
-
-COACH_CONTEXT: dict[str, str] = {
-    "blender": BLENDER_COACH,
-    "affinity": AFFINITY_PHOTO_COACH,
-    "affinity_photo": AFFINITY_PHOTO_COACH,
-    "unreal": UNREAL_ENGINE_COACH,
-    "unreal_engine": UNREAL_ENGINE_COACH,
+COACH_TEMPLATES: dict[str, str] = {
+    "blender": BLENDER_PROMPT,
+    "affinity": AFFINITY_PROMPT,
+    "affinity_photo": AFFINITY_PROMPT,
+    "unreal": UNREAL_PROMPT,
+    "unreal_engine": UNREAL_PROMPT,
 }
+
+# Preference → instruction mapping
+PREF_INSTRUCTIONS: dict[str, dict[str, str]] = {
+    "interaction_style": {
+        "shortcuts": "ALWAYS state the keyboard shortcut before any menu path.",
+        "mouse": "Guide primarily via menus and on-screen buttons; shortcuts are secondary.",
+        "both": "Provide both keyboard shortcuts and menu paths.",
+    },
+    "tone": {
+        "concise_expert": "Be direct and precise. Avoid filler words or lengthy explanations.",
+        "calm_mentor": "Speak in a calm, patient, encouraging tone. Build confidence.",
+        "enthusiastic": "Be energetic and positive. Celebrate progress.",
+    },
+    "depth": {
+        "short": "Keep ALL responses to 1-2 sentences maximum.",
+        "medium": "Aim for 2-4 sentences. Expand only when asked.",
+        "detailed": "Provide thorough explanations including context and alternatives.",
+    },
+    "proactivity": {
+        "reactive": "Only respond when the user asks a question. Do not comment unprompted.",
+        "balanced": "Respond to questions, and occasionally mention obvious issues you see.",
+        "proactive": "Actively comment on what you see on screen, even without a question.",
+    },
+}
+
+# Context budget: system instruction knowledge capped to preserve token budget
+# for image frames + conversation. 128k total; ~8k (~2k tokens) for knowledge.
+MAX_KNOWLEDGE_CHARS = 8000
 
 
 def build_system_instruction(
@@ -55,38 +54,82 @@ def build_system_instruction(
     """
     Assemble the full system instruction for a coaching session.
 
-    Knowledge is capped at ~5-10 pages to leave room for image frames
-    and conversation history in the 128k token context window.
+    Args:
+        coach_id: Used to look up the software-specific prompt template.
+        user_preferences: Dict of preference keys → values (from Firestore or defaults).
+        knowledge_snippets: List of markdown strings from seed_sources (context stuffing).
     """
-    parts = [BASE_PERSONA]
+    parts = [SYSTEM_PROMPT]
 
     # Coach-specific context
     software_key = coach_id.strip().lower().replace("-", "_").replace(" ", "_")
-    coach_context = COACH_CONTEXT.get(software_key, "")
-    if coach_context:
-        parts.append(coach_context)
+    coach_template = COACH_TEMPLATES.get(software_key, "")
+    if coach_template:
+        parts.append(coach_template)
 
-    # User preferences (compact)
+    # User preferences → behavioral instructions
     if user_preferences:
-        prefs = user_preferences
         pref_lines = []
-        if prefs.get("interaction_style") == "shortcuts":
-            pref_lines.append("- Always lead with keyboard shortcuts")
-        if prefs.get("depth") == "short":
-            pref_lines.append("- Keep responses to 1-2 sentences maximum")
-        if prefs.get("proactivity") == "proactive":
-            pref_lines.append("- Proactively comment on what you see even without a question")
-        if prefs.get("tone") == "calm_mentor":
-            pref_lines.append("- Use a calm, patient, encouraging tone")
+        for pref_key, pref_map in PREF_INSTRUCTIONS.items():
+            value = user_preferences.get(pref_key)
+            if value and value in pref_map:
+                pref_lines.append(f"- {pref_map[value]}")
         if pref_lines:
-            parts.append("## User Preferences\n" + "\n".join(pref_lines))
+            parts.append("## Session-Specific Instructions\n" + "\n".join(pref_lines))
 
-    # Curated knowledge snippets (context stuffing — capped)
+    # Curated knowledge snippets (capped for context budget)
     if knowledge_snippets:
-        # Limit total knowledge to ~8000 chars (~2000 tokens) to preserve context budget
         combined = "\n\n".join(knowledge_snippets)
-        if len(combined) > 8000:
-            combined = combined[:8000] + "\n[...truncated for context budget]"
+        if len(combined) > MAX_KNOWLEDGE_CHARS:
+            combined = combined[:MAX_KNOWLEDGE_CHARS] + "\n[...additional knowledge via tool]"
         parts.append(f"## Knowledge Reference\n{combined}")
 
     return "\n\n".join(parts)
+
+
+async def build_system_instruction_from_firestore(coach_id: str, user_id: str = "default") -> str:
+    """
+    Build system instruction by loading coach data + knowledge from Firestore.
+    Falls back gracefully if Firestore is unavailable.
+    """
+    # Load in parallel
+    import asyncio
+
+    from app.api.db.coach_repo import get_coach
+    from app.api.db.knowledge_repo import get_all_knowledge_for_software
+    from app.api.db.preferences_repo import get_preferences
+
+    coach_task = asyncio.create_task(get_coach(coach_id))
+    prefs_task = asyncio.create_task(get_preferences(user_id))
+
+    coach = None
+    user_prefs = None
+    knowledge_snippets: list[str] = []
+
+    try:
+        coach = await coach_task
+    except Exception as e:
+        logger.warning(f"Failed to load coach {coach_id} from Firestore: {e}")
+
+    try:
+        prefs = await prefs_task
+        user_prefs = prefs.model_dump() if prefs else None
+    except Exception as e:
+        logger.warning(f"Failed to load preferences for {user_id}: {e}")
+
+    try:
+        software_name = (
+            coach.software_name.lower().replace(" ", "_")
+            if coach
+            else coach_id.lower().replace("-", "_").replace(" ", "_")
+        )
+        chunks = await get_all_knowledge_for_software(software_name)
+        knowledge_snippets = [c.content for c in chunks]
+    except Exception as e:
+        logger.warning(f"Failed to load knowledge for {coach_id}: {e}")
+
+    return build_system_instruction(
+        coach_id=coach_id,
+        user_preferences=user_prefs,
+        knowledge_snippets=knowledge_snippets,
+    )

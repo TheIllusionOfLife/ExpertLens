@@ -26,15 +26,13 @@ def split_audio_chunks(data: bytes, chunk_size: int = MAX_CHUNK_BYTES) -> list[b
     """Split a large audio buffer into smaller chunks for streaming."""
     if chunk_size <= 0 or chunk_size % 2 != 0:
         raise ValueError(f"chunk_size must be a positive even number, got {chunk_size}")
+    # Trim to even length so every chunk boundary is on a sample boundary
+    valid_len = len(data) - len(data) % 2
     chunks = []
     offset = 0
-    while offset < len(data):
-        end = min(offset + chunk_size, len(data))
-        # Ensure chunk boundary is on a sample boundary (2 bytes per sample)
-        if (end - offset) % 2 != 0:
-            end -= 1
-        if end > offset:
-            chunks.append(data[offset:end])
+    while offset < valid_len:
+        end = min(offset + chunk_size, valid_len)
+        chunks.append(data[offset:end])
         offset = end
     return chunks
 

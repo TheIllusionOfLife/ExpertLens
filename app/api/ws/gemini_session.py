@@ -44,12 +44,16 @@ class GeminiLiveSession:
     def __init__(
         self,
         system_instruction: str,
+        coach_id: str = "default",
+        user_id: str = "default",
         on_audio_response: Callable[[bytes], None] | None = None,
         on_session_handle: Callable[[str], None] | None = None,
         on_reconnecting: Callable[[], None] | None = None,
         on_reconnected: Callable[[], None] | None = None,
     ):
         self._system_instruction = system_instruction
+        self._coach_id = coach_id
+        self._user_id = user_id
         self._on_audio_response = on_audio_response
         self._on_session_handle = on_session_handle
         self._on_reconnecting = on_reconnecting
@@ -224,17 +228,25 @@ class GeminiLiveSession:
 
     async def _handle_tool_call(self, tool_call: Any) -> None:
         """Handle function calls from Gemini."""
-        from agent.tools.knowledge import get_coach_knowledge_stub
-        from agent.tools.preferences import get_user_preferences_stub
+        from agent.tools.knowledge import get_coach_knowledge
+        from agent.tools.preferences import get_user_preferences
 
         function_calls = tool_call.function_calls if tool_call.function_calls else []
         responses = []
         for fc in function_calls:
             args = fc.args or {}
             if fc.name == "get_coach_knowledge":
-                result = get_coach_knowledge_stub(args.get("topic", ""))
+                # Normalize to canonical software_name (same rules as base.py prompt builder)
+                software_name = (
+                    self._coach_id.strip().lower().replace("-", "_").replace(" ", "_")
+                )
+                result = await get_coach_knowledge(
+                    software_name=software_name,
+                    topic=args.get("topic", ""),
+                )
             elif fc.name == "get_user_preferences":
-                result = get_user_preferences_stub(args.get("user_id", ""))
+                # Always use session user_id — ignore agent-supplied value to prevent injection
+                result = await get_user_preferences(user_id=self._user_id)
             else:
                 result = {"error": f"Unknown tool: {fc.name}"}
 
