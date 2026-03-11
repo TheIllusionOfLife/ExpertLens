@@ -19,6 +19,7 @@ from app.api.ws.protocol import (
     ReconnectingMessage,
     SessionHandleMessage,
     SessionStartedMessage,
+    StartSessionMessage,
     parse_control_message,
 )
 
@@ -72,16 +73,19 @@ class SessionHandler:
     async def _wait_for_start(self) -> None:
         """Wait for start_session control message, open Gemini session, confirm to client."""
         raw = await self._ws.receive_text()
-        msg = parse_control_message(raw)
+        try:
+            msg = StartSessionMessage.model_validate_json(raw)
+        except Exception as e:
+            raise ValueError(f"Invalid start_session message: {e}") from e
 
-        if msg.get("type") != MessageType.START_SESSION:
-            raise ValueError(f"Expected start_session, got: {msg.get('type')}")
+        if msg.coach_id != self._coach_id:
+            raise ValueError(f"coach_id mismatch: path={self._coach_id!r}, body={msg.coach_id!r}")
 
-        coach_id = msg.get("coach_id", self._coach_id)
-        saved_handle = msg.get("session_handle")
-        # user_id defaults to coach_id so frontend-saved preferences load correctly.
+        # Always use the path param as authoritative identity — no client-supplied user_id.
         # In this demo there is no auth layer; coach_id acts as the per-coach user scope.
-        user_id = msg.get("user_id", coach_id)
+        coach_id = self._coach_id
+        saved_handle = msg.session_handle
+        user_id = self._coach_id
 
         from agent.prompts.base import build_system_instruction_from_firestore
         from app.api.db.session_repo import create_session as create_fs_session
@@ -125,7 +129,9 @@ class SessionHandler:
             raise RuntimeError("Gemini session failed to connect within 10 seconds") from e
 
         await self._ws_send(
-            SessionStartedMessage(session_id=f"session-{coach_id}").model_dump_json(),
+            SessionStartedMessage(
+                session_id=self._firestore_session_id or f"session-{coach_id}"
+            ).model_dump_json(),
             is_text=True,
         )
 
