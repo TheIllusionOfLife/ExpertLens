@@ -145,6 +145,12 @@ class SessionHandler:
         # Monitor the Gemini task so we know if it dies
         self._gemini_task.add_done_callback(self._on_gemini_task_done)
 
+    @staticmethod
+    def _log_task_exception(task: asyncio.Task) -> None:
+        """Done callback for fire-and-forget tasks — log exceptions instead of silencing."""
+        if not task.cancelled() and task.exception():
+            logger.warning(f"Background task {task.get_name()} failed: {task.exception()}")
+
     def _on_gemini_task_done(self, task: asyncio.Task) -> None:
         """Log when the Gemini background task finishes."""
         if task.cancelled():
@@ -251,10 +257,11 @@ class SessionHandler:
                 self._audio_queue.get_nowait()
             except asyncio.QueueEmpty:
                 break
-        asyncio.create_task(
+        task = asyncio.create_task(
             self._ws_send(InterruptedMessage().model_dump_json(), is_text=True),
             name="notify-interrupted",
         )
+        task.add_done_callback(self._log_task_exception)
 
     def _notify_reconnecting(self) -> None:
         """Called by GeminiSession when GoAway received."""

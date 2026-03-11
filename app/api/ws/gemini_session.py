@@ -198,8 +198,8 @@ class GeminiLiveSession:
                         if self._reconnect_requested or self._closed:
                             break
                     logger.debug("receive() iterator exhausted, re-entering for next turn")
-            except Exception as e:
-                logger.error(f"Receive loop error: {e}")
+            except Exception:
+                logger.exception("Receive loop error")
                 raise
             finally:
                 logger.info("Receive loop finished, cleaning up")

@@ -5,6 +5,10 @@
 import { useCallback, useEffect, useRef } from "react";
 
 const OUTPUT_SAMPLE_RATE = 24000;
+// Max seconds of audio to buffer ahead. Gemini sends chunks faster than
+// real-time, but with barge-in clearing the queue on interruption, we
+// don't need a large buffer. 15s balances long responses vs responsiveness.
+const BUFFER_CAP_SECONDS = 15;
 
 export interface AudioPlaybackHandle {
   playChunk: (pcm: ArrayBuffer) => void;
@@ -42,10 +46,8 @@ export function AudioPlayback({ onHandle }: Props) {
     const ctx = ctxRef.current;
     if (ctx.state === "suspended") ctx.resume();
 
-    // Cap check BEFORE allocating resources — Gemini sends chunks faster
-    // than real-time, allow up to 30s of buffered speech
     const now = ctx.currentTime;
-    if (nextPlayTimeRef.current - now > 30) {
+    if (nextPlayTimeRef.current - now > BUFFER_CAP_SECONDS) {
       return;
     }
 
