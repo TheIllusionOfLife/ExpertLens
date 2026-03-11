@@ -91,11 +91,7 @@ class GeminiLiveSession:
                 sliding_window=types.SlidingWindow(),
             ),
             session_resumption=resumption_config,
-            speech_config=types.SpeechConfig(
-                voice_config=types.VoiceConfig(
-                    prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name="Aoede")
-                )
-            ),
+            speech_config=types.SpeechConfig(),
             tools=self._build_tools(),
         )
 
@@ -217,10 +213,14 @@ class GeminiLiveSession:
             self._reconnect_requested = True
             return
 
-        # Audio response data
-        if hasattr(response, "data") and response.data:
-            if self._on_audio_response:
-                self._on_audio_response(response.data)
+        # Audio response data — extract from inline_data parts directly
+        # (the convenience .data accessor mixes text/thought parts on native audio models)
+        sc = getattr(response, "server_content", None)
+        if sc and sc.model_turn and sc.model_turn.parts:
+            for part in sc.model_turn.parts:
+                if hasattr(part, "inline_data") and part.inline_data and part.inline_data.data:
+                    if self._on_audio_response:
+                        self._on_audio_response(part.inline_data.data)
 
         # Tool calls
         if hasattr(response, "tool_call") and response.tool_call:
