@@ -22,6 +22,7 @@ resource "google_project_service" "apis" {
     "artifactregistry.googleapis.com",
     "cloudbuild.googleapis.com",
     "storage.googleapis.com",
+    "iam.googleapis.com",
   ])
   service            = each.value
   disable_on_destroy = false
