@@ -1,11 +1,13 @@
 resource "google_service_account" "backend" {
   account_id   = "expertlens-backend"
   display_name = "ExpertLens Backend Service Account"
+  depends_on   = [google_project_service.apis]
 }
 
 resource "google_service_account" "frontend" {
   account_id   = "expertlens-frontend"
   display_name = "ExpertLens Frontend Service Account"
+  depends_on   = [google_project_service.apis]
   # No GCP permissions needed — acts as a low-privilege identity for the public frontend service.
 }
 
