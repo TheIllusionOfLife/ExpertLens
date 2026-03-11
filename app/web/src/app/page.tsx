@@ -40,11 +40,12 @@ export default async function DashboardPage() {
 
       <main className="px-8 py-12 max-w-5xl mx-auto">
         {/* Hero */}
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold mb-3 text-gradient tracking-tight">
-            Your Expert Coaches
-          </h1>
-          <p className="text-(--muted) text-sm max-w-md leading-relaxed">
+        <div className="mb-14">
+          <p className="font-mono text-xs text-(--accent) tracking-[0.2em] uppercase mb-5">
+            AI Expert Coaching
+          </p>
+          <h1 className="text-5xl font-black tracking-tight leading-none mb-5">Your Coaches.</h1>
+          <p className="text-(--muted) text-sm max-w-sm leading-relaxed">
             Select a coach to start a live session. Share your screen, speak naturally, and get
             real-time expert guidance.
           </p>
@@ -69,8 +70,8 @@ export default async function DashboardPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {coaches.map((coach) => (
-              <CoachCard key={coach.coach_id} coach={coach} />
+            {coaches.map((coach, index) => (
+              <CoachCard key={coach.coach_id} coach={coach} index={index} />
             ))}
           </div>
         )}
@@ -79,9 +80,12 @@ export default async function DashboardPage() {
   );
 }
 
-function CoachCard({ coach }: { coach: Coach }) {
+function CoachCard({ coach, index }: { coach: Coach; index: number }) {
   return (
-    <div className="bg-(--surface) border border-(--border) rounded-xl overflow-hidden card-glow flex flex-col">
+    <div
+      className="bg-(--surface) border border-(--border) rounded-xl overflow-hidden card-glow card-enter flex flex-col"
+      style={{ animationDelay: `${index * 80}ms` }}
+    >
       {/* Icon header */}
       <div className="flex items-center justify-between px-5 pt-5 pb-4">
         <div className="w-11 h-11 rounded-xl bg-(--accent-glow) border border-(--accent)/15 flex items-center justify-center text-2xl">
