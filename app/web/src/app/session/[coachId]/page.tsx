@@ -11,6 +11,35 @@ import type { Coach } from "@/types/coach";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+const PlayIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path d="M5 3l14 9-14 9V3z" />
+  </svg>
+);
+
+const MonitorIcon = () => (
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <rect x="2" y="3" width="20" height="14" rx="2" />
+    <path d="M8 21h8M12 17v4" />
+  </svg>
+);
+
+const STEPS = (softwareName: string) => [
+  "Click Start Session below",
+  `Share your ${softwareName} window when prompted`,
+  "Ask questions or work naturally — the coach watches and listens",
+];
+
 export default function LiveSessionPage() {
   const { coachId } = useParams<{ coachId: string }>();
   const router = useRouter();
@@ -104,6 +133,7 @@ export default function LiveSessionPage() {
   useEffect(() => () => stopSession(), [stopSession]);
 
   const coachName = coach?.display_name ?? coachId;
+  const softwareName = coach?.software_name ?? "desktop app";
 
   return (
     <div className="min-h-screen bg-(--background) flex flex-col">
@@ -129,35 +159,54 @@ export default function LiveSessionPage() {
 
       {/* Main area */}
       <main className="flex-1 flex flex-col items-center justify-center p-8 gap-6">
+        {/* Pre-session launch pad */}
         {status === "disconnected" && (
-          <div className="text-center space-y-4 max-w-md">
-            <div className="text-5xl">{coach?.icon ?? "🎯"}</div>
-            <h1 className="text-2xl font-semibold">{coachName}</h1>
-            <p className="text-(--muted) text-sm leading-relaxed">
-              {coach?.persona ?? "Your AI coaching session"}
-            </p>
-            <div className="text-xs text-(--muted) space-y-1">
-              <p>
-                1. Click <strong>Start Session</strong>
-              </p>
-              <p>2. Share your {coach?.software_name ?? "desktop app"} window</p>
-              <p>3. Ask questions or just work — the coach watches and listens</p>
+          <div className="text-center max-w-sm w-full space-y-8">
+            {/* Coach avatar with glow */}
+            <div className="relative mx-auto w-24 h-24">
+              <div className="absolute inset-0 rounded-2xl bg-(--accent-glow) blur-xl" />
+              <div className="relative w-24 h-24 rounded-2xl bg-(--surface-elevated) border border-(--border) flex items-center justify-center text-4xl">
+                {coach?.icon ?? "🎯"}
+              </div>
             </div>
+
+            <div>
+              <h1 className="text-2xl font-bold mb-2">{coachName}</h1>
+              <p className="text-(--muted) text-sm leading-relaxed max-w-xs mx-auto">
+                {coach?.persona ?? "Your AI coaching session"}
+              </p>
+            </div>
+
+            {/* Steps */}
+            <div className="text-left space-y-3 bg-(--surface-elevated) rounded-xl p-5 border border-(--border)">
+              {STEPS(softwareName).map((step, i) => (
+                <div key={step} className="flex items-start gap-3 text-sm">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-(--accent-glow) border border-(--accent)/20 text-(--accent) text-xs flex items-center justify-center font-semibold mt-0.5">
+                    {i + 1}
+                  </span>
+                  <span className="text-(--foreground)/80 leading-relaxed">{step}</span>
+                </div>
+              ))}
+            </div>
+
             <button
               type="button"
               onClick={startSession}
-              className="mt-4 px-6 py-3 bg-(--accent) hover:bg-(--accent-hover) text-white rounded-lg font-medium transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-3.5 bg-(--accent) hover:bg-(--accent-hover) text-white rounded-xl font-semibold transition-all shadow-[0_0_32px_rgba(124,106,247,0.25)] hover:shadow-[0_0_40px_rgba(124,106,247,0.35)]"
             >
+              <PlayIcon />
               Start Session
             </button>
           </div>
         )}
 
+        {/* Active session info */}
         {status !== "disconnected" && (
-          <div className="w-full max-w-2xl space-y-4">
+          <div className="w-full max-w-md space-y-3">
             {!screenSharing && status === "connected" && (
-              <div className="p-4 bg-(--surface-elevated) border border-(--border) rounded-lg text-center text-sm text-(--muted)">
-                Share your {coach?.software_name ?? "app"} window to enable visual coaching.
+              <div className="p-4 bg-(--surface-elevated) border border-(--border) rounded-xl text-center text-sm text-(--muted) leading-relaxed">
+                Share your <strong className="text-(--foreground)">{softwareName}</strong> window to
+                enable visual coaching.
                 <br />
                 <span className="text-xs">
                   The coach can still hear you without screen sharing.
@@ -166,24 +215,24 @@ export default function LiveSessionPage() {
             )}
 
             {screenSharing && (
-              <div className="p-3 bg-(--success)/10 border border-(--success)/20 rounded-lg text-sm text-(--success) text-center">
-                📺 Screen shared — coach can see your {coach?.software_name ?? "app"}
+              <div className="p-3.5 bg-(--success)/8 border border-(--success)/20 rounded-xl text-sm text-(--success) text-center font-medium">
+                Screen shared — coach can see your {softwareName}
               </div>
             )}
 
             {status === "reconnecting" && (
-              <div className="p-3 bg-(--warning)/10 border border-(--warning)/20 rounded-lg text-sm text-(--warning) text-center">
-                ⟳ Reconnecting… your session context is preserved
+              <div className="p-3.5 bg-(--warning)/8 border border-(--warning)/20 rounded-xl text-sm text-(--warning) text-center">
+                Reconnecting… your session context is preserved
               </div>
             )}
 
-            <div className="p-4 bg-(--surface) border border-(--border) rounded-lg text-xs text-(--muted) space-y-1">
-              <p>
-                💡 <strong>Tips:</strong>
+            <div className="p-4 bg-(--surface) border border-(--border) rounded-xl text-xs text-(--muted) space-y-2">
+              <p className="font-medium text-(--foreground)/60 uppercase tracking-wide text-[10px]">
+                Tips
               </p>
-              <p>• Speak naturally — barge-in to interrupt the coach at any time</p>
-              <p>• Ask "what should I do next?" if you&apos;re stuck</p>
-              <p>• Say "explain that again" for more detail</p>
+              <p>Speak naturally — barge-in to interrupt the coach at any time</p>
+              <p>Ask &quot;what should I do next?&quot; if you&apos;re stuck</p>
+              <p>Say &quot;explain that again&quot; for more detail</p>
             </div>
           </div>
         )}
@@ -198,15 +247,16 @@ export default function LiveSessionPage() {
         onStopped={handleScreenStopped}
       />
 
-      {/* Screen share trigger — separate button in connected state */}
+      {/* Screen share FAB */}
       {status === "connected" && !screenSharing && (
         <div className="fixed bottom-6 right-6">
           <button
             type="button"
             onClick={() => setScreenSharing(true)}
-            className="px-4 py-2.5 bg-(--surface-elevated) hover:bg-(--border) border border-(--border) rounded-lg text-sm font-medium transition-colors"
+            className="flex items-center gap-2 px-5 py-3 bg-(--surface-elevated) hover:bg-(--surface-elevated)/80 border border-(--border) hover:border-(--accent)/30 rounded-xl text-sm font-medium transition-all shadow-lg"
           >
-            🖥 Share Screen
+            <MonitorIcon />
+            Share Screen
           </button>
         </div>
       )}
