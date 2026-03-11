@@ -17,11 +17,11 @@ resource "google_secret_manager_secret_iam_member" "backend_secret_accessor" {
   member    = "serviceAccount:${google_service_account.backend.email}"
 }
 
-# Cloud Storage read access (demo assets)
-resource "google_project_iam_member" "backend_storage_viewer" {
-  project = var.project_id
-  role    = "roles/storage.objectViewer"
-  member  = "serviceAccount:${google_service_account.backend.email}"
+# Cloud Storage read access — scoped to the assets bucket, not project-wide
+resource "google_storage_bucket_iam_member" "backend_storage_viewer" {
+  bucket = google_storage_bucket.assets.name
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${google_service_account.backend.email}"
 }
 
 # Allow unauthenticated access to Cloud Run services (public demo)

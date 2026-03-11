@@ -16,12 +16,20 @@ from app.api.ws.handler import websocket_session_endpoint
 
 # Use JSON structured logging on Cloud Run (K_SERVICE is set by the Cloud Run runtime).
 if os.getenv("K_SERVICE"):
+    import json as _json
+
+    class _JsonFormatter(logging.Formatter):
+        def format(self, record: logging.LogRecord) -> str:
+            return _json.dumps(
+                {
+                    "severity": record.levelname,
+                    "message": super().format(record),
+                    "logger": record.name,
+                }
+            )
+
     _handler = logging.StreamHandler()
-    _handler.setFormatter(
-        logging.Formatter(
-            fmt='{"severity":"%(levelname)s","message":"%(message)s","logger":"%(name)s"}'
-        )
-    )
+    _handler.setFormatter(_JsonFormatter())
     logging.root.handlers = [_handler]
     logging.root.setLevel(logging.INFO)
 else:
