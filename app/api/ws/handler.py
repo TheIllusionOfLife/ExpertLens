@@ -120,9 +120,9 @@ class SessionHandler:
         # Wait for Gemini to confirm connection before telling the client
         try:
             await asyncio.wait_for(gemini.connected_event.wait(), timeout=10.0)
-        except TimeoutError:
+        except TimeoutError as e:
             self._gemini_task.cancel()
-            raise RuntimeError("Gemini session failed to connect within 10 seconds")
+            raise RuntimeError("Gemini session failed to connect within 10 seconds") from e
 
         await self._ws_send(
             SessionStartedMessage(session_id=f"session-{coach_id}").model_dump_json(),

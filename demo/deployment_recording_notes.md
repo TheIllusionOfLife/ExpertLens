@@ -34,7 +34,7 @@ Record a screen capture showing:
 ```
 
 Expected output:
-```
+```text
 ==> Configuring Docker for Artifact Registry
 ==> Building backend image
 ==> Building frontend image
