@@ -32,7 +32,7 @@ async def end_session(session_id: str, summary: str, last_topics: list[str]) -> 
     }
     await ref.update(updates)
     doc = await ref.get()
-    return Session(**doc.to_dict())
+    return Session.model_validate(doc.to_dict())
 
 
 async def get_sessions(coach_id: str, limit: int = 10) -> list[Session]:
@@ -45,5 +45,5 @@ async def get_sessions(coach_id: str, limit: int = 10) -> list[Session]:
     )
     sessions: list[Session] = []
     async for doc in query.stream():
-        sessions.append(Session(**doc.to_dict()))
+        sessions.append(Session.model_validate(doc.to_dict()))
     return sessions

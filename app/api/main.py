@@ -45,7 +45,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     try:
         from app.api.db.firestore import get_client
 
-        await get_client().close()
+        get_client().close()
     except Exception:
         pass
 

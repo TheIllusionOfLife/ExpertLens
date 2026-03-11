@@ -27,14 +27,14 @@ async def get_coach(coach_id: str) -> Coach | None:
     doc = await get_client().collection(COACHES_COLLECTION).document(coach_id).get()
     if not doc.exists:
         return None
-    return Coach(**doc.to_dict())
+    return Coach.model_validate(doc.to_dict())
 
 
 async def list_coaches() -> list[Coach]:
     docs = get_client().collection(COACHES_COLLECTION).stream()
     coaches: list[Coach] = []
     async for doc in docs:
-        coaches.append(Coach(**doc.to_dict()))
+        coaches.append(Coach.model_validate(doc.to_dict()))
     return coaches
 
 
@@ -66,4 +66,4 @@ async def update_coach(coach_id: str, updates: dict) -> Coach | None:
         return None
     await ref.update(updates)
     doc = await ref.get()
-    return Coach(**doc.to_dict())
+    return Coach.model_validate(doc.to_dict())
