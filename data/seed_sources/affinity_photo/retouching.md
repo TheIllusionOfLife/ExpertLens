@@ -49,4 +49,4 @@ Always prefer adjustment layers over direct pixel editing:
 - Screen: lighten (like projecting two slides)
 - Overlay: increase contrast (blend of Multiply + Screen)
 - Soft Light: subtle Overlay (great for dodging/burning)
-- Luminosity: apply color change without affecting tone
+- Luminosity: apply tone/brightness from source without affecting hue or saturation

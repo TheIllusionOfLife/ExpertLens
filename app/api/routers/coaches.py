@@ -23,7 +23,12 @@ async def get_coach_endpoint(coach_id: str) -> Coach:
 
 @router.post("", response_model=Coach, status_code=201)
 async def create_coach_endpoint(data: CoachCreate) -> Coach:
-    return await create_coach(data)
+    coach = await create_coach(data)
+    if not coach:
+        raise HTTPException(
+            status_code=409, detail=f"Coach for '{data.software_name}' already exists"
+        )
+    return coach
 
 
 @router.put("/{coach_id}", response_model=Coach)

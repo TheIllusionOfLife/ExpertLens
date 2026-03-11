@@ -7,7 +7,7 @@ Materials define how a surface looks. Material Editor = node graph.
 - **Base Color**: Albedo/diffuse color (RGB)
 - **Metallic**: 0=non-metal, 1=metal (use only 0 or 1, rarely in-between)
 - **Roughness**: 0=mirror, 1=fully rough
-- **Normal**: Surface detail from normal map (must use Normal Map node)
+- **Normal**: Surface detail from normal map (connect TextureSample RGB directly to Normal input)
 - **Emissive Color**: Self-illumination (multiplied for HDR glow)
 - **Opacity**: Transparency (enable in Material settings: Blend Mode = Translucent)
 
@@ -17,11 +17,10 @@ Materials define how a surface looks. Material Editor = node graph.
 - **Lerp (LinearInterpolate)**: Blend between A and B using Alpha (0-1)
 - **Multiply/Add/Clamp**: Math operations
 - **TextureCoordinate**: UV coordinates (tiling: change U/V Tiling)
-- **Normal Map**: Use for normal maps — NEVER plug normal map directly into Normal pin
 
 ### Quick Material Setup (PBR)
 1. Texture Sample (Albedo) → Base Color
-2. Texture Sample (Normal) → Normal Map node → Normal
+2. Texture Sample (Normal map texture, Compression=Normalmap) → Normal
 3. Constant (Metallic 0 or 1) → Metallic
 4. Texture Sample or Constant → Roughness
 

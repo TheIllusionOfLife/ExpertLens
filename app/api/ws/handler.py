@@ -82,11 +82,13 @@ class SessionHandler:
         from agent.prompts.base import build_system_instruction_from_firestore
 
         system_instruction = await build_system_instruction_from_firestore(
-            coach_id=coach_id, user_id="default"
+            coach_id=coach_id, user_id=coach_id
         )
 
         gemini = GeminiLiveSession(
             system_instruction=system_instruction,
+            coach_id=coach_id,
+            user_id=coach_id,
             on_audio_response=self._enqueue_audio,
             on_session_handle=self._notify_session_handle,
             on_reconnecting=self._notify_reconnecting,

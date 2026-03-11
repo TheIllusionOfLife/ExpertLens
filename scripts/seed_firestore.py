@@ -3,7 +3,7 @@
 Usage:
     uv run python scripts/seed_firestore.py
 
-Requires GEMINI_API_KEY and GCP_PROJECT_ID in .env (or environment).
+Requires GCP_PROJECT_ID in .env (or environment). GEMINI_API_KEY is not used by this script.
 """
 
 import asyncio
@@ -23,31 +23,33 @@ from google.cloud import firestore  # noqa: E402
 COACHES_COLLECTION = "coaches"
 KNOWLEDGE_COLLECTION = "knowledge_chunks"
 
+_REPO_ROOT = Path(__file__).parent.parent
+
 # Maps software_name → list of (topic, file_path) tuples
 KNOWLEDGE_MAP: dict[str, list[tuple[str, Path]]] = {
     "blender": [
-        ("shortcuts", Path("data/seed_sources/blender/shortcuts.md")),
-        ("modeling_basics", Path("data/seed_sources/blender/modeling_basics.md")),
-        ("common_errors", Path("data/seed_sources/blender/common_errors.md")),
-        ("modifiers", Path("data/seed_sources/blender/modifiers.md")),
-        ("rendering", Path("data/seed_sources/blender/rendering.md")),
+        ("shortcuts", _REPO_ROOT / "data/seed_sources/blender/shortcuts.md"),
+        ("modeling_basics", _REPO_ROOT / "data/seed_sources/blender/modeling_basics.md"),
+        ("common_errors", _REPO_ROOT / "data/seed_sources/blender/common_errors.md"),
+        ("modifiers", _REPO_ROOT / "data/seed_sources/blender/modifiers.md"),
+        ("rendering", _REPO_ROOT / "data/seed_sources/blender/rendering.md"),
     ],
     "affinity_photo": [
-        ("shortcuts", Path("data/seed_sources/affinity_photo/shortcuts.md")),
-        ("retouching", Path("data/seed_sources/affinity_photo/retouching.md")),
-        ("layers", Path("data/seed_sources/affinity_photo/layers.md")),
+        ("shortcuts", _REPO_ROOT / "data/seed_sources/affinity_photo/shortcuts.md"),
+        ("retouching", _REPO_ROOT / "data/seed_sources/affinity_photo/retouching.md"),
+        ("layers", _REPO_ROOT / "data/seed_sources/affinity_photo/layers.md"),
     ],
     "unreal_engine": [
-        ("shortcuts", Path("data/seed_sources/unreal_engine/shortcuts.md")),
-        ("blueprints", Path("data/seed_sources/unreal_engine/blueprints.md")),
-        ("materials", Path("data/seed_sources/unreal_engine/materials.md")),
+        ("shortcuts", _REPO_ROOT / "data/seed_sources/unreal_engine/shortcuts.md"),
+        ("blueprints", _REPO_ROOT / "data/seed_sources/unreal_engine/blueprints.md"),
+        ("materials", _REPO_ROOT / "data/seed_sources/unreal_engine/materials.md"),
     ],
 }
 
 COACH_PROFILES = [
-    Path("data/coach_profiles/blender.json"),
-    Path("data/coach_profiles/affinity_photo.json"),
-    Path("data/coach_profiles/unreal_engine.json"),
+    _REPO_ROOT / "data/coach_profiles/blender.json",
+    _REPO_ROOT / "data/coach_profiles/affinity_photo.json",
+    _REPO_ROOT / "data/coach_profiles/unreal_engine.json",
 ]
 
 

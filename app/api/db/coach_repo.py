@@ -19,8 +19,13 @@ async def list_coaches() -> list[Coach]:
     return coaches
 
 
-async def create_coach(data: CoachCreate) -> Coach:
+async def create_coach(data: CoachCreate) -> Coach | None:
+    """Create a coach. Returns None if a coach with the same ID already exists."""
     coach_id = data.software_name.lower().replace(" ", "_")
+    ref = get_client().collection(COACHES_COLLECTION).document(coach_id)
+    existing = await ref.get()
+    if existing.exists:
+        return None
     coach = Coach(
         coach_id=coach_id,
         software_name=data.software_name,
@@ -29,11 +34,13 @@ async def create_coach(data: CoachCreate) -> Coach:
         focus_areas=data.focus_areas,
         icon=data.icon,
     )
-    await get_client().collection(COACHES_COLLECTION).document(coach_id).set(coach.model_dump())
+    await ref.set(coach.model_dump())
     return coach
 
 
 async def update_coach(coach_id: str, updates: dict) -> Coach | None:
+    if not updates:
+        return await get_coach(coach_id)
     ref = get_client().collection(COACHES_COLLECTION).document(coach_id)
     doc = await ref.get()
     if not doc.exists:
