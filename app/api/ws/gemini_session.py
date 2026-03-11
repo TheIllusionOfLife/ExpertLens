@@ -236,8 +236,12 @@ class GeminiLiveSession:
         for fc in function_calls:
             args = fc.args or {}
             if fc.name == "get_coach_knowledge":
+                # Normalize to canonical software_name (same rules as base.py prompt builder)
+                software_name = (
+                    self._coach_id.strip().lower().replace("-", "_").replace(" ", "_")
+                )
                 result = await get_coach_knowledge(
-                    software_name=self._coach_id,
+                    software_name=software_name,
                     topic=args.get("topic", ""),
                 )
             elif fc.name == "get_user_preferences":

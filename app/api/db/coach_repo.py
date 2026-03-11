@@ -1,7 +1,26 @@
 """Coach CRUD operations against Firestore."""
 
+import re
+
+from google.api_core.exceptions import AlreadyExists
+
 from app.api.db.firestore import COACHES_COLLECTION, get_client
 from app.api.db.models import Coach, CoachCreate
+
+
+def make_coach_slug(software_name: str) -> str:
+    """
+    Convert a software name to a safe Firestore document ID.
+    Raises ValueError if the input yields an empty slug.
+    """
+    slug = software_name.strip().lower()
+    slug = re.sub(r"\s+", "_", slug)       # whitespace → underscore
+    slug = re.sub(r"[^a-z0-9_]", "", slug) # strip unsafe chars (/, .., ., control chars)
+    slug = re.sub(r"_+", "_", slug)         # collapse repeated underscores
+    slug = slug.strip("_")
+    if not slug:
+        raise ValueError(f"Software name {software_name!r} yields an empty slug")
+    return slug
 
 
 async def get_coach(coach_id: str) -> Coach | None:
@@ -20,12 +39,9 @@ async def list_coaches() -> list[Coach]:
 
 
 async def create_coach(data: CoachCreate) -> Coach | None:
-    """Create a coach. Returns None if a coach with the same ID already exists."""
-    coach_id = data.software_name.lower().replace(" ", "_")
+    """Create a coach. Returns None if a coach with the same slug already exists."""
+    coach_id = make_coach_slug(data.software_name)
     ref = get_client().collection(COACHES_COLLECTION).document(coach_id)
-    existing = await ref.get()
-    if existing.exists:
-        return None
     coach = Coach(
         coach_id=coach_id,
         software_name=data.software_name,
@@ -34,7 +50,10 @@ async def create_coach(data: CoachCreate) -> Coach | None:
         focus_areas=data.focus_areas,
         icon=data.icon,
     )
-    await ref.set(coach.model_dump())
+    try:
+        await ref.create(coach.model_dump())
+    except AlreadyExists:
+        return None
     return coach
 
 

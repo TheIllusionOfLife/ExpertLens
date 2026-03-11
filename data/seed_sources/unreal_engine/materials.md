@@ -50,4 +50,4 @@ Materials define how a surface looks. Material Editor = node graph.
 - Avoid too many Texture Samples (performance)
 - Use Material Functions for reusable node groups
 - Check shader complexity (View → Shader Complexity) — green=good, red=expensive
-- Nanite meshes: avoid masked/translucent materials (use opaque)
+- Nanite meshes: Translucent materials are unsupported (use Opaque or Masked); unsupported materials render with a default material and emit a warning
