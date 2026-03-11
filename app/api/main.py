@@ -50,7 +50,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         pass
 
 
-app = FastAPI(title="ExpertLens API", version="0.1.0", lifespan=lifespan)
+_in_cloud_run = bool(os.getenv("K_SERVICE"))
+app = FastAPI(
+    title="ExpertLens API",
+    version="0.1.0",
+    lifespan=lifespan,
+    # Disable interactive docs in production to reduce endpoint discoverability.
+    docs_url=None if _in_cloud_run else "/docs",
+    redoc_url=None if _in_cloud_run else "/redoc",
+    openapi_url=None if _in_cloud_run else "/openapi.json",
+)
 
 app.add_middleware(
     CORSMiddleware,

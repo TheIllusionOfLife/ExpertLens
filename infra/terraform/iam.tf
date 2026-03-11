@@ -3,6 +3,12 @@ resource "google_service_account" "backend" {
   display_name = "ExpertLens Backend Service Account"
 }
 
+resource "google_service_account" "frontend" {
+  account_id   = "expertlens-frontend"
+  display_name = "ExpertLens Frontend Service Account"
+  # No GCP permissions needed — acts as a low-privilege identity for the public frontend service.
+}
+
 # Firestore access
 resource "google_project_iam_member" "backend_firestore" {
   project = var.project_id

@@ -75,6 +75,8 @@ resource "google_cloud_run_v2_service" "frontend" {
   depends_on = [google_project_service.apis]
 
   template {
+    service_account = google_service_account.frontend.email
+
     scaling {
       min_instance_count = 0
       max_instance_count = 5
