@@ -70,7 +70,10 @@ export default function LiveSessionPage() {
       coachId,
       savedHandle: undefined,
       onMessage: (msg) => {
-        if (msg.type === "error") {
+        if (msg.type === "interrupted") {
+          // Barge-in: user spoke while model was speaking — stop stale audio
+          playbackRef.current?.clearQueue();
+        } else if (msg.type === "error") {
           console.error("Session error:", msg.message);
         }
       },
