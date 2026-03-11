@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+*.md
+
+# Environment files — never copy secrets into images
+.env
+.env.local
+.env.*.local
+
+# OS / IDE
+.DS_Store
+.vscode
+.idea
