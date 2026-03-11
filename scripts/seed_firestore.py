@@ -88,7 +88,7 @@ async def seed(project_id: str | None = None) -> None:
         f"\nSeeding complete! {len(COACH_PROFILES)} coaches, "
         f"{sum(len(v) for v in KNOWLEDGE_MAP.values())} knowledge chunks."
     )
-    await client.close()
+    client.close()
 
 
 if __name__ == "__main__":
