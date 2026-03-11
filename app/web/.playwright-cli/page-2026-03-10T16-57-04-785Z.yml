@@ -1,0 +1,38 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - link "← Back" [ref=e4] [cursor=pointer]:
+        - /url: /
+      - heading "Create New Coach" [level=1] [ref=e5]
+    - main [ref=e6]:
+      - paragraph [ref=e7]: Choose the desktop software you want to be coached in. ExpertLens will build a specialized expert with curated knowledge for that app.
+      - generic [ref=e8]:
+        - generic [ref=e9]:
+          - paragraph [ref=e10]: Software
+          - generic [ref=e11]:
+            - button "🎨 Blender" [ref=e12]:
+              - generic [ref=e13]: 🎨
+              - text: Blender
+            - button "📸 Affinity Photo" [ref=e14]:
+              - generic [ref=e15]: 📸
+              - text: Affinity Photo
+            - button "🎮 Unreal Engine" [ref=e16]:
+              - generic [ref=e17]: 🎮
+              - text: Unreal Engine
+            - button "🎬 DaVinci Resolve" [ref=e18]:
+              - generic [ref=e19]: 🎬
+              - text: DaVinci Resolve
+            - button "✏️ Figma" [ref=e20]:
+              - generic [ref=e21]: ✏️
+              - text: Figma
+            - button "🔧 Other (custom)" [ref=e22]:
+              - generic [ref=e23]: 🔧
+              - text: Other (custom)
+        - generic [ref=e24]:
+          - generic [ref=e25]: Coach style (optional)
+          - textbox "Coach style (optional)" [ref=e26]:
+            - /placeholder: e.g. Concise and direct, always lead with shortcuts, avoid long explanations
+        - button "Create Coach" [ref=e27]
+  - button "Open Next.js Dev Tools" [ref=e33] [cursor=pointer]:
+    - img [ref=e34]
+  - alert [ref=e37]

@@ -13,12 +13,17 @@ interface Props {
 export function ScreenCapture({ active, onFrame, onStopped }: Props) {
   const handleRef = useRef<ScreenCaptureHandle | null>(null);
   const prevActiveRef = useRef(false);
+  // Use a ref so stop() is stable and doesn't re-create when onStopped identity changes
+  const onStoppedRef = useRef(onStopped);
+  useEffect(() => {
+    onStoppedRef.current = onStopped;
+  }, [onStopped]);
 
   const stop = useCallback(() => {
     handleRef.current?.stop();
     handleRef.current = null;
-    onStopped?.();
-  }, [onStopped]);
+    onStoppedRef.current?.();
+  }, []);
 
   useEffect(() => {
     if (active && !prevActiveRef.current) {
@@ -37,7 +42,8 @@ export function ScreenCapture({ active, onFrame, onStopped }: Props) {
         .catch((err) => {
           if (!cancelled) {
             console.error("Screen capture failed:", err);
-            onStopped?.();
+            prevActiveRef.current = false;
+            onStoppedRef.current?.();
           }
         });
 
@@ -51,7 +57,7 @@ export function ScreenCapture({ active, onFrame, onStopped }: Props) {
       stop();
       prevActiveRef.current = false;
     }
-  }, [active, onFrame, stop, onStopped]);
+  }, [active, onFrame, stop]);
 
   useEffect(() => () => stop(), [stop]);
 

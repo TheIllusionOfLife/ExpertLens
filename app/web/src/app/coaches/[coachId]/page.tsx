@@ -1,6 +1,7 @@
 import { PreferencesForm } from "@/components/PreferencesForm";
 import { getCoach } from "@/lib/api-client";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 interface Props {
   params: Promise<{ coachId: string }>;
@@ -8,7 +9,8 @@ interface Props {
 
 export default async function CoachDetailPage({ params }: Props) {
   const { coachId } = await params;
-  const coach = await getCoach(coachId);
+  const coach = await getCoach(coachId).catch(() => null);
+  if (!coach) notFound();
 
   return (
     <div className="min-h-screen bg-[--background]">
@@ -39,7 +41,7 @@ export default async function CoachDetailPage({ params }: Props) {
             <h1 className="text-2xl font-bold mb-1">{coach.display_name}</h1>
             <p className="text-[--muted] text-sm leading-relaxed">{coach.persona}</p>
             <div className="flex flex-wrap gap-2 mt-3">
-              {coach.focus_areas.map((area) => (
+              {(coach.focus_areas ?? []).map((area) => (
                 <span
                   key={area}
                   className="text-xs px-2.5 py-1 bg-[--surface-elevated] border border-[--border] rounded-full text-[--muted]"

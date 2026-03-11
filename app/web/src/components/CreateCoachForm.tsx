@@ -33,7 +33,13 @@ export function CreateCoachForm() {
     try {
       const coach = await createCoach({
         software_name: name,
-        coach_id: name.toLowerCase().replace(/\s+/g, "_"),
+        coach_id:
+          name
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/\p{M}/gu, "")
+            .replace(/[^a-z0-9]+/g, "_")
+            .replace(/^_+|_+$/g, "") || "custom_coach",
         persona: persona || undefined,
       });
       router.push(`/coaches/${coach.coach_id}`);
@@ -71,6 +77,7 @@ export function CreateCoachForm() {
             value={customSoftware}
             onChange={(e) => setCustomSoftware(e.target.value)}
             placeholder="Enter software name…"
+            aria-label="Custom software name"
             className="mt-3 w-full px-4 py-2.5 bg-[--surface-elevated] border border-[--border] rounded-lg text-sm focus:outline-none focus:border-[--accent]"
           />
         )}

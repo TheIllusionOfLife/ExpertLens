@@ -5,9 +5,10 @@ import { DEMO_COACHES } from "@/types/coach";
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  const { headers: customHeaders, ...restOptions } = options ?? {};
   const res = await fetch(`${API_URL}${path}`, {
-    headers: { "Content-Type": "application/json" },
-    ...options,
+    ...restOptions,
+    headers: { "Content-Type": "application/json", ...customHeaders },
   });
   if (!res.ok) {
     const text = await res.text();

@@ -77,7 +77,7 @@ function CoachCard({ coach }: { coach: Coach }) {
       <h2 className="font-semibold text-base mb-1">{coach.display_name}</h2>
       <p className="text-[--muted] text-xs mb-4 leading-relaxed line-clamp-2">{coach.persona}</p>
       <div className="flex flex-wrap gap-1.5 mb-4">
-        {coach.focus_areas.slice(0, 3).map((area) => (
+        {(coach.focus_areas ?? []).slice(0, 3).map((area) => (
           <span
             key={area}
             className="text-xs px-2 py-0.5 bg-[--surface-elevated] border border-[--border] rounded-full text-[--muted]"
@@ -85,9 +85,9 @@ function CoachCard({ coach }: { coach: Coach }) {
             {area}
           </span>
         ))}
-        {coach.focus_areas.length > 3 && (
+        {(coach.focus_areas?.length ?? 0) > 3 && (
           <span className="text-xs px-2 py-0.5 text-[--muted]">
-            +{coach.focus_areas.length - 3}
+            +{(coach.focus_areas?.length ?? 0) - 3}
           </span>
         )}
       </div>

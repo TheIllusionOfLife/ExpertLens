@@ -18,6 +18,7 @@ export function AudioCapture({ active, onChunk, onBargeIn }: Props) {
   const workletRef = useRef<AudioWorkletNode | null>(null);
   const blobUrlRef = useRef<string | null>(null);
   const prevActiveRef = useRef(false);
+  const bargeInFiredRef = useRef(false);
 
   const stop = useCallback(() => {
     workletRef.current?.disconnect();
@@ -34,6 +35,7 @@ export function AudioCapture({ active, onChunk, onBargeIn }: Props) {
 
   const start = useCallback(
     async (cancelled: { value: boolean }) => {
+      bargeInFiredRef.current = false;
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
       });
@@ -67,7 +69,11 @@ export function AudioCapture({ active, onChunk, onBargeIn }: Props) {
 
       worklet.port.onmessage = (e: MessageEvent<ArrayBuffer>) => {
         onChunk(e.data);
-        onBargeIn?.();
+        // Fire barge-in once per capture start (not on every chunk)
+        if (!bargeInFiredRef.current) {
+          bargeInFiredRef.current = true;
+          onBargeIn?.();
+        }
       };
 
       source.connect(worklet);

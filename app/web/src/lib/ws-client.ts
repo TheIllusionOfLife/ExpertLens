@@ -123,14 +123,19 @@ export class WsClient {
   sendImage(jpeg: Blob): void {
     const ws = this.ws;
     if (!ws || ws.readyState !== WebSocket.OPEN) return;
-    jpeg.arrayBuffer().then((buf) => {
-      // Re-check after async: socket may have closed during arrayBuffer() conversion
-      if (ws.readyState !== WebSocket.OPEN) return;
-      const frame = new Uint8Array(1 + buf.byteLength);
-      frame[0] = MEDIA_TAG_IMAGE;
-      frame.set(new Uint8Array(buf), 1);
-      ws.send(frame.buffer);
-    });
+    jpeg
+      .arrayBuffer()
+      .then((buf) => {
+        // Re-check after async: socket may have closed during arrayBuffer() conversion
+        if (ws.readyState !== WebSocket.OPEN) return;
+        const frame = new Uint8Array(1 + buf.byteLength);
+        frame[0] = MEDIA_TAG_IMAGE;
+        frame.set(new Uint8Array(buf), 1);
+        ws.send(frame.buffer);
+      })
+      .catch((err) => {
+        console.warn("Failed to convert image blob:", err);
+      });
   }
 
   sendAudio(pcm: ArrayBuffer): void {

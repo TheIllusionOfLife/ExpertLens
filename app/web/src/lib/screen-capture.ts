@@ -26,7 +26,12 @@ export async function startScreenCapture(
   const video = document.createElement("video");
   video.srcObject = stream;
   video.muted = true;
-  await video.play();
+  try {
+    await video.play();
+  } catch (err) {
+    for (const track of stream.getTracks()) track.stop();
+    throw err;
+  }
 
   const canvas = document.createElement("canvas");
   canvas.width = FRAME_WIDTH;
@@ -39,7 +44,7 @@ export async function startScreenCapture(
   const captureLoop = () => {
     if (stopped) return;
     if (video.readyState >= 2 /* HAVE_CURRENT_DATA */) {
-      // Letterbox/crop to fill 768×768 while preserving aspect ratio
+      // Crop to fill 768×768 while preserving aspect ratio (Math.max = scale up to cover)
       const vw = video.videoWidth || FRAME_WIDTH;
       const vh = video.videoHeight || FRAME_HEIGHT;
       const scale = Math.max(FRAME_WIDTH / vw, FRAME_HEIGHT / vh);
