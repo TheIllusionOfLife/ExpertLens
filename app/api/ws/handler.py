@@ -92,11 +92,11 @@ class SessionHandler:
             create_fs_session(coach_id),
             return_exceptions=True,
         )
-        if isinstance(fs_session, Exception):
+        if isinstance(fs_session, BaseException):
             logger.warning(f"Failed to create Firestore session: {fs_session}")
         else:
             self._firestore_session_id = fs_session.session_id
-        if isinstance(system_instruction, Exception):
+        if isinstance(system_instruction, BaseException):
             raise system_instruction
         assert isinstance(system_instruction, str)
 
