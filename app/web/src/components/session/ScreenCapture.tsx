@@ -44,6 +44,7 @@ export function ScreenCapture({ active, onFrame, onStopped }: Props) {
       prevActiveRef.current = true;
       return () => {
         cancelled = true;
+        prevActiveRef.current = false;
       };
     }
 
