@@ -8,7 +8,7 @@ async def get_preferences(user_id: str) -> UserPreferences:
     doc = await get_client().collection(PREFERENCES_COLLECTION).document(user_id).get()
     if not doc.exists:
         return UserPreferences()
-    return UserPreferences(**doc.to_dict())
+    return UserPreferences.model_validate(doc.to_dict())
 
 
 async def update_preferences(user_id: str, updates: PreferencesUpdate) -> UserPreferences:
@@ -19,4 +19,4 @@ async def update_preferences(user_id: str, updates: PreferencesUpdate) -> UserPr
     doc = await ref.get()
     if not doc.exists:
         return UserPreferences()
-    return UserPreferences(**doc.to_dict())
+    return UserPreferences.model_validate(doc.to_dict())

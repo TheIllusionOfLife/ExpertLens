@@ -18,7 +18,7 @@ async def get_knowledge(software_name: str, topic: str, limit: int = 3) -> list[
     )
     chunks: list[KnowledgeChunk] = []
     async for doc in query.stream():
-        chunks.append(KnowledgeChunk(**doc.to_dict()))
+        chunks.append(KnowledgeChunk.model_validate(doc.to_dict()))
     return chunks
 
 
@@ -34,5 +34,5 @@ async def get_all_knowledge_for_software(software_name: str) -> list[KnowledgeCh
     )
     chunks: list[KnowledgeChunk] = []
     async for doc in query.stream():
-        chunks.append(KnowledgeChunk(**doc.to_dict()))
+        chunks.append(KnowledgeChunk.model_validate(doc.to_dict()))
     return chunks
