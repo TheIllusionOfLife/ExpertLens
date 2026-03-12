@@ -23,6 +23,7 @@ animation basics, geometry nodes.
 ### Quick Reference (always available)
 - G/R/S: Grab/Rotate/Scale | Tab: Edit Mode | A: Select All
 - Ctrl+Z: Undo | Shift+D: Duplicate | X: Delete | E: Extrude
-- Ctrl+R: Loop Cut | K: Knife | I: Insert keyframe | M: Merge | P: Separate
+- Ctrl+R: Loop Cut | K: Knife (Edit Mode) | M: Merge | P: Separate
+- (Timeline/Dope Sheet) I: Insert keyframe immediately | K: Keyframe type picker
 - Numpad 0/1/3/7: Camera/Front/Right/Top views | Numpad 5: Ortho toggle
 """

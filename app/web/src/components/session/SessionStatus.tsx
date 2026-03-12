@@ -43,9 +43,9 @@ export function SessionStatus({ coachName, status, elapsed }: Props) {
   const isLive = status === "connected";
 
   return (
-    <div
+    <output
       className={`flex items-center gap-2.5 px-4 py-2 bg-(--surface-elevated) rounded-lg border transition-colors ${
-        isLive ? "border-(--success)/20" : "border-(--border)"
+        cfg.ring ?? "border-(--border)"
       }`}
     >
       <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`} />
@@ -57,6 +57,6 @@ export function SessionStatus({ coachName, status, elapsed }: Props) {
           {formatElapsed(elapsed)}
         </span>
       )}
-    </div>
+    </output>
   );
 }

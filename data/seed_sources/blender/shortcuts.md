@@ -39,7 +39,7 @@
 - Ctrl+M: Mirror modifier setup
 - Tab in Properties: Switch between panels
 
-## Animation (CHANGED in Blender 4.0)
+## Animation Editors (Timeline / Dope Sheet / Graph Editor) — CHANGED in Blender 4.0
 - **I: Insert keyframe immediately** (4.0+) — no longer opens a menu
 - **K: Keyframe type picker menu** (4.0+) — this is what I used to do in 3.x
 - Ctrl+I: Insert keyframe with custom type dialog

@@ -11,8 +11,38 @@ const SOFTWARE_OPTIONS = [
     icon: (
       <svg width="16" height="16" viewBox="0 0 32 32" fill="none" aria-hidden="true">
         <circle cx="15" cy="18" r="7" fill="#E87D0D" />
-        <ellipse cx="15" cy="18" rx="13" ry="4.5" stroke="#F4A623" strokeWidth="1.5" fill="none" opacity="0.8" />
-        <ellipse cx="15" cy="18" rx="13" ry="4.5" stroke="#F4A623" strokeWidth="1.5" fill="none" opacity="0.5" transform="rotate(60 15 18)" />
+        <ellipse
+          cx="15"
+          cy="18"
+          rx="13"
+          ry="4.5"
+          stroke="#F4A623"
+          strokeWidth="1.5"
+          fill="none"
+          opacity="0.8"
+        />
+        <ellipse
+          cx="15"
+          cy="18"
+          rx="13"
+          ry="4.5"
+          stroke="#F4A623"
+          strokeWidth="1.5"
+          fill="none"
+          opacity="0.55"
+          transform="rotate(60 15 18)"
+        />
+        <ellipse
+          cx="15"
+          cy="18"
+          rx="13"
+          ry="4.5"
+          stroke="#F4A623"
+          strokeWidth="1.5"
+          fill="none"
+          opacity="0.55"
+          transform="rotate(-60 15 18)"
+        />
         <circle cx="15" cy="9" r="2.5" fill="white" />
       </svg>
     ),
@@ -24,10 +54,42 @@ const SOFTWARE_OPTIONS = [
       <svg width="16" height="16" viewBox="0 0 32 32" fill="none" aria-hidden="true">
         <circle cx="16" cy="16" r="9.5" stroke="#7c6af7" strokeWidth="2" />
         <circle cx="16" cy="16" r="3.5" fill="#7c6af7" />
-        <line x1="16" y1="6.5" x2="16" y2="12.5" stroke="#7c6af7" strokeWidth="1.5" strokeLinecap="round" />
-        <line x1="16" y1="19.5" x2="16" y2="25.5" stroke="#7c6af7" strokeWidth="1.5" strokeLinecap="round" />
-        <line x1="6.5" y1="16" x2="12.5" y2="16" stroke="#7c6af7" strokeWidth="1.5" strokeLinecap="round" />
-        <line x1="19.5" y1="16" x2="25.5" y2="16" stroke="#7c6af7" strokeWidth="1.5" strokeLinecap="round" />
+        <line
+          x1="16"
+          y1="6.5"
+          x2="16"
+          y2="12.5"
+          stroke="#7c6af7"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+        <line
+          x1="16"
+          y1="19.5"
+          x2="16"
+          y2="25.5"
+          stroke="#7c6af7"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+        <line
+          x1="6.5"
+          y1="16"
+          x2="12.5"
+          y2="16"
+          stroke="#7c6af7"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+        <line
+          x1="19.5"
+          y1="16"
+          x2="25.5"
+          y2="16"
+          stroke="#7c6af7"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
       </svg>
     ),
   },
@@ -72,7 +134,16 @@ const SOFTWARE_OPTIONS = [
     value: "custom",
     label: "Other",
     icon: (
-      <svg width="16" height="16" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 32 32"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        aria-hidden="true"
+      >
         <circle cx="16" cy="16" r="3" />
         <circle cx="16" cy="16" r="10" strokeDasharray="3 3" opacity="0.5" />
         <line x1="16" y1="6" x2="16" y2="9" />

@@ -16,7 +16,7 @@ If a user presses `I` and expects a menu, they are on 4.0+. Tell them to press `
   - Bloom → now done via the **Glare node** in the Compositor
   - Enable: Render Properties → Post Processing → Compositing, then add Glare node
 - Screen Space Reflections replaced by actual ray-traced reflections (lower cost, better quality)
-- Screen Space Ambient Occlusion still available but SSGI provides better results
+- Screen Space Ambient Occlusion still available but Screen Space Global Illumination (SSGI) provides better results
 
 ## Auto Smooth (4.1) — MEDIUM IMPACT
 

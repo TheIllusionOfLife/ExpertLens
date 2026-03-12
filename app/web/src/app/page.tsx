@@ -34,7 +34,7 @@ export default async function DashboardPage() {
           </div>
           <Link
             href="/coaches/new"
-            className="px-4 py-2 bg-(--accent) hover:bg-(--accent-hover) text-white rounded-lg text-sm font-semibold transition-all shadow-[0_0_20px_rgba(124,106,247,0.35)] cursor-pointer"
+            className="px-4 py-2 bg-(--accent) hover:bg-(--accent-hover) text-white rounded-lg text-sm font-semibold transition-all shadow-[0_0_20px_rgba(124,106,247,0.35)]"
           >
             + New Coach
           </Link>
@@ -59,12 +59,55 @@ export default async function DashboardPage() {
             <div className="w-20 h-20 rounded-2xl bg-(--surface-elevated) border border-(--border) flex items-center justify-center mb-6">
               <svg width="36" height="36" viewBox="0 0 32 32" fill="none" aria-hidden="true">
                 <circle cx="16" cy="16" r="13" stroke="var(--border)" strokeWidth="1.5" />
-                <circle cx="16" cy="16" r="8" stroke="var(--muted)" strokeWidth="1.5" opacity="0.5" />
+                <circle
+                  cx="16"
+                  cy="16"
+                  r="8"
+                  stroke="var(--muted)"
+                  strokeWidth="1.5"
+                  opacity="0.5"
+                />
                 <circle cx="16" cy="16" r="3" fill="var(--accent)" />
-                <line x1="16" y1="3" x2="16" y2="7" stroke="var(--muted)" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
-                <line x1="16" y1="25" x2="16" y2="29" stroke="var(--muted)" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
-                <line x1="3" y1="16" x2="7" y2="16" stroke="var(--muted)" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
-                <line x1="25" y1="16" x2="29" y2="16" stroke="var(--muted)" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
+                <line
+                  x1="16"
+                  y1="3"
+                  x2="16"
+                  y2="7"
+                  stroke="var(--muted)"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  opacity="0.4"
+                />
+                <line
+                  x1="16"
+                  y1="25"
+                  x2="16"
+                  y2="29"
+                  stroke="var(--muted)"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  opacity="0.4"
+                />
+                <line
+                  x1="3"
+                  y1="16"
+                  x2="7"
+                  y2="16"
+                  stroke="var(--muted)"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  opacity="0.4"
+                />
+                <line
+                  x1="25"
+                  y1="16"
+                  x2="29"
+                  y2="16"
+                  stroke="var(--muted)"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  opacity="0.4"
+                />
               </svg>
             </div>
             <h2 className="text-xl font-semibold mb-2">No coaches yet</h2>
@@ -74,7 +117,7 @@ export default async function DashboardPage() {
             </p>
             <Link
               href="/coaches/new"
-              className="px-5 py-2.5 bg-(--accent) hover:bg-(--accent-hover) text-white rounded-lg text-sm font-medium transition-colors cursor-pointer"
+              className="px-5 py-2.5 bg-(--accent) hover:bg-(--accent-hover) text-white rounded-lg text-sm font-medium transition-colors"
             >
               Create your first coach
             </Link>
@@ -94,7 +137,7 @@ export default async function DashboardPage() {
 function CoachCard({ coach, index }: { coach: Coach; index: number }) {
   return (
     <div
-      className="bg-(--surface) border border-(--border) rounded-xl overflow-hidden card-glow card-enter flex flex-col cursor-pointer"
+      className="bg-(--surface) border border-(--border) rounded-xl overflow-hidden card-glow card-enter flex flex-col"
       style={{ animationDelay: `${index * 80}ms` }}
     >
       {/* Icon header */}
@@ -104,7 +147,7 @@ function CoachCard({ coach, index }: { coach: Coach; index: number }) {
         </div>
         <Link
           href={`/coaches/${coach.coach_id}`}
-          className="text-xs text-(--muted) hover:text-(--foreground) px-2.5 py-1.5 rounded-md hover:bg-(--surface-elevated) transition-colors cursor-pointer"
+          className="text-xs text-(--muted) hover:text-(--foreground) px-2.5 py-1.5 rounded-md hover:bg-(--surface-elevated) transition-colors"
         >
           Settings
         </Link>
@@ -133,7 +176,7 @@ function CoachCard({ coach, index }: { coach: Coach; index: number }) {
 
         <Link
           href={`/session/${coach.coach_id}`}
-          className="mt-auto flex items-center justify-center gap-2 w-full py-2.5 bg-(--accent) hover:bg-(--accent-hover) text-white rounded-lg text-sm font-semibold transition-colors cursor-pointer"
+          className="mt-auto flex items-center justify-center gap-2 w-full py-2.5 bg-(--accent) hover:bg-(--accent-hover) text-white rounded-lg text-sm font-semibold transition-colors"
         >
           <PlayIcon />
           Start Session

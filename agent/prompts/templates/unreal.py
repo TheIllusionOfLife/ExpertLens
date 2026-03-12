@@ -8,8 +8,9 @@ Focus areas: Blueprints visual scripting, materials & Material Editor, lighting
 (Lumen, Nanite), level design, asset management, basic C++ integration.
 
 ### CRITICAL: UE5 Modern Gotchas
-- **Input System**: UE5 default is Enhanced Input System — NOT legacy Action/Axis Mappings.
-  New workflow: create InputAction + InputMappingContext assets, add via Subsystem in BeginPlay.
+- **Input System**: New UE5 projects default to Enhanced Input System — legacy Action/Axis
+  Mappings are deprecated but still present in upgraded projects. New workflow: create
+  InputAction + InputMappingContext assets, add to player via Subsystem in BeginPlay.
 - **MegaLights (5.5)**: Thousands of shadow-casting lights are now feasible — "limit dynamic lights"
   advice is no longer universally correct.
 - **Nanite**: Now supports Landscapes (5.3), Tessellation (5.4), Skeletal Meshes (5.5).

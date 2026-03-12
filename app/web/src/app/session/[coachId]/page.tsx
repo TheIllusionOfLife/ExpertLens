@@ -18,22 +18,40 @@ const PlayIcon = () => (
   </svg>
 );
 
-const MonitorIcon = () => (
+const MonitorIcon = ({ size = 14, className }: { size?: number; className?: string }) => (
   <svg
-    width="14"
-    height="14"
+    width={size}
+    height={size}
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
+    className={className}
     aria-hidden="true"
   >
     <rect x="2" y="3" width="20" height="14" rx="2" />
     <path d="M8 21h8M12 17v4" />
   </svg>
 );
+
+const DEFAULT_TIPS = [
+  "Speak naturally — barge-in to interrupt the coach at any time",
+  'Ask "what should I do next?" if you\'re stuck',
+  'Say "explain that again" for more detail',
+];
+
+function Tips({ items = DEFAULT_TIPS }: { items?: string[] }) {
+  return (
+    <div className="w-full p-5 bg-(--surface) border border-(--border) rounded-xl text-xs text-(--muted) space-y-2">
+      <p className="font-medium text-(--foreground)/60 uppercase tracking-wide text-[10px]">Tips</p>
+      {items.map((tip) => (
+        <p key={tip}>{tip}</p>
+      ))}
+    </div>
+  );
+}
 
 const STEPS = (softwareName: string) => [
   "Click Start Session below",
@@ -207,29 +225,14 @@ export default function LiveSessionPage() {
             <div className="relative">
               <div className="absolute inset-0 rounded-2xl bg-(--accent-glow) blur-2xl scale-150" />
               <div className="relative w-20 h-20 rounded-2xl bg-(--surface-elevated) border border-(--accent)/30 flex items-center justify-center">
-                <svg
-                  width="32"
-                  height="32"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-(--accent)"
-                  aria-hidden="true"
-                >
-                  <rect x="2" y="3" width="20" height="14" rx="2" />
-                  <path d="M8 21h8M12 17v4" />
-                </svg>
+                <MonitorIcon size={32} className="text-(--accent)" />
               </div>
             </div>
             <div>
               <h2 className="text-2xl font-bold mb-2">Share your screen</h2>
               <p className="text-(--muted) text-sm leading-relaxed max-w-xs mx-auto">
-                Let your coach see{" "}
-                <strong className="text-(--foreground)">{softwareName}</strong>
-                {" "}for real-time visual guidance
+                Let your coach see <strong className="text-(--foreground)">{softwareName}</strong>{" "}
+                for real-time visual guidance
               </p>
             </div>
             <button
@@ -243,14 +246,7 @@ export default function LiveSessionPage() {
             <p className="text-xs text-(--muted)">
               Audio coaching is active — your coach can hear you
             </p>
-            <div className="w-full p-5 bg-(--surface) border border-(--border) rounded-xl text-xs text-(--muted) space-y-2 text-left">
-              <p className="font-medium text-(--foreground)/60 uppercase tracking-wide text-[10px]">
-                Tips
-              </p>
-              <p>Speak naturally — barge-in to interrupt the coach at any time</p>
-              <p>Ask &quot;what should I do next?&quot; if you&apos;re stuck</p>
-              <p>Say &quot;explain that again&quot; for more detail</p>
-            </div>
+            <Tips />
           </div>
         )}
 
@@ -260,14 +256,7 @@ export default function LiveSessionPage() {
             <div className="p-3.5 bg-(--success)/8 border border-(--success)/20 rounded-xl text-sm text-(--success) text-center font-medium">
               Screen shared — coach can see your {softwareName}
             </div>
-            <div className="p-5 bg-(--surface) border border-(--border) rounded-xl text-xs text-(--muted) space-y-2">
-              <p className="font-medium text-(--foreground)/60 uppercase tracking-wide text-[10px]">
-                Tips
-              </p>
-              <p>Speak naturally — barge-in to interrupt the coach at any time</p>
-              <p>Ask &quot;what should I do next?&quot; if you&apos;re stuck</p>
-              <p>Say &quot;explain that again&quot; for more detail</p>
-            </div>
+            <Tips />
           </div>
         )}
 
@@ -277,13 +266,24 @@ export default function LiveSessionPage() {
             <div className="p-3.5 bg-(--warning)/8 border border-(--warning)/20 rounded-xl text-sm text-(--warning) text-center">
               Reconnecting… your session context is preserved
             </div>
-            <div className="p-5 bg-(--surface) border border-(--border) rounded-xl text-xs text-(--muted) space-y-2">
-              <p className="font-medium text-(--foreground)/60 uppercase tracking-wide text-[10px]">
-                Tips
-              </p>
-              <p>Speak naturally — barge-in to interrupt the coach at any time</p>
-              <p>Ask &quot;what should I do next?&quot; if you&apos;re stuck</p>
+            <Tips items={DEFAULT_TIPS.slice(0, 2)} />
+          </div>
+        )}
+
+        {/* Error: connection failed */}
+        {status === "error" && (
+          <div className="w-full max-w-md space-y-3">
+            <div className="p-3.5 bg-(--error)/8 border border-(--error)/20 rounded-xl text-sm text-(--error) text-center">
+              Connection error — could not reach the coaching server
             </div>
+            <button
+              type="button"
+              onClick={startSession}
+              className="w-full flex items-center justify-center gap-2 py-3 bg-(--accent) hover:bg-(--accent-hover) text-white rounded-xl font-semibold transition-colors cursor-pointer"
+            >
+              <PlayIcon />
+              Retry Session
+            </button>
           </div>
         )}
       </main>
@@ -296,7 +296,6 @@ export default function LiveSessionPage() {
         onFrame={handleScreenFrame}
         onStopped={handleScreenStopped}
       />
-
     </div>
   );
 }
