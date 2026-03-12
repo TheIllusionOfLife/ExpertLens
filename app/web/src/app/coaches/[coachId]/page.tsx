@@ -1,15 +1,84 @@
+"use client";
+
 import { CoachIcon } from "@/components/CoachIcon";
 import { PreferencesForm } from "@/components/PreferencesForm";
 import { getCoach } from "@/lib/api-client";
+import type { Coach } from "@/types/coach";
 import Link from "next/link";
+import { use, useEffect, useState } from "react";
 
 interface Props {
   params: Promise<{ coachId: string }>;
 }
 
-export default async function CoachDetailPage({ params }: Props) {
-  const { coachId } = await params;
-  const coach = await getCoach(coachId);
+function KnowledgeStatusBanner({
+  coachId,
+  initialStatus,
+}: {
+  coachId: string;
+  initialStatus?: string;
+}) {
+  const [status, setStatus] = useState(initialStatus);
+
+  useEffect(() => {
+    if (status !== "building") return;
+    const id = setInterval(async () => {
+      try {
+        const coach = await getCoach(coachId);
+        setStatus(coach.knowledge_status);
+        if (coach.knowledge_status !== "building") clearInterval(id);
+      } catch {
+        // ignore polling errors — banner stays until status resolves
+      }
+    }, 3000);
+    return () => clearInterval(id);
+  }, [coachId, status]);
+
+  if (status === "building") {
+    return (
+      <div className="px-4 py-3 rounded-lg border border-(--accent)/40 bg-(--accent)/5 text-sm text-(--accent) animate-pulse">
+        Building knowledge base… (~30 seconds)
+      </div>
+    );
+  }
+  if (status === "error") {
+    return (
+      <div className="px-4 py-3 rounded-lg border border-(--error,#ef4444)/40 bg-red-500/5 text-sm text-red-400">
+        Knowledge generation failed — session uses base model training
+      </div>
+    );
+  }
+  return null;
+}
+
+export default function CoachDetailPage({ params }: Props) {
+  const { coachId } = use(params);
+  const [coach, setCoach] = useState<Coach | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    getCoach(coachId)
+      .then(setCoach)
+      .catch(() => setError("Coach not found"));
+  }, [coachId]);
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-(--background) flex items-center justify-center text-(--muted)">
+        {error}
+      </div>
+    );
+  }
+
+  if (!coach) {
+    return (
+      <div className="min-h-screen bg-(--background) flex items-center justify-center text-(--muted)">
+        Loading…
+      </div>
+    );
+  }
+
+  const sessionDisabled = coach.knowledge_status === "building";
 
   return (
     <div className="min-h-screen bg-(--background)">
@@ -25,14 +94,21 @@ export default async function CoachDetailPage({ params }: Props) {
           <span className="text-sm font-medium">{coach.display_name}</span>
         </div>
         <Link
-          href={`/session/${coachId}`}
-          className="px-4 py-2 bg-(--accent) hover:bg-(--accent-hover) text-white rounded-lg text-sm font-medium transition-colors"
+          href={sessionDisabled ? "#" : `/session/${coachId}`}
+          aria-disabled={sessionDisabled}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            sessionDisabled
+              ? "bg-(--surface-elevated) text-(--muted) cursor-not-allowed pointer-events-none opacity-50"
+              : "bg-(--accent) hover:bg-(--accent-hover) text-white"
+          }`}
         >
           ▶ Start Session
         </Link>
       </header>
 
       <main className="px-8 py-10 max-w-2xl mx-auto space-y-10">
+        <KnowledgeStatusBanner coachId={coachId} initialStatus={coach.knowledge_status} />
+
         {/* Coach info */}
         <div className="flex items-start gap-4">
           <div className="w-14 h-14 rounded-xl bg-(--surface-elevated) border border-(--border) flex items-center justify-center flex-shrink-0">

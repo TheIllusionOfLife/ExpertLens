@@ -6,6 +6,8 @@ export interface Coach {
   focus_areas: string[];
   icon: string;
   default_preferences: UserPreferences;
+  knowledge_status?: "none" | "building" | "ready" | "error";
+  knowledge_error?: string;
 }
 
 export interface UserPreferences {
@@ -24,7 +26,7 @@ export interface Session {
   last_topics?: string[];
 }
 
-// Hardcoded demo coaches (replaced by API in PR3)
+// Hardcoded demo coaches (fallback for dashboard when API is unavailable)
 export const DEMO_COACHES: Coach[] = [
   {
     coach_id: "blender",
@@ -33,6 +35,7 @@ export const DEMO_COACHES: Coach[] = [
     persona: "Concise expert who always leads with keyboard shortcuts",
     focus_areas: ["Modeling", "UV Unwrapping", "Materials", "Rendering", "Animation"],
     icon: "🎨",
+    knowledge_status: "ready",
     default_preferences: {
       interaction_style: "shortcuts",
       tone: "concise_expert",
@@ -48,6 +51,7 @@ export const DEMO_COACHES: Coach[] = [
     persona: "Friendly mentor focused on non-destructive workflows",
     focus_areas: ["Layers", "Adjustments", "Retouching", "Selections", "Export"],
     icon: "📸",
+    knowledge_status: "ready",
     default_preferences: {
       interaction_style: "both",
       tone: "calm_mentor",
@@ -63,6 +67,7 @@ export const DEMO_COACHES: Coach[] = [
     persona: "Technical guide for Blueprints, materials, and level design",
     focus_areas: ["Blueprints", "Materials", "Lighting", "Level Design", "Asset Management"],
     icon: "🎮",
+    knowledge_status: "ready",
     default_preferences: {
       interaction_style: "both",
       tone: "concise_expert",
