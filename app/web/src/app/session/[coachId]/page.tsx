@@ -1,5 +1,6 @@
 "use client";
 
+import { CoachIcon } from "@/components/CoachIcon";
 import { AudioCapture } from "@/components/session/AudioCapture";
 import { AudioPlayback, type AudioPlaybackHandle } from "@/components/session/AudioPlayback";
 import { ScreenCapture } from "@/components/session/ScreenCapture";
@@ -138,7 +139,7 @@ export default function LiveSessionPage() {
   return (
     <div className="min-h-screen bg-(--background) flex flex-col">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-(--border)">
+      <header className="flex items-center justify-between px-16 py-5 border-b border-(--border) bg-(--surface)">
         <button
           type="button"
           onClick={() => router.push("/")}
@@ -165,22 +166,22 @@ export default function LiveSessionPage() {
             {/* Coach avatar with glow */}
             <div className="relative mx-auto w-24 h-24">
               <div className="absolute inset-0 rounded-2xl bg-(--accent-glow) blur-xl" />
-              <div className="relative w-24 h-24 rounded-2xl bg-(--surface-elevated) border border-(--border) flex items-center justify-center text-4xl">
-                {coach?.icon ?? "🎯"}
+              <div className="relative w-24 h-24 rounded-2xl bg-(--surface-elevated) border border-(--border) flex items-center justify-center">
+                <CoachIcon coachId={coachId} size={52} />
               </div>
             </div>
 
             <div>
-              <h1 className="text-2xl font-bold mb-2">{coachName}</h1>
+              <h1 className="text-2xl font-bold mb-3">{coachName}</h1>
               <p className="text-(--muted) text-sm leading-relaxed max-w-xs mx-auto">
                 {coach?.persona ?? "Your AI coaching session"}
               </p>
             </div>
 
             {/* Steps */}
-            <div className="text-left space-y-3 bg-(--surface-elevated) rounded-xl p-5 border border-(--border)">
+            <div className="text-left space-y-4 bg-(--surface-elevated) rounded-xl p-6 border border-(--border)">
               {STEPS(softwareName).map((step, i) => (
-                <div key={step} className="flex items-start gap-3 text-sm">
+                <div key={step} className="flex items-start gap-4 text-sm">
                   <span className="flex-shrink-0 w-5 h-5 rounded-full bg-(--accent-glow) border border-(--accent)/20 text-(--accent) text-xs flex items-center justify-center font-semibold mt-0.5">
                     {i + 1}
                   </span>
@@ -200,39 +201,88 @@ export default function LiveSessionPage() {
           </div>
         )}
 
-        {/* Active session info */}
-        {status !== "disconnected" && (
-          <div className="w-full max-w-md space-y-3">
-            {!screenSharing && status === "connected" && (
-              <div className="p-4 bg-(--surface-elevated) border border-(--border) rounded-xl text-center text-sm text-(--muted) leading-relaxed">
-                Share your <strong className="text-(--foreground)">{softwareName}</strong> window to
-                enable visual coaching.
-                <br />
-                <span className="text-xs">
-                  The coach can still hear you without screen sharing.
-                </span>
+        {/* Connected, no screen: full-viewport Share Screen CTA */}
+        {status === "connected" && !screenSharing && (
+          <div className="flex flex-col items-center gap-7 text-center max-w-sm w-full">
+            <div className="relative">
+              <div className="absolute inset-0 rounded-2xl bg-(--accent-glow) blur-2xl scale-150" />
+              <div className="relative w-20 h-20 rounded-2xl bg-(--surface-elevated) border border-(--accent)/30 flex items-center justify-center">
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-(--accent)"
+                  aria-hidden="true"
+                >
+                  <rect x="2" y="3" width="20" height="14" rx="2" />
+                  <path d="M8 21h8M12 17v4" />
+                </svg>
               </div>
-            )}
-
-            {screenSharing && (
-              <div className="p-3.5 bg-(--success)/8 border border-(--success)/20 rounded-xl text-sm text-(--success) text-center font-medium">
-                Screen shared — coach can see your {softwareName}
-              </div>
-            )}
-
-            {status === "reconnecting" && (
-              <div className="p-3.5 bg-(--warning)/8 border border-(--warning)/20 rounded-xl text-sm text-(--warning) text-center">
-                Reconnecting… your session context is preserved
-              </div>
-            )}
-
-            <div className="p-4 bg-(--surface) border border-(--border) rounded-xl text-xs text-(--muted) space-y-2">
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold mb-2">Share your screen</h2>
+              <p className="text-(--muted) text-sm leading-relaxed max-w-xs mx-auto">
+                Let your coach see{" "}
+                <strong className="text-(--foreground)">{softwareName}</strong>
+                {" "}for real-time visual guidance
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setScreenSharing(true)}
+              className="flex items-center gap-2.5 px-8 py-3.5 bg-(--accent) hover:bg-(--accent-hover) text-white rounded-xl font-semibold text-base transition-all shadow-[0_0_40px_rgba(124,106,247,0.3)] hover:shadow-[0_0_50px_rgba(124,106,247,0.4)] cursor-pointer"
+            >
+              <MonitorIcon />
+              Share Screen
+            </button>
+            <p className="text-xs text-(--muted)">
+              Audio coaching is active — your coach can hear you
+            </p>
+            <div className="w-full p-5 bg-(--surface) border border-(--border) rounded-xl text-xs text-(--muted) space-y-2 text-left">
               <p className="font-medium text-(--foreground)/60 uppercase tracking-wide text-[10px]">
                 Tips
               </p>
               <p>Speak naturally — barge-in to interrupt the coach at any time</p>
               <p>Ask &quot;what should I do next?&quot; if you&apos;re stuck</p>
               <p>Say &quot;explain that again&quot; for more detail</p>
+            </div>
+          </div>
+        )}
+
+        {/* Connected + screen sharing: status + tips */}
+        {status === "connected" && screenSharing && (
+          <div className="w-full max-w-md space-y-3">
+            <div className="p-3.5 bg-(--success)/8 border border-(--success)/20 rounded-xl text-sm text-(--success) text-center font-medium">
+              Screen shared — coach can see your {softwareName}
+            </div>
+            <div className="p-5 bg-(--surface) border border-(--border) rounded-xl text-xs text-(--muted) space-y-2">
+              <p className="font-medium text-(--foreground)/60 uppercase tracking-wide text-[10px]">
+                Tips
+              </p>
+              <p>Speak naturally — barge-in to interrupt the coach at any time</p>
+              <p>Ask &quot;what should I do next?&quot; if you&apos;re stuck</p>
+              <p>Say &quot;explain that again&quot; for more detail</p>
+            </div>
+          </div>
+        )}
+
+        {/* Reconnecting: warning + tips */}
+        {status === "reconnecting" && (
+          <div className="w-full max-w-md space-y-3">
+            <div className="p-3.5 bg-(--warning)/8 border border-(--warning)/20 rounded-xl text-sm text-(--warning) text-center">
+              Reconnecting… your session context is preserved
+            </div>
+            <div className="p-5 bg-(--surface) border border-(--border) rounded-xl text-xs text-(--muted) space-y-2">
+              <p className="font-medium text-(--foreground)/60 uppercase tracking-wide text-[10px]">
+                Tips
+              </p>
+              <p>Speak naturally — barge-in to interrupt the coach at any time</p>
+              <p>Ask &quot;what should I do next?&quot; if you&apos;re stuck</p>
             </div>
           </div>
         )}
@@ -247,19 +297,6 @@ export default function LiveSessionPage() {
         onStopped={handleScreenStopped}
       />
 
-      {/* Screen share FAB */}
-      {status === "connected" && !screenSharing && (
-        <div className="fixed bottom-6 right-6">
-          <button
-            type="button"
-            onClick={() => setScreenSharing(true)}
-            className="flex items-center gap-2 px-5 py-3 bg-(--surface-elevated) hover:bg-(--surface-elevated)/80 border border-(--border) hover:border-(--accent)/30 rounded-xl text-sm font-medium transition-all shadow-lg"
-          >
-            <MonitorIcon />
-            Share Screen
-          </button>
-        </div>
-      )}
     </div>
   );
 }

@@ -113,7 +113,7 @@ export function SessionControls({
           <button
             type="button"
             onClick={onStop}
-            className="flex items-center gap-2 px-3.5 py-2 bg-(--error)/8 hover:bg-(--error)/15 border border-(--error)/25 text-(--error) rounded-lg font-medium text-sm transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-(--error) hover:opacity-90 text-white rounded-lg font-semibold text-sm transition-all"
           >
             <StopIcon />
             Stop
