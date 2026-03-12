@@ -144,10 +144,30 @@ const UnrealEngineIcon = ({ size }: { size: number }) => (
     <circle cx="7" cy="11" r="3" fill="#34d399" />
     <circle cx="25" cy="11" r="3" fill="#34d399" />
     <circle cx="16" cy="23" r="3" fill="#34d399" />
-    <line x1="10" y1="11" x2="22" y2="11" stroke="#34d399" strokeWidth="1.5" />
+    <line x1="10" y1="11" x2="14" y2="11" stroke="#34d399" strokeWidth="1.5" />
+    <line x1="18" y1="11" x2="22" y2="11" stroke="#34d399" strokeWidth="1.5" />
     <line x1="8.5" y1="13.5" x2="14.2" y2="20.8" stroke="#34d399" strokeWidth="1.5" />
     <line x1="23.5" y1="13.5" x2="17.8" y2="20.8" stroke="#34d399" strokeWidth="1.5" />
-    <circle cx="16" cy="11" r="2" fill="var(--background)" stroke="#34d399" strokeWidth="1" />
+    <circle cx="16" cy="11" r="2" fill="none" stroke="#34d399" strokeWidth="1" />
+  </svg>
+);
+
+// DaVinci Resolve: circular badge with play triangle — references the resolve logo shape
+const DavinciResolveIcon = ({ size }: { size: number }) => (
+  <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+    <circle cx="16" cy="16" r="11" stroke="#e05c4b" strokeWidth="2" />
+    <path d="M13 11l8 5-8 5V11z" fill="#e05c4b" />
+  </svg>
+);
+
+// Figma: five-component grid — references the official Figma logo geometry
+const FigmaIcon = ({ size }: { size: number }) => (
+  <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+    <rect x="9" y="5" width="7" height="7" rx="2" fill="#a259ff" />
+    <rect x="9" y="12.5" width="7" height="7" rx="2" fill="#1abcfe" />
+    <rect x="9" y="20" width="7" height="7" rx="2" fill="#0acf83" />
+    <rect x="16" y="5" width="7" height="7" rx="2" fill="#ff7262" />
+    <circle cx="19.5" cy="16" r="3.5" fill="#f24e1e" />
   </svg>
 );
 
@@ -162,6 +182,8 @@ const ICONS: Record<string, (props: { size: number }) => React.JSX.Element> = {
   blender: BlenderIcon,
   affinity_photo: AffinityIcon,
   unreal_engine: UnrealEngineIcon,
+  davinci_resolve: DavinciResolveIcon,
+  figma: FigmaIcon,
 };
 
 export function CoachIcon({ coachId, size = 32 }: Props) {

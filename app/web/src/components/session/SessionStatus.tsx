@@ -53,7 +53,7 @@ export function SessionStatus({ coachName, status, elapsed }: Props) {
       <span className="w-px h-3 bg-(--border)" />
       <span className={`text-xs ${cfg.color}`}>{cfg.label}</span>
       {isLive && elapsed > 0 && (
-        <span className="text-xs text-(--muted) font-mono tabular-nums">
+        <span className="text-xs text-(--muted) font-mono tabular-nums" aria-hidden="true">
           {formatElapsed(elapsed)}
         </span>
       )}

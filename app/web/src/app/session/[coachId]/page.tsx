@@ -278,7 +278,10 @@ export default function LiveSessionPage() {
             </div>
             <button
               type="button"
-              onClick={startSession}
+              onClick={() => {
+                stopSession();
+                startSession();
+              }}
               className="w-full flex items-center justify-center gap-2 py-3 bg-(--accent) hover:bg-(--accent-hover) text-white rounded-xl font-semibold transition-colors cursor-pointer"
             >
               <PlayIcon />
