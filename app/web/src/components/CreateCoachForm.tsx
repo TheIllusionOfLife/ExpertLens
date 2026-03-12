@@ -131,6 +131,51 @@ const SOFTWARE_OPTIONS = [
     ),
   },
   {
+    value: "fusion",
+    label: "Fusion",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <circle cx="10" cy="16" r="5" stroke="#e8a020" strokeWidth="1.5" fill="none" />
+        <circle cx="22" cy="16" r="5" stroke="#e8a020" strokeWidth="1.5" fill="none" />
+        <line
+          x1="15"
+          y1="16"
+          x2="17"
+          y2="16"
+          stroke="#e8a020"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+        <circle cx="10" cy="16" r="2" fill="#e8a020" opacity="0.6" />
+        <circle cx="22" cy="16" r="2" fill="#e8a020" opacity="0.6" />
+      </svg>
+    ),
+  },
+  {
+    value: "zbrush",
+    label: "ZBrush",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <path
+          d="M8 24 C8 24 10 20 16 16 C22 12 24 8 24 8"
+          stroke="#f07028"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          fill="none"
+        />
+        <circle
+          cx="16"
+          cy="16"
+          r="3.5"
+          fill="none"
+          stroke="#f07028"
+          strokeWidth="1.5"
+          opacity="0.6"
+        />
+      </svg>
+    ),
+  },
+  {
     value: "custom",
     label: "Other",
     icon: (

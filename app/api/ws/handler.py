@@ -7,6 +7,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 
 from agent.prompts.base import build_system_instruction_from_firestore
 from app.api.config import settings
+from app.api.db.coach_repo import get_coach
 from app.api.db.session_repo import create_session as create_fs_session
 from app.api.db.session_repo import end_session as end_fs_session
 from app.api.ws.audio import is_valid_pcm_chunk
@@ -90,6 +91,23 @@ class SessionHandler:
         coach_id = self._coach_id
         saved_handle = msg.session_handle
         user_id = self._coach_id
+
+        # Check knowledge status — degrade gracefully rather than blocking the session.
+        try:
+            coach = await get_coach(coach_id)
+            if coach and coach.knowledge_status == "building":
+                logger.info(
+                    f"Session started while knowledge is still building (coach={coach_id})"
+                )
+            elif coach and coach.knowledge_status == "error":
+                await self._send_error(
+                    "Knowledge generation failed; session will use base model training only"
+                )
+                # Non-fatal: session continues with whatever knowledge exists in context
+        except Exception as e:
+            logger.warning(
+                f"Could not load coach knowledge_status (coach={coach_id}), continuing: {e}"
+            )
 
         # Build system instruction and create Firestore session record in parallel.
         system_instruction, fs_session = await asyncio.gather(

@@ -137,6 +137,7 @@ export default async function DashboardPage() {
 function CoachCard({ coach, index }: { coach: Coach; index: number }) {
   return (
     <div
+      data-testid="coach-card"
       className="bg-(--surface) border border-(--border) rounded-xl overflow-hidden card-glow card-enter flex flex-col"
       style={{ animationDelay: `${index * 80}ms` }}
     >

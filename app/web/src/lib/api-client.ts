@@ -26,13 +26,7 @@ export async function getCoaches(): Promise<Coach[]> {
 }
 
 export async function getCoach(coachId: string): Promise<Coach> {
-  try {
-    return await apiFetch<Coach>(`/coaches/${coachId}`);
-  } catch {
-    const coach = DEMO_COACHES.find((c) => c.coach_id === coachId);
-    if (!coach) throw new Error(`Coach not found: ${coachId}`);
-    return coach;
-  }
+  return apiFetch<Coach>(`/coaches/${coachId}`);
 }
 
 export async function createCoach(data: Partial<Coach>): Promise<Coach> {

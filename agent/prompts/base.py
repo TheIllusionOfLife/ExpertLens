@@ -95,21 +95,13 @@ async def build_system_instruction_from_firestore(coach_id: str, user_id: str = 
     # Load in parallel
     import asyncio
 
-    from app.api.db.coach_repo import get_coach
     from app.api.db.knowledge_repo import get_all_knowledge_for_software
     from app.api.db.preferences_repo import get_preferences
 
-    coach_task = asyncio.create_task(get_coach(coach_id))
     prefs_task = asyncio.create_task(get_preferences(user_id))
 
-    coach = None
     user_prefs = None
     knowledge_snippets: list[str] = []
-
-    try:
-        coach = await coach_task
-    except Exception as e:
-        logger.warning(f"Failed to load coach {coach_id} from Firestore: {e}")
 
     try:
         prefs = await prefs_task
@@ -118,12 +110,10 @@ async def build_system_instruction_from_firestore(coach_id: str, user_id: str = 
         logger.warning(f"Failed to load preferences for {user_id}: {e}")
 
     try:
-        software_name = (
-            coach.software_name.lower().replace(" ", "_")
-            if coach
-            else coach_id.lower().replace("-", "_").replace(" ", "_")
-        )
-        chunks = await get_all_knowledge_for_software(software_name)
+        # Use coach_id (the Firestore document slug) — it is the canonical key used
+        # by the builder when saving chunks, so it always matches regardless of how
+        # the raw software_name was cased or punctuated.
+        chunks = await get_all_knowledge_for_software(coach_id)
         knowledge_snippets = [c.content for c in chunks]
     except Exception as e:
         logger.warning(f"Failed to load knowledge for {coach_id}: {e}")
