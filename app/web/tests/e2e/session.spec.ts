@@ -7,21 +7,27 @@ test("/session/blender renders disconnected state", async ({ page }) => {
 
 test("coach name visible in session status pill", async ({ page }) => {
   await page.goto("/session/blender");
-  await expect(page.getByText(/blender/i)).toBeVisible();
+  // <output role="status"> is the SessionStatus pill; scope to avoid matching <h1>
+  await expect(page.getByRole("status").getByText(/blender/i)).toBeVisible();
 });
 
 test("status pill shows 'Disconnected' label", async ({ page }) => {
   await page.goto("/session/blender");
-  await expect(page.getByText(/disconnected/i)).toBeVisible();
+  await expect(page.getByRole("status").getByText(/disconnected/i)).toBeVisible();
 });
 
 test("'Start Session' button is present", async ({ page }) => {
   await page.goto("/session/blender");
-  await expect(page.getByRole("button", { name: /start session/i })).toBeVisible();
+  // Two Start Session buttons exist (header + main panel); scope to main
+  await expect(
+    page.getByRole("main").getByRole("button", { name: /start session/i }),
+  ).toBeVisible();
 });
 
-test("'← Dashboard' back link href is /", async ({ page }) => {
+test("'← Dashboard' back button navigates home", async ({ page }) => {
   await page.goto("/session/blender");
-  const backLink = page.getByRole("link", { name: /dashboard/i });
-  await expect(backLink).toHaveAttribute("href", "/");
+  // Header uses <button onClick={router.push("/")}> not a link
+  const backButton = page.getByRole("banner").getByRole("button", { name: /dashboard/i });
+  await backButton.click();
+  await expect(page).toHaveURL("/");
 });
