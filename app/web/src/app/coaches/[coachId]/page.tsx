@@ -11,29 +11,7 @@ interface Props {
   params: Promise<{ coachId: string }>;
 }
 
-function KnowledgeStatusBanner({
-  coachId,
-  initialStatus,
-}: {
-  coachId: string;
-  initialStatus?: string;
-}) {
-  const [status, setStatus] = useState(initialStatus);
-
-  useEffect(() => {
-    if (status !== "building") return;
-    const id = setInterval(async () => {
-      try {
-        const coach = await getCoach(coachId);
-        setStatus(coach.knowledge_status);
-        if (coach.knowledge_status !== "building") clearInterval(id);
-      } catch {
-        // ignore polling errors — banner stays until status resolves
-      }
-    }, 3000);
-    return () => clearInterval(id);
-  }, [coachId, status]);
-
+function KnowledgeStatusBanner({ status }: { status: string | undefined }) {
   if (status === "building") {
     return (
       <div className="px-4 py-3 rounded-lg border border-(--accent)/40 bg-(--accent)/5 text-sm text-(--accent) animate-pulse">
@@ -43,7 +21,7 @@ function KnowledgeStatusBanner({
   }
   if (status === "error") {
     return (
-      <div className="px-4 py-3 rounded-lg border border-(--error,#ef4444)/40 bg-red-500/5 text-sm text-red-400">
+      <div className="px-4 py-3 rounded-lg border border-red-500/40 bg-red-500/5 text-sm text-red-400">
         Knowledge generation failed — session uses base model training
       </div>
     );
@@ -54,13 +32,33 @@ function KnowledgeStatusBanner({
 export default function CoachDetailPage({ params }: Props) {
   const { coachId } = use(params);
   const [coach, setCoach] = useState<Coach | null>(null);
+  const [knowledgeStatus, setKnowledgeStatus] = useState<string | undefined>();
   const [error, setError] = useState("");
 
+  // Initial load
   useEffect(() => {
     getCoach(coachId)
-      .then(setCoach)
+      .then((c) => {
+        setCoach(c);
+        setKnowledgeStatus(c.knowledge_status);
+      })
       .catch(() => setError("Coach not found"));
   }, [coachId]);
+
+  // Poll while building — updates both banner and button disabled state
+  useEffect(() => {
+    if (knowledgeStatus !== "building") return;
+    const id = setInterval(async () => {
+      try {
+        const c = await getCoach(coachId);
+        setKnowledgeStatus(c.knowledge_status);
+        if (c.knowledge_status !== "building") clearInterval(id);
+      } catch {
+        // ignore transient poll errors
+      }
+    }, 3000);
+    return () => clearInterval(id);
+  }, [coachId, knowledgeStatus]);
 
   if (error) {
     return (
@@ -78,7 +76,7 @@ export default function CoachDetailPage({ params }: Props) {
     );
   }
 
-  const sessionDisabled = coach.knowledge_status === "building";
+  const sessionDisabled = knowledgeStatus === "building";
 
   return (
     <div className="min-h-screen bg-(--background)">
@@ -107,7 +105,7 @@ export default function CoachDetailPage({ params }: Props) {
       </header>
 
       <main className="px-8 py-10 max-w-2xl mx-auto space-y-10">
-        <KnowledgeStatusBanner coachId={coachId} initialStatus={coach.knowledge_status} />
+        <KnowledgeStatusBanner status={knowledgeStatus} />
 
         {/* Coach info */}
         <div className="flex items-start gap-4">

@@ -70,9 +70,13 @@ export function createMockServer(): http.Server {
     const url = req.url ?? "/";
     const method = req.method ?? "GET";
 
-    // CORS preflight
+    // CORS preflight — must echo back Access-Control-Allow-Headers to unblock fetch
     if (method === "OPTIONS") {
-      res.writeHead(204, { "Access-Control-Allow-Origin": "*" });
+      res.writeHead(204, {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      });
       res.end();
       return;
     }
