@@ -1,5 +1,6 @@
 """Knowledge builder: generates coach knowledge via Gemini + Google Search grounding."""
 
+import asyncio
 import logging
 from datetime import UTC, datetime
 
@@ -56,8 +57,9 @@ def _parse_sections(text: str) -> dict[str, str]:
 
     sections: dict[str, str] = {}
     for i, (start, topic) in enumerate(positions):
-        # Content starts after the header line
-        content_start = text.index("\n", start) + 1
+        # Content starts after the header line; guard against missing newline
+        newline_pos = text.find("\n", start)
+        content_start = (newline_pos + 1) if newline_pos != -1 else len(text)
         content_end = positions[i + 1][0] if i + 1 < len(positions) else len(text)
         sections[topic] = text[content_start:content_end].strip()
 
@@ -75,14 +77,15 @@ async def build_knowledge_for_coach(coach_id: str, software_name: str) -> None:
     """Generate knowledge chunks for a coach via a single Gemini call with Search grounding."""
     client = genai.Client()
     try:
-        response = await client.aio.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=PROMPT_TEMPLATE.format(software_name=software_name),
-            config=types.GenerateContentConfig(
-                tools=[types.Tool(google_search=types.GoogleSearch())],
-                temperature=0.2,
-            ),
-        )
+        async with asyncio.timeout(120):
+            response = await client.aio.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=PROMPT_TEMPLATE.format(software_name=software_name),
+                config=types.GenerateContentConfig(
+                    tools=[types.Tool(google_search=types.GoogleSearch())],
+                    temperature=0.2,
+                ),
+            )
         if not response.text:
             raise ValueError("Gemini returned an empty response")
         sections = _parse_sections(response.text)

@@ -104,8 +104,10 @@ class SessionHandler:
                     "Knowledge generation failed; session will use base model training only"
                 )
                 # Non-fatal: session continues with whatever knowledge exists in context
-        except Exception:
-            logger.warning(f"Could not load coach knowledge_status (coach={coach_id}), continuing")
+        except Exception as e:
+            logger.warning(
+                f"Could not load coach knowledge_status (coach={coach_id}), continuing: {e}"
+            )
 
         # Build system instruction and create Firestore session record in parallel.
         system_instruction, fs_session = await asyncio.gather(

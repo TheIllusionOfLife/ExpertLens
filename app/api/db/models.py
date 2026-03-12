@@ -1,5 +1,7 @@
 """Pydantic models for Firestore data: Coach, UserPreferences, Session, KnowledgeChunk."""
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -20,7 +22,7 @@ class Coach(BaseModel):
     icon: str = "🎯"
     default_preferences: UserPreferences = Field(default_factory=UserPreferences)
     knowledge_index_id: str = ""
-    knowledge_status: str = "none"  # none | building | ready | error
+    knowledge_status: Literal["none", "building", "ready", "error"] = "none"
     knowledge_error: str = ""
     knowledge_updated_at: str = ""
 

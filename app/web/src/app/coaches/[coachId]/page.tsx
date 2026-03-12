@@ -42,7 +42,7 @@ export default function CoachDetailPage({ params }: Props) {
         setCoach(c);
         setKnowledgeStatus(c.knowledge_status);
       })
-      .catch(() => setError("Coach not found"));
+      .catch(() => setError("Failed to load coach"));
   }, [coachId]);
 
   // Poll while building — updates both banner and button disabled state
@@ -91,17 +91,22 @@ export default function CoachDetailPage({ params }: Props) {
           <span className="text-(--border)">/</span>
           <span className="text-sm font-medium">{coach.display_name}</span>
         </div>
-        <Link
-          href={sessionDisabled ? "#" : `/session/${coachId}`}
-          aria-disabled={sessionDisabled}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            sessionDisabled
-              ? "bg-(--surface-elevated) text-(--muted) cursor-not-allowed pointer-events-none opacity-50"
-              : "bg-(--accent) hover:bg-(--accent-hover) text-white"
-          }`}
-        >
-          ▶ Start Session
-        </Link>
+        {sessionDisabled ? (
+          <button
+            type="button"
+            disabled
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-(--surface-elevated) text-(--muted) cursor-not-allowed opacity-50"
+          >
+            ▶ Start Session
+          </button>
+        ) : (
+          <Link
+            href={`/session/${coachId}`}
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-(--accent) hover:bg-(--accent-hover) text-white"
+          >
+            ▶ Start Session
+          </Link>
+        )}
       </header>
 
       <main className="px-8 py-10 max-w-2xl mx-auto space-y-10">

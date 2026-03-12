@@ -45,9 +45,9 @@ test("banner disappears after polling resolves status to ready", async ({ page }
 test("Start Session button is disabled while status=building", async ({ page }) => {
   // beforeEach reset ensures davinciPollCount=0, so first response is 'building'
   await page.goto("/coaches/davinci_resolve");
-  const startBtn = page.getByRole("link", { name: /start session/i });
-  // Button has opacity-50 and pointer-events-none while building
-  await expect(startBtn).toHaveAttribute("aria-disabled", "true");
+  // Disabled state renders a real <button disabled>, not a link
+  const startBtn = page.getByRole("button", { name: /start session/i });
+  await expect(startBtn).toBeDisabled();
 });
 
 test("Start Session is enabled once status=ready", async ({ page }) => {

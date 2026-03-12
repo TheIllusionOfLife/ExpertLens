@@ -21,7 +21,7 @@ BLENDER_COACH = Coach(
 
 BUILDING_COACH = Coach(
     coach_id="davinci_resolve",
-    software_name="davinci_resolve",
+    software_name="DaVinci Resolve",  # differs from slug to catch arg-swap regressions
     display_name="DaVinci Resolve Expert",
     persona="Expert coach for DaVinci Resolve",
     knowledge_status="building",
@@ -117,7 +117,7 @@ async def test_create_coach_triggers_builder(async_client, monkeypatch):
         json={"software_name": "DaVinci Resolve"},
     )
     assert response.status_code == 201
-    builder_mock.assert_called_once_with("davinci_resolve", "davinci_resolve")
+    builder_mock.assert_called_once_with("davinci_resolve", "DaVinci Resolve")
 
 
 # ---------------------------------------------------------------------------
