@@ -49,6 +49,7 @@ async def create_coach(data: CoachCreate) -> Coach | None:
         persona=data.persona or f"Expert coach for {data.software_name}",
         focus_areas=data.focus_areas,
         icon=data.icon,
+        knowledge_status="building",
     )
     try:
         await ref.create(coach.model_dump())

@@ -4,6 +4,13 @@ from app.api.db.firestore import KNOWLEDGE_COLLECTION, get_client
 from app.api.db.models import KnowledgeChunk
 
 
+async def save_chunk(chunk: KnowledgeChunk) -> None:
+    """Upsert a knowledge chunk into Firestore."""
+    await get_client().collection(KNOWLEDGE_COLLECTION).document(chunk.chunk_id).set(
+        chunk.model_dump()
+    )
+
+
 async def get_knowledge(software_name: str, topic: str, limit: int = 3) -> list[KnowledgeChunk]:
     """Query knowledge chunks by software_name + topic substring match."""
     # Firestore doesn't support full-text search; use prefix match on topic field.
