@@ -60,3 +60,7 @@ htmlcov/
 
 # Playwright CLI artifacts
 .playwright-cli/
+
+# Playwright test artifacts
+app/web/test-results/
+app/web/playwright-report/
