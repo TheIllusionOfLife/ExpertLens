@@ -26,8 +26,8 @@ test("'Start Session' button is present", async ({ page }) => {
 
 test("'← Dashboard' back button navigates home", async ({ page }) => {
   await page.goto("/session/blender");
-  // Header uses <button onClick={router.push("/")}> not a link — check it exists
-  await expect(
-    page.getByRole("banner").getByRole("button", { name: /dashboard/i }),
-  ).toBeVisible();
+  // Header uses <button onClick={router.push("/")}> not a link
+  const backButton = page.getByRole("banner").getByRole("button", { name: /dashboard/i });
+  await backButton.click();
+  await expect(page).toHaveURL("/");
 });
