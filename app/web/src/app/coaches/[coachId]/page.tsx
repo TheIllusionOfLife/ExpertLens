@@ -1,3 +1,4 @@
+import { CoachIcon } from "@/components/CoachIcon";
 import { PreferencesForm } from "@/components/PreferencesForm";
 import { getCoach } from "@/lib/api-client";
 import Link from "next/link";
@@ -34,7 +35,9 @@ export default async function CoachDetailPage({ params }: Props) {
       <main className="px-8 py-10 max-w-2xl mx-auto space-y-10">
         {/* Coach info */}
         <div className="flex items-start gap-4">
-          <span className="text-4xl">{coach.icon}</span>
+          <div className="w-14 h-14 rounded-xl bg-(--surface-elevated) border border-(--border) flex items-center justify-center flex-shrink-0">
+            <CoachIcon coachId={coachId} size={32} />
+          </div>
           <div>
             <h1 className="text-2xl font-bold mb-1">{coach.display_name}</h1>
             <p className="text-(--muted) text-sm leading-relaxed">{coach.persona}</p>

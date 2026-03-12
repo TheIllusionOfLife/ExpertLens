@@ -76,6 +76,7 @@ export class WsClient {
     };
 
     this.ws.onerror = () => {
+      this.stopped = true; // prevent onclose from triggering reconnect loop
       this.options.onStatusChange("error");
     };
   }

@@ -50,4 +50,11 @@ Materials define how a surface looks. Material Editor = node graph.
 - Avoid too many Texture Samples (performance)
 - Use Material Functions for reusable node groups
 - Check shader complexity (View → Shader Complexity) — green=good, red=expensive
-- Nanite meshes: Translucent materials are unsupported (use Opaque or Masked); unsupported materials render with a default material and emit a warning
+
+## Nanite Compatibility (evolving — check version)
+- **UE 5.0–5.2**: Nanite for static meshes only; Translucent materials unsupported
+- **UE 5.3+**: Nanite supports **Landscapes** — use Nanite Landscapes for terrain
+- **UE 5.4+**: Nanite supports **Tessellation & Displacement** — add height detail without baking
+- **UE 5.5+**: Nanite supports **Skeletal Meshes** — film-quality geo for characters without LOD pressure
+- Translucent materials still unsupported on Nanite meshes (use Opaque or Masked)
+- If Nanite is enabled and material is unsupported: renders with default magenta material + warning

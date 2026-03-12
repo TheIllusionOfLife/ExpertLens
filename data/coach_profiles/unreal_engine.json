@@ -16,6 +16,7 @@
   "seed_sources": [
     "shortcuts",
     "blueprints",
-    "materials"
+    "materials",
+    "ue5_modern_features"
   ]
 }

@@ -44,6 +44,30 @@ Always prefer adjustment layers over direct pixel editing:
 - Feather mask: soft transition
 - Luminosity mask: affect only lights/darks
 
+## AI Retouching Tools (Canva Pro required)
+
+### Generative Fill
+- Select an area, then choose Edit → Generative Fill (or toolbar button)
+- Type a text prompt describing what to add/replace
+- Generates multiple variations to choose from
+- Works for: object removal, replacement, background changes
+
+### Magic Expand
+- Extends photo edges to change aspect ratio or fill blank canvas space
+- Access via Document → Magic Expand or crop tool options
+- AI inpaints the extended area based on the existing image content
+- Ideal for: repurposing portrait photos to landscape for social media
+
+### Background Remover
+- Layer → Background Remover (one click)
+- Better hair/fur edge handling than the manual Refine Selection workflow
+- Still non-destructive: creates a mask layer on the pixel layer
+
+### Smart Vectorizer
+- Converts raster image to editable vector paths
+- Layer → Smart Vectorize (available in both Pixel Studio and Vector Studio)
+- Adjust detail/color threshold in the dialog before confirming
+
 ## Blend Modes (Key Ones)
 - Multiply: darken (like stacking transparencies)
 - Screen: lighten (like projecting two slides)

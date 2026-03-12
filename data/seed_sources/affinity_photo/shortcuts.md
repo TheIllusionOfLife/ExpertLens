@@ -35,8 +35,10 @@
 - Cmd/Ctrl+Shift+N: New layer
 - Cmd/Ctrl+S: Save | Cmd/Ctrl+Shift+S: Save as
 
-## Personas
-- Photo Persona (default): pixel editing
-- Liquify Persona: warp/distort
-- Develop Persona: RAW processing
-- Export Persona: slice and export
+## Studios (replaced Personas in Nov 2025 unified app)
+- **Pixel Studio** (default): raster/pixel editing — replaces Photo Persona
+- **Vector Studio**: vector illustration — was Affinity Designer
+- **Layout Studio**: page layout & print — was Affinity Publisher
+- Liquify tools: available within Pixel Studio
+- Develop tools: RAW processing within Pixel Studio
+- Export: built into each Studio's File menu

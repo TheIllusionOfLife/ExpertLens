@@ -5,26 +5,63 @@
   --foreground: #e8e8f0;
   --surface: #13131a;
   --surface-elevated: #1a1a24;
-  --border: #2a2a38;
+  --border: #3d3d52;
   --accent: #7c6af7;
   --accent-hover: #9b8fff;
+  --accent-glow: rgba(124, 106, 247, 0.12);
   --success: #34d399;
   --warning: #fbbf24;
   --error: #f87171;
-  --muted: #6b7280;
+  --muted: #9ca3af;
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+/* Card glow on hover */
+.card-glow {
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.card-glow:hover {
+  box-shadow: 0 0 0 1px rgba(124, 106, 247, 0.25), 0 8px 32px rgba(124, 106, 247, 0.08);
+}
+
+/* Staggered card entrance */
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-enter {
+  animation: card-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-enter {
+    animation: none;
+  }
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+  }
 }
 
 html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
-  background: var(--background);
+  /* Dot-grid texture layered over dark background */
+  background-color: var(--background);
+  background-image: radial-gradient(circle, rgba(124, 106, 247, 0.07) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-attachment: fixed;
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;

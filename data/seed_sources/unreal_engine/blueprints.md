@@ -33,10 +33,24 @@ Event BeginPlay → Set Timer by Function Name → [set Interval, Looping]
 [Condition] → Branch → [True] / [False]
 ```
 
-## Input & Player Control
-1. Project Settings → Input → Add Action/Axis Mappings
-2. In Blueprint: "Input Action [Name]" event node
-3. Pressed/Released pins for button inputs
+## Input & Player Control (Enhanced Input System — UE5 default)
+UE5 uses the **Enhanced Input System** by default. The old Action/Axis Mappings are LEGACY.
+
+### Enhanced Input workflow:
+1. **Create an InputAction asset**: Content Browser → Add → Input → Input Action
+   - Set Value Type (Digital = button, Axis1D = axis like throttle, Axis2D = mouse/stick)
+2. **Create an InputMappingContext asset**: Content Browser → Add → Input → Input Mapping Context
+   - Open it → Add mapping → select your InputAction → assign keys
+3. **Add the mapping context in Blueprint**:
+   - Event BeginPlay → Get Player Controller → Get Enhanced Input Local Player Subsystem
+   → Add Mapping Context (select your IMC asset, Priority 0)
+4. **Bind action in Blueprint**:
+   - Right-click graph → search "Enhanced Action Events" → select your InputAction
+   - Use Triggered / Started / Completed pins
+
+### Key difference from legacy:
+- Old: "InputAction Jump" event lived in Project Settings
+- New: InputAction and InputMappingContext are **Content Browser assets** you create per project
 
 ## Components & Actors
 - Components are attached to Actors
