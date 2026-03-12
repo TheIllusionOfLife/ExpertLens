@@ -18,6 +18,7 @@
     "modeling_basics",
     "common_errors",
     "modifiers",
-    "rendering"
+    "rendering",
+    "blender_4x_changes"
   ]
 }

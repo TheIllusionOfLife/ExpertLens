@@ -1,16 +1,20 @@
 # Blender Rendering Guide
 
-## Cycles vs EEVEE
+## Cycles vs EEVEE Next
 
 ### Cycles (ray-traced, photorealistic)
 - Better for: glass, caustics, global illumination, product renders
 - Slower; use GPU if available (Render → Device → GPU Compute)
 - Samples: 128 for preview, 512-2048 for final; enable Denoising
 
-### EEVEE (rasterized, real-time)
-- Better for: stylized, fast iteration, animations
-- Enable Screen Space Reflections + Ambient Occlusion for quality boost
-- Bloom, Depth of Field available in Post Processing
+### EEVEE Next (rasterized, real-time) — Blender 4.2+
+- EEVEE was fully rewritten in Blender 4.2 ("EEVEE Next") — significant quality improvement
+- Real-time Screen Space Global Illumination (SSGI): better GI without baking
+- Ray-traced shadows and reflections available as quality options
+- **CRITICAL: Bloom is no longer in EEVEE Render Properties**
+  - Old (3.x/4.1): Enable "Bloom" checkbox in Render Properties
+  - New (4.2+): Add a **Glare node** in the Compositor (Render Properties → Post Processing → Compositing)
+- Depth of Field: still available via Camera properties
 
 ## Render Settings
 

@@ -33,16 +33,19 @@ KNOWLEDGE_MAP: dict[str, list[tuple[str, Path]]] = {
         ("common_errors", _REPO_ROOT / "data/seed_sources/blender/common_errors.md"),
         ("modifiers", _REPO_ROOT / "data/seed_sources/blender/modifiers.md"),
         ("rendering", _REPO_ROOT / "data/seed_sources/blender/rendering.md"),
+        ("blender_4x_changes", _REPO_ROOT / "data/seed_sources/blender/blender_4x_changes.md"),
     ],
     "affinity_photo": [
         ("shortcuts", _REPO_ROOT / "data/seed_sources/affinity_photo/shortcuts.md"),
         ("retouching", _REPO_ROOT / "data/seed_sources/affinity_photo/retouching.md"),
         ("layers", _REPO_ROOT / "data/seed_sources/affinity_photo/layers.md"),
+        ("v3_changes", _REPO_ROOT / "data/seed_sources/affinity_photo/v3_changes.md"),
     ],
     "unreal_engine": [
         ("shortcuts", _REPO_ROOT / "data/seed_sources/unreal_engine/shortcuts.md"),
         ("blueprints", _REPO_ROOT / "data/seed_sources/unreal_engine/blueprints.md"),
         ("materials", _REPO_ROOT / "data/seed_sources/unreal_engine/materials.md"),
+        ("ue5_modern_features", _REPO_ROOT / "data/seed_sources/unreal_engine/ue5_modern_features.md"),
     ],
 }
 

@@ -24,8 +24,13 @@
 
 ### Merging Vertices
 - M (Edit Mode): Merge at First/Last/Center/Cursor
-- Alt+M (pre-2.8): Same as M
 - Mesh → Merge by Distance: Remove doubles (set threshold)
+
+### Smooth Shading (CHANGED in Blender 4.1)
+- **Old (3.x/4.0)**: Right-click → Shade Smooth, then enable "Auto Smooth" checkbox in Mesh Properties
+- **New (4.1+)**: Right-click → Shade Smooth (auto), OR add **"Smooth by Angle" modifier** (non-destructive)
+  - The "Auto Smooth" checkbox in Mesh Data Properties no longer exists
+  - Modifier approach: Properties → Modifier → Add → Smooth by Angle (set angle threshold)
 
 ### Boolean Operations
 - Modifier → Boolean: Union/Difference/Intersect
