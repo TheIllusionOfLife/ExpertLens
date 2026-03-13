@@ -77,7 +77,7 @@ async def build_knowledge_for_coach(coach_id: str, software_name: str) -> None:
     """Generate knowledge chunks for a coach via a single Gemini call with Search grounding."""
     client = genai.Client()
     try:
-        async with asyncio.timeout(120):
+        async with asyncio.timeout(240):
             response = await client.aio.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=PROMPT_TEMPLATE.format(software_name=software_name),
