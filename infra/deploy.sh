@@ -36,12 +36,13 @@ echo "==> Configuring Docker for Artifact Registry"
 gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
 
 echo "==> Building backend image"
-docker build -t "${REPO}/backend:latest" -f "${ROOT_DIR}/Dockerfile" "${ROOT_DIR}"
+docker build --platform linux/amd64 -t "${REPO}/backend:latest" -f "${ROOT_DIR}/Dockerfile" "${ROOT_DIR}"
 
 echo "==> Building frontend image (baking backend URL at build time)"
 # NEXT_PUBLIC_* vars must be set at build time — they are inlined into the JS bundle.
 # Setting them via Cloud Run env vars post-build has no effect for client-side code.
 docker build \
+  --platform linux/amd64 \
   --build-arg NEXT_PUBLIC_API_URL="${BACKEND_URL}" \
   -t "${REPO}/frontend:latest" \
   -f "${ROOT_DIR}/app/web/Dockerfile" \
