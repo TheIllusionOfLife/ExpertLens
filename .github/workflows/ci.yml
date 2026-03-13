@@ -46,6 +46,8 @@ jobs:
           enable-cache: true
       - run: uv sync --frozen
       - run: uv run pytest tests/ -v --tb=short
+        env:
+          GEMINI_API_KEY: fake
 
   lint-frontend:
     runs-on: ubuntu-latest

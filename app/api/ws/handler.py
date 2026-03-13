@@ -96,9 +96,7 @@ class SessionHandler:
         try:
             coach = await get_coach(coach_id)
             if coach and coach.knowledge_status == "building":
-                logger.info(
-                    f"Session started while knowledge is still building (coach={coach_id})"
-                )
+                logger.info(f"Session started while knowledge is still building (coach={coach_id})")
             elif coach and coach.knowledge_status == "error":
                 await self._send_error(
                     "Knowledge generation failed; session will use base model training only"
