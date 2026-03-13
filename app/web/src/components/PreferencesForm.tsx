@@ -118,9 +118,9 @@ export function PreferencesForm({ coachId, initial }: Props) {
         {saved ? "✓ Saved" : saving ? "Saving…" : "Save Preferences"}
       </button>
       {saveError && (
-        <p role="status" aria-live="polite" className="text-(--error) text-sm mt-2">
+        <output aria-live="polite" className="text-(--error) text-sm mt-2 block">
           {saveError}
-        </p>
+        </output>
       )}
     </div>
   );
