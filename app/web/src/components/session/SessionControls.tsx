@@ -104,7 +104,8 @@ export function SessionControls({
           <button
             type="button"
             onClick={onToggleMic}
-            title={micActive ? "Mute microphone" : "Unmute microphone"}
+            aria-pressed={micActive}
+            title={micActive ? "Click to mute" : "Click to unmute"}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
               micActive
                 ? "bg-(--accent-glow) border-(--accent)/30 text-(--accent)"

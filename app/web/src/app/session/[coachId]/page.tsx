@@ -161,6 +161,7 @@ export default function LiveSessionPage() {
         <button
           type="button"
           onClick={() => router.push("/")}
+          aria-label="Back to dashboard"
           className="text-(--muted) hover:text-(--foreground) text-sm transition-colors"
         >
           ← Dashboard

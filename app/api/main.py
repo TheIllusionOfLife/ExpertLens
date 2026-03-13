@@ -46,8 +46,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         from app.api.db.firestore import get_client
 
         get_client().close()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("Firestore close error: %s", e)
 
 
 _in_cloud_run = bool(os.getenv("K_SERVICE"))
@@ -65,8 +65,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 

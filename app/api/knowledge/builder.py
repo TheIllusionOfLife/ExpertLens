@@ -114,7 +114,7 @@ async def build_knowledge_for_coach(coach_id: str, software_name: str) -> None:
             coach_id,
             {
                 "knowledge_status": "error",
-                "knowledge_error": str(e),
+                "knowledge_error": f"{type(e).__name__}: {str(e)[:200]}",
                 "knowledge_updated_at": datetime.now(UTC).isoformat(),
             },
         )

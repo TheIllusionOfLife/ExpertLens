@@ -46,7 +46,7 @@ class KnowledgeChunk(BaseModel):
 
 
 class CoachCreate(BaseModel):
-    software_name: str
+    software_name: str = Field(..., min_length=1, max_length=100)
     display_name: str | None = None
     persona: str | None = None
     focus_areas: list[str] = Field(default_factory=list)
