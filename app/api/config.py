@@ -1,3 +1,4 @@
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,7 +13,7 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
 
     # Gemini
-    gemini_connect_timeout: float = 30.0
+    gemini_connect_timeout: float = Field(default=30.0, gt=0)
 
     # Server
     host: str = "0.0.0.0"

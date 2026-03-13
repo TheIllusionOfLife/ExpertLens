@@ -22,4 +22,4 @@ seed:
 	uv run python scripts/seed_firestore.py
 
 deploy:
-	./infra/deploy.sh
+	./infra/deploy.sh $(PROJECT_ID)

@@ -62,6 +62,7 @@ export function PreferencesForm({ coachId, initial }: Props) {
 
   async function handleSave() {
     setSaving(true);
+    setSaveError(null);
     try {
       await updatePreferences(coachId, prefs);
       setSaved(true);
@@ -117,7 +118,7 @@ export function PreferencesForm({ coachId, initial }: Props) {
         {saved ? "✓ Saved" : saving ? "Saving…" : "Save Preferences"}
       </button>
       {saveError && (
-        <p role="alert" aria-live="polite" className="text-(--error) text-sm mt-2">
+        <p role="status" aria-live="polite" className="text-(--error) text-sm mt-2">
           {saveError}
         </p>
       )}

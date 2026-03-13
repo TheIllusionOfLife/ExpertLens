@@ -142,7 +142,7 @@ GCP Services
 
 ## WebSocket Protocol
 
-The browser connects to `ws://{host}/ws/session/{coach_id}`.
+The browser connects to `wss://{host}/ws/session/{coach_id}` (production) or `ws://localhost:8000/ws/session/{coach_id}` (local dev).
 
 ### Binary Frames (media)
 

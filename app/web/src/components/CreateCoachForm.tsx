@@ -261,7 +261,7 @@ export function CreateCoachForm() {
               value={customSoftware}
               onChange={(e) => setCustomSoftware(e.target.value)}
               placeholder="Enter software name…"
-              className="mt-3 w-full px-4 py-2.5 bg-(--surface-elevated) border border-(--border) rounded-lg text-sm focus:outline-none focus:border-(--accent)"
+              className="mt-3 w-full px-4 py-2.5 bg-(--surface-elevated) border border-(--border) rounded-lg text-sm focus:border-(--accent)"
             />
           </>
         )}
@@ -277,7 +277,7 @@ export function CreateCoachForm() {
           onChange={(e) => setPersona(e.target.value)}
           placeholder="e.g. Concise and direct, always lead with shortcuts, avoid long explanations"
           rows={3}
-          className="w-full px-4 py-2.5 bg-(--surface-elevated) border border-(--border) rounded-lg text-sm focus:outline-none focus:border-(--accent) resize-none"
+          className="w-full px-4 py-2.5 bg-(--surface-elevated) border border-(--border) rounded-lg text-sm focus:border-(--accent) resize-none"
         />
       </div>
 
