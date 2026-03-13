@@ -59,6 +59,9 @@ async def create_coach(data: CoachCreate) -> Coach | None:
 
 
 async def update_coach(coach_id: str, updates: dict) -> Coach | None:
+    # NOTE: local merge is only safe for flat primitive updates (strings, numbers).
+    # Do NOT use this path for Firestore server transforms (ArrayUnion, SERVER_TIMESTAMP,
+    # DELETE_FIELD, or dotted field paths like "a.b").
     if not updates:
         return await get_coach(coach_id)
     ref = get_client().collection(COACHES_COLLECTION).document(coach_id)
@@ -66,5 +69,4 @@ async def update_coach(coach_id: str, updates: dict) -> Coach | None:
     if not doc.exists:
         return None
     await ref.update(updates)
-    doc = await ref.get()
-    return Coach.model_validate(doc.to_dict())
+    return Coach.model_validate({**(doc.to_dict() or {}), **updates})

@@ -184,5 +184,5 @@ async def test_save_chunk_calls_firestore_set(mock_firestore):
 
     mock_firestore.collection.return_value.document.assert_called_with("blender_shortcuts")
     mock_firestore.collection.return_value.document.return_value.set.assert_called_once_with(
-        chunk.model_dump()
+        chunk.model_dump(by_alias=True)
     )

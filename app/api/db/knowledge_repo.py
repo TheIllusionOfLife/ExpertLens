@@ -10,7 +10,7 @@ async def save_chunk(chunk: KnowledgeChunk) -> None:
         get_client()
         .collection(KNOWLEDGE_COLLECTION)
         .document(chunk.chunk_id)
-        .set(chunk.model_dump())
+        .set(chunk.model_dump(by_alias=True))
     )
 
 

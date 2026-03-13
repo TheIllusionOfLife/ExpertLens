@@ -26,6 +26,7 @@ out/
 .turbo/
 .cache/
 bun.lockb
+*.tsbuildinfo
 
 # IDE
 .vscode/

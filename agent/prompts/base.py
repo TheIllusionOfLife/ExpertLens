@@ -42,7 +42,7 @@ PREF_INSTRUCTIONS: dict[str, dict[str, str]] = {
 }
 
 # Context budget: system instruction knowledge capped to preserve token budget
-# for image frames + conversation. 128k total; ~8k (~2k tokens) for knowledge.
+# for image frames + conversation. 128k total; ~8 000 chars (~2 000 tokens at 4 chars/token) for knowledge.
 MAX_KNOWLEDGE_CHARS = 8000
 
 
