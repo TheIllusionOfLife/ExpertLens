@@ -79,7 +79,7 @@ async def build_knowledge_for_coach(coach_id: str, software_name: str) -> None:
     try:
         async with asyncio.timeout(240):
             response = await client.aio.models.generate_content(
-                model="gemini-2.5-flash",
+                model="gemini-3-flash-preview",
                 contents=PROMPT_TEMPLATE.format(software_name=software_name),
                 config=types.GenerateContentConfig(
                     tools=[types.Tool(google_search=types.GoogleSearch())],
