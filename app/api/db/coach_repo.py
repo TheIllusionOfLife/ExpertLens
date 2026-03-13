@@ -14,9 +14,9 @@ def make_coach_slug(software_name: str) -> str:
     Raises ValueError if the input yields an empty slug.
     """
     slug = software_name.strip().lower()
-    slug = re.sub(r"\s+", "_", slug)       # whitespace → underscore
-    slug = re.sub(r"[^a-z0-9_]", "", slug) # strip unsafe chars (/, .., ., control chars)
-    slug = re.sub(r"_+", "_", slug)         # collapse repeated underscores
+    slug = re.sub(r"\s+", "_", slug)  # whitespace → underscore
+    slug = re.sub(r"[^a-z0-9_]", "", slug)  # strip unsafe chars (/, .., ., control chars)
+    slug = re.sub(r"_+", "_", slug)  # collapse repeated underscores
     slug = slug.strip("_")
     if not slug:
         raise ValueError(f"Software name {software_name!r} yields an empty slug")

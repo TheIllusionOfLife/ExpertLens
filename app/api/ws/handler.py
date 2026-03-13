@@ -96,9 +96,7 @@ class SessionHandler:
         try:
             coach = await get_coach(coach_id)
             if coach and coach.knowledge_status == "building":
-                logger.info(
-                    f"Session started while knowledge is still building (coach={coach_id})"
-                )
+                logger.info(f"Session started while knowledge is still building (coach={coach_id})")
             elif coach and coach.knowledge_status == "error":
                 await self._send_error(
                     "Knowledge generation failed; session will use base model training only"
@@ -143,10 +141,12 @@ class SessionHandler:
 
         # Wait for Gemini to confirm connection before telling the client
         try:
-            await asyncio.wait_for(gemini.connected_event.wait(), timeout=settings.gemini_connect_timeout)
+            timeout = settings.gemini_connect_timeout
+            await asyncio.wait_for(gemini.connected_event.wait(), timeout=timeout)
         except TimeoutError as e:
             self._gemini_task.cancel()
-            raise RuntimeError(f"Gemini session failed to connect within {settings.gemini_connect_timeout:.0f} seconds") from e
+            secs = int(settings.gemini_connect_timeout)
+            raise RuntimeError(f"Gemini session failed to connect within {secs} seconds") from e
 
         await self._ws_send(
             SessionStartedMessage(

@@ -10,7 +10,8 @@
     "test:e2e": "playwright test",
     "build:e2e": "NEXT_PUBLIC_API_URL=http://localhost:8099 next build",
     "test:e2e:prod": "bun run build:e2e && playwright test --config playwright.prod.config.ts",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "next": "^15.1.0",

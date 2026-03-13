@@ -254,7 +254,9 @@ export function CreateCoachForm() {
         </div>
         {software === "custom" && (
           <>
-            <label htmlFor="custom-software" className="sr-only">Custom software name</label>
+            <label htmlFor="custom-software" className="sr-only">
+              Custom software name
+            </label>
             <input
               id="custom-software"
               type="text"

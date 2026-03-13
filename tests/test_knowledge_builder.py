@@ -143,6 +143,31 @@ async def test_build_knowledge_empty_response():
     assert update_args["knowledge_status"] == "error"
 
 
+async def test_build_knowledge_timeout():
+    """asyncio.timeout expiration sets knowledge_status=error with 'timeout' in message."""
+    mock_aio = MagicMock()
+    mock_aio.models.generate_content = AsyncMock(
+        side_effect=TimeoutError("Knowledge build timed out")
+    )
+
+    mock_genai_client = MagicMock()
+    mock_genai_client.aio = mock_aio
+
+    with (
+        patch("app.api.knowledge.builder.genai.Client", return_value=mock_genai_client),
+        patch("app.api.knowledge.builder.save_chunk", new_callable=AsyncMock) as mock_save,
+        patch("app.api.knowledge.builder.update_coach", new_callable=AsyncMock) as mock_update,
+    ):
+        await build_knowledge_for_coach("blender", "Blender")
+
+    mock_save.assert_not_called()
+    update_args = mock_update.call_args.args[1]
+    assert update_args["knowledge_status"] == "error"
+    # Real asyncio TimeoutError has no message (str(e) == ""), so only the class name is reliable
+    assert "TimeoutError" in update_args["knowledge_error"]
+    assert "knowledge_updated_at" in update_args
+
+
 async def test_save_chunk_calls_firestore_set(mock_firestore):
     """save_chunk writes the chunk document to Firestore with the correct chunk_id."""
     from app.api.db.knowledge_repo import save_chunk

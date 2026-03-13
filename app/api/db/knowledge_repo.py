@@ -6,8 +6,11 @@ from app.api.db.models import KnowledgeChunk
 
 async def save_chunk(chunk: KnowledgeChunk) -> None:
     """Upsert a knowledge chunk into Firestore."""
-    await get_client().collection(KNOWLEDGE_COLLECTION).document(chunk.chunk_id).set(
-        chunk.model_dump()
+    await (
+        get_client()
+        .collection(KNOWLEDGE_COLLECTION)
+        .document(chunk.chunk_id)
+        .set(chunk.model_dump())
     )
 
 

@@ -59,9 +59,7 @@ async def test_list_coaches_returns_coaches(async_client, monkeypatch):
 
 
 async def test_get_coach_not_found(async_client, monkeypatch):
-    monkeypatch.setattr(
-        "app.api.routers.coaches.get_coach", AsyncMock(return_value=None)
-    )
+    monkeypatch.setattr("app.api.routers.coaches.get_coach", AsyncMock(return_value=None))
     response = await async_client.get("/coaches/nonexistent")
     assert response.status_code == 404
 
@@ -76,9 +74,7 @@ async def test_create_coach(async_client, monkeypatch):
         "app.api.routers.coaches.create_coach",
         AsyncMock(return_value=BUILDING_COACH),
     )
-    monkeypatch.setattr(
-        "app.api.routers.coaches.build_knowledge_for_coach", AsyncMock()
-    )
+    monkeypatch.setattr("app.api.routers.coaches.build_knowledge_for_coach", AsyncMock())
     response = await async_client.post(
         "/coaches",
         json={"software_name": "DaVinci Resolve"},
@@ -90,12 +86,8 @@ async def test_create_coach(async_client, monkeypatch):
 
 
 async def test_create_coach_duplicate(async_client, monkeypatch):
-    monkeypatch.setattr(
-        "app.api.routers.coaches.create_coach", AsyncMock(return_value=None)
-    )
-    monkeypatch.setattr(
-        "app.api.routers.coaches.build_knowledge_for_coach", AsyncMock()
-    )
+    monkeypatch.setattr("app.api.routers.coaches.create_coach", AsyncMock(return_value=None))
+    monkeypatch.setattr("app.api.routers.coaches.build_knowledge_for_coach", AsyncMock())
     response = await async_client.post(
         "/coaches",
         json={"software_name": "blender"},
@@ -133,19 +125,29 @@ async def test_rebuild_knowledge_endpoint(async_client, monkeypatch):
     monkeypatch.setattr(
         "app.api.routers.coaches.update_coach", AsyncMock(return_value=BLENDER_COACH)
     )
-    monkeypatch.setattr(
-        "app.api.routers.coaches.build_knowledge_for_coach", AsyncMock()
-    )
+    monkeypatch.setattr("app.api.routers.coaches.build_knowledge_for_coach", AsyncMock())
     response = await async_client.post("/coaches/blender/rebuild-knowledge")
     assert response.status_code == 202
     assert response.json()["status"] == "building"
 
 
 async def test_rebuild_knowledge_not_found(async_client, monkeypatch):
-    monkeypatch.setattr(
-        "app.api.routers.coaches.get_coach", AsyncMock(return_value=None)
-    )
+    monkeypatch.setattr("app.api.routers.coaches.get_coach", AsyncMock(return_value=None))
     response = await async_client.post("/coaches/nonexistent/rebuild-knowledge")
+    assert response.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# PUT /coaches/{coach_id}
+# ---------------------------------------------------------------------------
+
+
+async def test_update_coach_not_found(async_client, monkeypatch):
+    monkeypatch.setattr("app.api.routers.coaches.update_coach", AsyncMock(return_value=None))
+    response = await async_client.put(
+        "/coaches/nonexistent",
+        json={"display_name": "New Name"},
+    )
     assert response.status_code == 404
 
 
