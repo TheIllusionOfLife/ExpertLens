@@ -108,4 +108,9 @@ Cloud Run, Firestore, Cloud Storage, Secret Manager, Cloud Build, Artifact Regis
 
 ## Current Status
 
-Project is in planning phase. The master plan is in `expertlens_hackathon_master_plan.md`. Hackathon rules in `official_rules.txt` and `official_overview.txt`.
+Core implementation complete. All major components shipped:
+- **Backend**: FastAPI REST API (`app/api/`) with Firestore persistence, coach management, and knowledge builder
+- **Frontend**: Next.js web app (`app/web/`) with real-time session UI, screen/mic capture, and coach management
+- **Agent Runtime**: ADK-based Gemini Live agent (`agent/`) with context stuffing and fallback knowledge retrieval
+- **Infrastructure**: Terraform IaC (`infra/terraform/`) and Cloud Build pipeline
+- **Tests**: Pytest unit/integration tests + Playwright E2E test suite

@@ -140,6 +140,38 @@ GCP Services
 
 ---
 
+## WebSocket Protocol
+
+The browser connects to `ws://{host}/ws/session/{coach_id}`.
+
+### Binary Frames (media)
+
+Binary frames use a 1-byte tag prefix followed by the payload:
+
+| Tag | Value | Content |
+|-----|-------|---------|
+| `MEDIA_TAG_IMAGE` | `0x01` | JPEG frame (max 2 MB), sent at ~1 fps |
+| `MEDIA_TAG_AUDIO` | `0x02` | PCM 16-bit 16 kHz mono chunk (max 64 KB) |
+
+Audio output from the agent is also delivered as binary frames with `MEDIA_TAG_AUDIO`.
+
+### Text Frames (control messages)
+
+JSON control messages flow both directions:
+
+| Type | Direction | Description |
+|------|-----------|-------------|
+| `start_session` | client -> server | Begin session; optionally include `session_handle` for reconnect |
+| `end_session` | client -> server | Gracefully end session |
+| `session_started` | server -> client | Session confirmed; includes `session_id` |
+| `session_handle` | server -> client | Latest resumption handle (save for reconnect) |
+| `reconnecting` | server -> client | GoAway received; reconnect in progress |
+| `reconnected` | server -> client | Reconnection successful |
+| `interrupted` | server -> client | Agent turn interrupted by user barge-in |
+| `error` | server -> client | Session error with `message` field |
+
+---
+
 ## Demo Coaches
 
 | Coach | Software | Persona |
