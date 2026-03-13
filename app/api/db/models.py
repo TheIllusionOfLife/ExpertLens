@@ -2,7 +2,7 @@
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class UserPreferences(BaseModel):
@@ -37,8 +37,10 @@ class Session(BaseModel):
 
 
 class KnowledgeChunk(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     chunk_id: str
-    software_name: str
+    coach_id: str = Field(..., alias="software_name")  # alias preserves Firestore key
     topic: str
     content: str
     difficulty_level: str = "beginner"  # beginner | intermediate | advanced

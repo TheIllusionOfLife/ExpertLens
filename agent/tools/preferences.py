@@ -2,17 +2,10 @@
 
 import logging
 
+from app.api.db.models import UserPreferences
 from app.api.db.preferences_repo import get_preferences
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_PREFERENCES = {
-    "interaction_style": "shortcuts",
-    "tone": "concise_expert",
-    "depth": "medium",
-    "proactivity": "reactive",
-    "response_language": "english",
-}
 
 
 async def get_user_preferences(user_id: str) -> dict:
@@ -27,4 +20,4 @@ async def get_user_preferences(user_id: str) -> dict:
 
 def get_user_preferences_stub(user_id: str) -> dict:
     """Fallback: return default preferences for any user."""
-    return {**DEFAULT_PREFERENCES, "user_id": user_id, "source": "stub"}
+    return {**UserPreferences().model_dump(), "user_id": user_id, "source": "stub"}

@@ -92,7 +92,7 @@ async def build_knowledge_for_coach(coach_id: str, software_name: str) -> None:
         for topic, content in sections.items():
             chunk = KnowledgeChunk(
                 chunk_id=f"{coach_id}_{topic}",
-                software_name=coach_id,  # slug (matches seed_firestore.py + retrieval convention)
+                software_name=coach_id,
                 topic=topic,
                 content=content,
                 difficulty_level="beginner",
