@@ -7,10 +7,8 @@ import { CoachIcon } from "./CoachIcon";
 
 const SOFTWARE_OPTIONS = [
   { value: "blender", label: "Blender" },
-  { value: "affinity_photo", label: "Affinity" },
+  { value: "affinity_photo", label: "Affinity Photo" },
   { value: "unreal_engine", label: "Unreal Engine" },
-  { value: "davinci_resolve", label: "DaVinci Resolve" },
-  { value: "figma", label: "Figma" },
   { value: "fusion", label: "Fusion" },
   { value: "zbrush", label: "ZBrush" },
   { value: "custom", label: "Other" },
