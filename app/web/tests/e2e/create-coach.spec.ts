@@ -5,11 +5,11 @@ test.beforeEach(async ({ request }) => {
   await request.post("http://localhost:8099/__reset");
 });
 
-test("/coaches/new renders software option grid (8 presets)", async ({ page }) => {
+test("/coaches/new renders software option grid (6 presets)", async ({ page }) => {
   await page.goto("/coaches/new");
   // Each preset is a button in the software grid
   const presetButtons = page.locator("form button[type='button']");
-  await expect(presetButtons).toHaveCount(8); // blender, affinity, unreal, davinci, figma, fusion, zbrush, other
+  await expect(presetButtons).toHaveCount(6); // blender, affinity_photo, unreal_engine, fusion, zbrush, other
 });
 
 test("clicking a preset highlights it with active styling", async ({ page }) => {
@@ -22,8 +22,8 @@ test("clicking a preset highlights it with active styling", async ({ page }) => 
 
 test("submitting form redirects to coach detail page", async ({ page }) => {
   await page.goto("/coaches/new");
-  // Select DaVinci Resolve (mock POST returns davinci_resolve coach)
-  await page.getByRole("button", { name: /davinci/i }).click();
+  // Select Blender (mock POST always returns davinci_resolve coach regardless of selection)
+  await page.getByRole("button", { name: /blender/i }).click();
   await page.getByRole("button", { name: /create coach/i }).click();
   await expect(page).toHaveURL(/\/coaches\/davinci_resolve/);
 });
