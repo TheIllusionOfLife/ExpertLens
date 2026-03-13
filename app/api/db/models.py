@@ -32,21 +32,21 @@ class Session(BaseModel):
     coach_id: str
     started_at: str
     ended_at: str | None = None
-    summary: str | None = None
-    last_topics: list[str] = Field(default_factory=list)
+    summary: str | None = Field(default=None, max_length=10_000)
+    last_topics: list[str] = Field(default_factory=list, max_length=20)
 
 
 class KnowledgeChunk(BaseModel):
     chunk_id: str
     software_name: str
     topic: str
-    content: str
+    content: str = Field(..., max_length=50_000)
     difficulty_level: str = "beginner"  # beginner | intermediate | advanced
     tags: list[str] = Field(default_factory=list)
 
 
 class CoachCreate(BaseModel):
-    software_name: str
+    software_name: str = Field(..., min_length=1, max_length=100)
     display_name: str | None = None
     persona: str | None = None
     focus_areas: list[str] = Field(default_factory=list)

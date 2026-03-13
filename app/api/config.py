@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     # CORS
     cors_origins: str = "http://localhost:3000"
 
+    # Gemini
+    gemini_connect_timeout: float = 30.0
+
     # Server
     host: str = "0.0.0.0"
     port: int = 8000
