@@ -58,14 +58,17 @@ export function PreferencesForm({ coachId, initial }: Props) {
   const [prefs, setPrefs] = useState<UserPreferences>(initial);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   async function handleSave() {
     setSaving(true);
     try {
       await updatePreferences(coachId, prefs);
       setSaved(true);
+      setSaveError(null);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Failed to save preferences");
       console.error("Failed to save preferences:", err);
     } finally {
       setSaving(false);
@@ -80,8 +83,8 @@ export function PreferencesForm({ coachId, initial }: Props) {
   return (
     <div className="space-y-6">
       {PREF_FIELDS.map(({ key, label, options }) => (
-        <div key={key}>
-          <p className="block text-sm font-medium mb-2">{label}</p>
+        <fieldset key={key} className="border-none p-0 m-0">
+          <legend className="block text-sm font-medium mb-2">{label}</legend>
           <div className="flex flex-wrap gap-2">
             {options.map((opt) => (
               <button
@@ -102,7 +105,7 @@ export function PreferencesForm({ coachId, initial }: Props) {
           <p className="text-xs text-(--muted) mt-1">
             {options.find((o) => o.value === prefs[key])?.hint}
           </p>
-        </div>
+        </fieldset>
       ))}
 
       <button
@@ -113,6 +116,11 @@ export function PreferencesForm({ coachId, initial }: Props) {
       >
         {saved ? "✓ Saved" : saving ? "Saving…" : "Save Preferences"}
       </button>
+      {saveError && (
+        <p role="alert" aria-live="polite" className="text-(--error) text-sm mt-2">
+          {saveError}
+        </p>
+      )}
     </div>
   );
 }

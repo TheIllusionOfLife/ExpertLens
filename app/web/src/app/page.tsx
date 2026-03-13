@@ -34,6 +34,7 @@ export default async function DashboardPage() {
           </div>
           <Link
             href="/coaches/new"
+            aria-label="Create new coach"
             className="px-4 py-2 bg-(--accent) hover:bg-(--accent-hover) text-white rounded-lg text-sm font-semibold transition-all shadow-[0_0_20px_rgba(124,106,247,0.35)]"
           >
             + New Coach

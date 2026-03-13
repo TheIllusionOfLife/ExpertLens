@@ -253,13 +253,17 @@ export function CreateCoachForm() {
           ))}
         </div>
         {software === "custom" && (
-          <input
-            type="text"
-            value={customSoftware}
-            onChange={(e) => setCustomSoftware(e.target.value)}
-            placeholder="Enter software name…"
-            className="mt-3 w-full px-4 py-2.5 bg-(--surface-elevated) border border-(--border) rounded-lg text-sm focus:outline-none focus:border-(--accent)"
-          />
+          <>
+            <label htmlFor="custom-software" className="sr-only">Custom software name</label>
+            <input
+              id="custom-software"
+              type="text"
+              value={customSoftware}
+              onChange={(e) => setCustomSoftware(e.target.value)}
+              placeholder="Enter software name…"
+              className="mt-3 w-full px-4 py-2.5 bg-(--surface-elevated) border border-(--border) rounded-lg text-sm focus:outline-none focus:border-(--accent)"
+            />
+          </>
         )}
       </div>
 

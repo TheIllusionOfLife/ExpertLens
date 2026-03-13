@@ -104,6 +104,7 @@ export function SessionControls({
           <button
             type="button"
             onClick={onToggleMic}
+            aria-label={micActive ? "Mute microphone" : "Unmute microphone"}
             title={micActive ? "Mute microphone" : "Unmute microphone"}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
               micActive
