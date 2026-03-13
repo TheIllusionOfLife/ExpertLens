@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint-python:
     runs-on: ubuntu-latest
@@ -55,7 +62,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: "1.2.23"
       - run: cd app/web && bun install --frozen-lockfile
       - run: cd app/web && bun run lint
 
@@ -65,7 +72,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: "1.2.23"
       - run: cd app/web && bun install --frozen-lockfile
       - run: cd app/web && bun run typecheck
 
@@ -75,7 +82,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: "1.2.23"
       - run: cd app/web && bun install --frozen-lockfile
       - run: cd app/web && NEXT_PUBLIC_API_URL=http://localhost:8099 bun run build
 
@@ -85,7 +92,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: "1.2.23"
       - run: cd app/web && bun install --frozen-lockfile
       - run: cd app/web && bunx playwright install --with-deps chromium
       - run: cd app/web && bun run test:e2e

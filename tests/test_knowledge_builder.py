@@ -163,7 +163,9 @@ async def test_build_knowledge_timeout():
     mock_save.assert_not_called()
     update_args = mock_update.call_args.args[1]
     assert update_args["knowledge_status"] == "error"
-    assert "timed out" in update_args["knowledge_error"].lower()
+    # Real asyncio TimeoutError has no message (str(e) == ""), so only the class name is reliable
+    assert "TimeoutError" in update_args["knowledge_error"]
+    assert "knowledge_updated_at" in update_args
 
 
 async def test_save_chunk_calls_firestore_set(mock_firestore):
