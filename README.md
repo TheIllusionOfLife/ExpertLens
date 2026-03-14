@@ -4,6 +4,8 @@ Real-time multimodal AI coaching agent. Share your screen, speak naturally, and 
 
 Built on [Gemini Live API](https://ai.google.dev/gemini-api/docs/live) for the **Gemini Live Agent Challenge**.
 
+**Live:** https://expertlens-frontend-1085534867079.us-central1.run.app
+
 ---
 
 ## How It Works
@@ -40,7 +42,7 @@ uv run uvicorn app.api.main:app --reload --port 8000
 
 # 4. Verify
 curl http://localhost:8000/health
-# → {"status":"ok","model":"gemini-2.5-flash-live-preview"}
+# → {"status":"ok","model":"gemini-2.5-flash-native-audio-latest"}
 ```
 
 ### Frontend
@@ -110,29 +112,7 @@ firebase deploy --only firestore:indexes
 
 ## Architecture
 
-```
-User's Browser
-  ├─ getDisplayMedia() → JPEG frames @ ~1fps
-  ├─ getUserMedia()    → PCM 16kHz mono audio
-  └─ AudioContext      ← PCM 24kHz playback
-        │ WebSocket (binary: tagged frames up + audio down)
-        │ JSON text (control: start/end/reconnect/handle)
-        ▼
-Cloud Run — FastAPI Backend
-  ├─ WebSocket Handler  (browser ↔ Gemini proxy)
-  ├─ System Instruction (persona + preferences + curated knowledge)
-  └─ Gemini Live API Session
-       ├─ contextWindowCompression (SlidingWindow) — unlimited session duration
-       ├─ sessionResumption (handle-based) — survives ~10min WebSocket rotation
-       ├─ Native barge-in (VAD) — interrupt Gemini mid-response
-       └─ NON_BLOCKING tool calls (WHEN_IDLE) — no audio pause
-            │
-            ▼
-GCP Services
-  ├─ Firestore  — coach profiles, user preferences, session history, knowledge
-  ├─ Storage    — demo assets
-  └─ Secret Manager — GEMINI_API_KEY
-```
+![Architecture](demo/architecture.png)
 
 **Grounding strategy (two-layer):**
 1. **Context stuffing** — Curated shortcuts, workflows, and common errors pre-loaded into system instruction at session start. Zero latency.
@@ -211,7 +191,7 @@ demo/             — Video script, deployment notes
 |----------|----------|-------------|
 | `GEMINI_API_KEY` | Yes | Gemini API key from AI Studio |
 | `GCP_PROJECT_ID` | No | GCP project ID (Firestore; auto-detected on Cloud Run) |
-| `GEMINI_LIVE_MODEL` | No | Defaults to `gemini-2.5-flash-live-preview` |
+| `GEMINI_LIVE_MODEL` | No | Defaults to `gemini-2.5-flash-native-audio-latest` |
 | `CORS_ORIGINS` | No | Defaults to `http://localhost:3000` |
 
 ---
