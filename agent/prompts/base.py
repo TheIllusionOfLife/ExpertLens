@@ -82,9 +82,9 @@ def build_system_instruction(
     if session_history:
         note_lines = []
         for s in session_history:
-            if s.get("summary"):
+            if summary := s.get("summary"):
                 topics = ", ".join(s.get("last_topics", []))
-                line = f"- {s['summary']}"
+                line = f"- {summary}"
                 if topics:
                     line += f" (topics: {topics})"
                 note_lines.append(line)

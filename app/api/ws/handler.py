@@ -5,6 +5,7 @@ import logging
 
 from fastapi import WebSocket, WebSocketDisconnect
 
+from agent.memory.summarize import summarize_session
 from agent.prompts.base import build_system_instruction_from_firestore
 from app.api.config import settings
 from app.api.db.coach_repo import get_coach
@@ -349,8 +350,6 @@ class SessionHandler:
             summary, last_topics = "", []
             if self._coach_transcript:
                 try:
-                    from agent.memory.summarize import summarize_session
-
                     summary, last_topics = await asyncio.wait_for(
                         summarize_session(self._coach_id, self._coach_transcript),
                         timeout=5.0,

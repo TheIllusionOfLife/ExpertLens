@@ -10,6 +10,8 @@ from app.api.config import settings
 
 logger = logging.getLogger(__name__)
 
+_client = genai.Client(api_key=settings.gemini_api_key)
+
 PROMPT = """\
 Summarize this {software} coaching session in 2-3 sentences covering what was worked on.
 Then extract 3-5 topic keywords.
@@ -20,10 +22,9 @@ Coach turns:
 
 async def summarize_session(coach_id: str, lines: list[str]) -> tuple[str, list[str]]:
     """Summarize coach transcript and return (summary, topics)."""
-    client = genai.Client(api_key=settings.gemini_api_key)
     software = coach_id.replace("_", " ").title()
     transcript = "\n".join(f"- {line}" for line in lines[-20:])
-    response = await client.aio.models.generate_content(
+    response = await _client.aio.models.generate_content(
         model="gemini-2.0-flash",
         contents=PROMPT.format(software=software, transcript=transcript),
         config=types.GenerateContentConfig(
