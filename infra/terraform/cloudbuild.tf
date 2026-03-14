@@ -2,20 +2,21 @@
 # PREREQUISITE: Connect the GitHub repo to Cloud Build manually before applying:
 #   GCP Console → Cloud Build → Triggers → Connect Repository → GitHub (Cloud Build app)
 #   Select TheIllusionOfLife/ExpertLens, then run terraform apply.
+#
+# NOTE: If org policy requires a user-managed SA, create the trigger via the Console
+# and import it: terraform import google_cloudbuild_trigger.deploy_on_main <TRIGGER_ID>
 
-data "google_project" "project" {
-  project_id = var.project_id
-}
-
-locals {
-  # Default Cloud Build service account
-  cloudbuild_sa = "${data.google_project.project.number}@cloudbuild.gserviceaccount.com"
+resource "google_service_account" "cloudbuild" {
+  account_id   = "expertlens-cloudbuild"
+  display_name = "ExpertLens Cloud Build"
+  depends_on   = [google_project_service.apis]
 }
 
 resource "google_cloudbuild_trigger" "deploy_on_main" {
-  name     = "deploy-on-main-push"
-  project  = var.project_id
-  location = var.region
+  name            = "deploy-on-main-push"
+  project         = var.project_id
+  service_account = google_service_account.cloudbuild.id
+  # 1st-gen GitHub App connections are global — no location field.
 
   github {
     owner = "TheIllusionOfLife"
@@ -38,36 +39,35 @@ resource "google_cloudbuild_trigger" "deploy_on_main" {
 }
 
 # IAM: grant Cloud Build SA the minimum roles required by cloudbuild.yaml
-# (push to Artifact Registry, deploy to Cloud Run, write logs)
+# (deploy to Cloud Run, push to Artifact Registry, write logs)
 
 resource "google_project_iam_member" "cloudbuild_run_developer" {
   project = var.project_id
   role    = "roles/run.developer"
-  member  = "serviceAccount:${local.cloudbuild_sa}"
-}
-
-# Scope iam.serviceAccountUser to only the runtime SAs that Cloud Run uses,
-# not the entire project (principle of least privilege).
-resource "google_service_account_iam_member" "cloudbuild_sa_user_backend" {
-  service_account_id = google_service_account.backend.name
-  role               = "roles/iam.serviceAccountUser"
-  member             = "serviceAccount:${local.cloudbuild_sa}"
-}
-
-resource "google_service_account_iam_member" "cloudbuild_sa_user_frontend" {
-  service_account_id = google_service_account.frontend.name
-  role               = "roles/iam.serviceAccountUser"
-  member             = "serviceAccount:${local.cloudbuild_sa}"
+  member  = "serviceAccount:${google_service_account.cloudbuild.email}"
 }
 
 resource "google_project_iam_member" "cloudbuild_ar_writer" {
   project = var.project_id
   role    = "roles/artifactregistry.writer"
-  member  = "serviceAccount:${local.cloudbuild_sa}"
+  member  = "serviceAccount:${google_service_account.cloudbuild.email}"
 }
 
 resource "google_project_iam_member" "cloudbuild_log_writer" {
   project = var.project_id
   role    = "roles/logging.logWriter"
-  member  = "serviceAccount:${local.cloudbuild_sa}"
+  member  = "serviceAccount:${google_service_account.cloudbuild.email}"
+}
+
+# Scope iam.serviceAccountUser to only the runtime SAs Cloud Run uses (least privilege).
+resource "google_service_account_iam_member" "cloudbuild_sa_user_backend" {
+  service_account_id = google_service_account.backend.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.cloudbuild.email}"
+}
+
+resource "google_service_account_iam_member" "cloudbuild_sa_user_frontend" {
+  service_account_id = google_service_account.frontend.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.cloudbuild.email}"
 }
