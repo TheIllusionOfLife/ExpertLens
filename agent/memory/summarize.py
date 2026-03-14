@@ -40,4 +40,11 @@ async def summarize_session(coach_id: str, lines: list[str]) -> tuple[str, list[
         ),
     )
     data = json.loads(response.text or "{}")
-    return data.get("summary", ""), data.get("topics", [])
+    summary = data.get("summary", "")
+    topics = data.get("topics", [])
+    if not isinstance(summary, str):
+        summary = ""
+    if not isinstance(topics, list):
+        topics = []
+    topics = [t for t in topics if isinstance(t, str)]
+    return summary, topics

@@ -295,10 +295,11 @@ class SessionHandler:
     def _notify_text_response(self, text: str, finished: bool) -> None:
         """Called by GeminiSession when output transcription text arrives."""
         self._current_turn_text += text
-        if finished and self._current_turn_text.strip():
-            turn = self._current_turn_text[:_MAX_TURN_CHARS]
-            if len(self._coach_transcript) < _MAX_TRANSCRIPT_TURNS:
-                self._coach_transcript.append(turn)
+        if finished:
+            if self._current_turn_text.strip():
+                turn = self._current_turn_text[:_MAX_TURN_CHARS]
+                if len(self._coach_transcript) < _MAX_TRANSCRIPT_TURNS:
+                    self._coach_transcript.append(turn)
             self._current_turn_text = ""
         task = asyncio.create_task(
             self._ws_send(
