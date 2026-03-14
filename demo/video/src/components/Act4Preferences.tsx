@@ -6,7 +6,7 @@ import { ActLabel } from "./ActLabel";
 export const Act4Preferences: React.FC = () => {
   return (
     <AbsoluteFill>
-      <Sequence from={0} durationInFrames={900} premountFor={30}>
+      <Sequence from={0} durationInFrames={900}>
         <Slide
           imageSrc="assets/04-settings.png"
           headline="User Preferences"
@@ -14,11 +14,11 @@ export const Act4Preferences: React.FC = () => {
         />
       </Sequence>
 
-      <Sequence from={0} durationInFrames={900} layout="none" premountFor={30}>
+      <Sequence from={0} durationInFrames={900} layout="none">
         <ActLabel text="Act 4 — Preferences" />
       </Sequence>
 
-      <Sequence from={300} durationInFrames={600} premountFor={30}>
+      <Sequence from={300} durationInFrames={600}>
         <NarrationCard
           title="Same Question, Different Style"
           messages={[

@@ -1,4 +1,5 @@
-import { AbsoluteFill, Series } from "remotion";
+import { AbsoluteFill, Sequence, Series, staticFile } from "remotion";
+import { Audio } from "@remotion/media";
 import { Act1DesktopGap } from "./components/Act1DesktopGap";
 import { Act2aSession1 } from "./components/Act2aSession1";
 import { Act2bMemory } from "./components/Act2bMemory";
@@ -7,8 +8,9 @@ import { Act4Preferences } from "./components/Act4Preferences";
 import { Act5CoachBuilder } from "./components/Act5CoachBuilder";
 import { Act6Architecture } from "./components/Act6Architecture";
 import { Closing } from "./components/Closing";
+import { SCENE_IDS } from "./voiceover-config";
 
-// Frame budget (30fps):
+// Frame budget (30fps) — overridden at render time by calculateMetadata:
 // Act 1  — Desktop GUI Gap   :   0–899   (30s)
 // Act 2a — Session 1         : 900–2099  (40s)
 // Act 2b — Memory Demo       : 2100–3299 (40s)
@@ -18,35 +20,55 @@ import { Closing } from "./components/Closing";
 // Act 6  — Architecture      : 6300–6899 (20s)
 // Closing                    : 6900–7199 (10s)
 
-export const ExpertLensDemo: React.FC = () => {
+export type DemoProps = {
+  sceneDurations: number[];
+};
+
+export const ExpertLensDemo: React.FC<DemoProps> = ({ sceneDurations }) => {
+  const [d1, d2, d3, d4, d5, d6, d7, d8] = sceneDurations;
+
+  // Absolute start frame for each scene (cumulative sum of previous durations).
+  const offsets = sceneDurations.reduce<number[]>((acc, _, i) => {
+    acc.push(i === 0 ? 0 : acc[i - 1] + sceneDurations[i - 1]);
+    return acc;
+  }, []);
+
   return (
     <AbsoluteFill style={{ backgroundColor: "#0f0f1a" }}>
+      {/* Visual sequences */}
       <Series>
-        <Series.Sequence durationInFrames={900}>
+        <Series.Sequence durationInFrames={d1}>
           <Act1DesktopGap />
         </Series.Sequence>
-        <Series.Sequence durationInFrames={1200}>
+        <Series.Sequence durationInFrames={d2}>
           <Act2aSession1 />
         </Series.Sequence>
-        <Series.Sequence durationInFrames={1200}>
+        <Series.Sequence durationInFrames={d3}>
           <Act2bMemory />
         </Series.Sequence>
-        <Series.Sequence durationInFrames={1200}>
+        <Series.Sequence durationInFrames={d4}>
           <Act3VsGeminiLive />
         </Series.Sequence>
-        <Series.Sequence durationInFrames={900}>
+        <Series.Sequence durationInFrames={d5}>
           <Act4Preferences />
         </Series.Sequence>
-        <Series.Sequence durationInFrames={900}>
+        <Series.Sequence durationInFrames={d6}>
           <Act5CoachBuilder />
         </Series.Sequence>
-        <Series.Sequence durationInFrames={600}>
+        <Series.Sequence durationInFrames={d7}>
           <Act6Architecture />
         </Series.Sequence>
-        <Series.Sequence durationInFrames={300}>
+        <Series.Sequence durationInFrames={d8}>
           <Closing />
         </Series.Sequence>
       </Series>
+
+      {/* Voiceover audio — one track per scene, starting at each scene's offset */}
+      {SCENE_IDS.map((id, i) => (
+        <Sequence key={id} from={offsets[i]} durationInFrames={sceneDurations[i]}>
+          <Audio src={staticFile(`voiceover/${id}.m4a`)} />
+        </Sequence>
+      ))}
     </AbsoluteFill>
   );
 };

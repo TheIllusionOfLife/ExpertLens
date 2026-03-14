@@ -10,7 +10,7 @@ export const Act1DesktopGap: React.FC = () => {
   return (
     <AbsoluteFill>
       {/* Background: dashboard screenshot */}
-      <Sequence from={0} durationInFrames={900} premountFor={30}>
+      <Sequence from={0} durationInFrames={900}>
         <Slide
           imageSrc="assets/01-dashboard.png"
           headline="The Desktop GUI Gap"
@@ -20,12 +20,12 @@ export const Act1DesktopGap: React.FC = () => {
       </Sequence>
 
       {/* Act label */}
-      <Sequence from={0} durationInFrames={900} layout="none" premountFor={30}>
+      <Sequence from={0} durationInFrames={900} layout="none">
         <ActLabel text="Act 1 — The Desktop GUI Gap" />
       </Sequence>
 
       {/* Three-column comparison cards */}
-      <Sequence from={15 * fps} durationInFrames={15 * fps} layout="none" premountFor={30}>
+      <Sequence from={15 * fps} durationInFrames={15 * fps} layout="none">
         <ComparisonRow frame={frame - 15 * fps} fps={fps} />
       </Sequence>
     </AbsoluteFill>

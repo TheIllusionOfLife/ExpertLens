@@ -6,7 +6,7 @@ import { ActLabel } from "./ActLabel";
 export const Act3VsGeminiLive: React.FC = () => {
   return (
     <AbsoluteFill>
-      <Sequence from={0} durationInFrames={1200} premountFor={30}>
+      <Sequence from={0} durationInFrames={1200}>
         <Slide
           imageSrc="assets/01-dashboard.png"
           headline="vs. Gemini AI Studio Live"
@@ -15,11 +15,11 @@ export const Act3VsGeminiLive: React.FC = () => {
         />
       </Sequence>
 
-      <Sequence from={0} durationInFrames={1200} layout="none" premountFor={30}>
+      <Sequence from={0} durationInFrames={1200} layout="none">
         <ActLabel text="Act 3 — ExpertLens vs Gemini AI Studio Live" />
       </Sequence>
 
-      <Sequence from={300} durationInFrames={900} premountFor={30}>
+      <Sequence from={300} durationInFrames={900}>
         <NarrationCard
           title="What ExpertLens Adds"
           messages={[

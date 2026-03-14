@@ -6,7 +6,7 @@ import { ActLabel } from "./ActLabel";
 export const Act2aSession1: React.FC = () => {
   return (
     <AbsoluteFill>
-      <Sequence from={0} durationInFrames={1200} premountFor={30}>
+      <Sequence from={0} durationInFrames={1200}>
         <Slide
           imageSrc="assets/03-session-idle.png"
           headline="Live Coaching Session"
@@ -15,11 +15,11 @@ export const Act2aSession1: React.FC = () => {
         />
       </Sequence>
 
-      <Sequence from={0} durationInFrames={1200} layout="none" premountFor={30}>
+      <Sequence from={0} durationInFrames={1200} layout="none">
         <ActLabel text="Act 2a — Session 1" />
       </Sequence>
 
-      <Sequence from={300} durationInFrames={900} premountFor={30}>
+      <Sequence from={300} durationInFrames={900}>
         <NarrationCard
           title="Live Session — Blender Expert"
           messages={[

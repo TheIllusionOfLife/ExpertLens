@@ -6,7 +6,7 @@ import { ActLabel } from "./ActLabel";
 export const Act5CoachBuilder: React.FC = () => {
   return (
     <AbsoluteFill>
-      <Sequence from={0} durationInFrames={900} premountFor={30}>
+      <Sequence from={0} durationInFrames={900}>
         <Slide
           imageSrc="assets/02-create-coach.png"
           headline="Coach Builder"
@@ -14,11 +14,11 @@ export const Act5CoachBuilder: React.FC = () => {
         />
       </Sequence>
 
-      <Sequence from={0} durationInFrames={900} layout="none" premountFor={30}>
+      <Sequence from={0} durationInFrames={900} layout="none">
         <ActLabel text="Act 5 — Coach Builder" />
       </Sequence>
 
-      <Sequence from={300} durationInFrames={600} premountFor={30}>
+      <Sequence from={300} durationInFrames={600}>
         <NarrationCard
           title="Custom Coach — DaVinci Resolve"
           messages={[
