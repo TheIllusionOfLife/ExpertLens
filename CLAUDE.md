@@ -16,8 +16,8 @@ ExpertLens is a **Gemini Live Agent** for the Gemini Live Agent Challenge hackat
 User's Machine
   ├─ Native Desktop App (Blender, Affinity Photo, Unreal Engine, etc.)
   └─ Browser (ExpertLens UI)
-       ├─ getDisplayMedia() → captures app window
-       ├─ getUserMedia() → microphone
+       ├─ getDisplayMedia() → captures app window (desktop/Android)
+       ├─ getUserMedia() → camera capture (iOS) or microphone
        └─ Audio playback ← speaker
              │ WebSocket (frames + audio up, audio down)
              ▼
@@ -26,7 +26,7 @@ Cloud Run (FastAPI + ADK)
   ├─ ADK Agent: Live Software Expert
   │    ├─ System Instruction (persona + preferences + curated knowledge)
   │    └─ Tools: get_coach_knowledge(topic), get_user_preferences(user_id)
-  └─ Gemini Live API Session (gemini-2.5-flash-live-preview)
+  └─ Gemini Live API Session (gemini-2.5-flash-native-audio-latest)
        ├─ contextWindowCompression (SlidingWindow) → unlimited session
        ├─ sessionResumption (handle-based reconnect)
        ├─ Native barge-in (VAD)
@@ -48,7 +48,7 @@ GCP Services
 - **Primary: Context Stuffing** — Curated knowledge loaded into System Instruction at session start. 0ms additional latency.
 - **Fallback: Firestore Tool** — `get_coach_knowledge(topic)` for deeper queries not in context. ~100-200ms.
 
-## Planned Repository Structure
+## Repository Structure
 
 ```
 app/web/          — Next.js frontend
@@ -67,7 +67,8 @@ demo/             — Architecture diagram, deployment recording, video script
 ## Key Technical Decisions
 
 - **Python FastAPI + ADK** (ADK is a Python SDK — no Node.js)
-- **Gemini Live API** model: `gemini-2.5-flash-live-preview` (gemini-2.0-flash-live is deprecated)
+- **Gemini Live API** model: `gemini-2.5-flash-native-audio-latest`
+- **Knowledge builder** model: `gemini-3-flash-preview` with `thinking_level="minimal"` + Google Search grounding (text generation — separate from the Live API model)
 - **Python SDK**: `google-genai` (`pip install google-genai`) — NOT the legacy `google-generativeai`
 - **Context stuffing** over pgvector/Cloud SQL (fastest grounding, zero latency)
 - **Firestore** for fallback knowledge + all metadata (no separate vector DB)
@@ -96,7 +97,7 @@ demo/             — Architecture diagram, deployment recording, video script
 
 - **Coach**: coach_id, software_name, persona, focus_areas, default_preferences, knowledge_index_id
 - **User Preferences**: interaction style, tone, depth, proactivity (per-coach overrides supported)
-- **Session**: session_id, coach_id, summary, last_topics
+- **Session**: session_id, coach_id, user_id, summary, last_topics
 
 ## GCP Services
 
@@ -108,9 +109,11 @@ Cloud Run, Firestore, Cloud Storage, Secret Manager, Cloud Build, Artifact Regis
 
 ## Current Status
 
-Core implementation complete. All major components shipped:
-- **Backend**: FastAPI REST API (`app/api/`) with Firestore persistence, coach management, and knowledge builder
-- **Frontend**: Next.js web app (`app/web/`) with real-time session UI, screen/mic capture, and coach management
-- **Agent Runtime**: ADK-based Gemini Live agent (`agent/`) with context stuffing and fallback knowledge retrieval
-- **Infrastructure**: Terraform IaC (`infra/terraform/`) and Cloud Build pipeline
-- **Tests**: Pytest unit/integration tests + Playwright E2E test suite
+Core implementation complete and deployed. All major features shipped:
+- **Coach management**: create, edit (name/icon/persona), delete, rebuild knowledge
+- **Per-user session history**: anonymous UUID per browser connection (`user_id` in session model)
+- **Mobile support**: screen share on desktop/Android (`getDisplayMedia`), camera capture on iOS (`getUserMedia`)
+- **Google Search grounding**: knowledge builder uses `gemini-3-flash-preview` with real-time search
+- **Input transcription**: interleaved user/coach messages in session summaries
+- **CI**: GitHub Actions (lint, typecheck, test-python, E2E Playwright)
+- **CD**: Cloud Build trigger on `main` push — deploys both services automatically

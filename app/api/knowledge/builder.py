@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 # Coach IDs that are pre-validated presets — skip software validation for these.
 KNOWN_PRESET_IDS = frozenset({"blender", "affinity_photo", "unreal_engine", "fusion", "zbrush"})
 
-_GEMINI_MODEL = "gemini-2.0-flash"  # was "gemini-3-flash-preview" which doesn't resolve
+_GEMINI_MODEL = "gemini-3-flash-preview"
 _BUILD_TIMEOUT_SECONDS = 300  # was 240 — more content takes slightly longer
 _VALIDATE_TIMEOUT_SECONDS = 20
 
@@ -127,7 +127,11 @@ async def build_knowledge_for_coach(coach_id: str, software_name: str) -> None:
                 contents=PROMPT_TEMPLATE.format(software_name=software_name),
                 config=types.GenerateContentConfig(
                     tools=[types.Tool(google_search=types.GoogleSearch())],
-                    temperature=0.2,
+                    # temperature removed — Gemini 3: setting temperature < 1.0 degrades complex
+                    # reasoning. Default 1.0 is required.
+                    thinking_config=types.ThinkingConfig(
+                        thinking_level="minimal",
+                    ),
                 ),
             )
         if not response.text:
@@ -186,6 +190,9 @@ async def validate_software_exists(software_name: str) -> None:
                 ),
                 config=types.GenerateContentConfig(
                     tools=[types.Tool(google_search=types.GoogleSearch())],
+                    thinking_config=types.ThinkingConfig(
+                        thinking_level="minimal",
+                    ),
                 ),
             )
     except TimeoutError:

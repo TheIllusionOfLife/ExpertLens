@@ -44,12 +44,12 @@ export function SessionStatus({ coachName, status, elapsed }: Props) {
 
   return (
     <output
-      className={`flex items-center gap-2.5 px-4 py-2 bg-(--surface-elevated) rounded-lg border transition-colors ${
+      className={`flex items-center gap-2.5 px-4 py-2 bg-(--surface-elevated) rounded-lg border transition-colors min-w-0 flex-1 ${
         cfg.ring ?? "border-(--border)"
       }`}
     >
       <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`} />
-      <span className="font-medium text-sm">{coachName}</span>
+      <span className="font-medium text-sm truncate">{coachName}</span>
       <span className="w-px h-3 bg-(--border)" />
       <span className={`text-xs ${cfg.color}`}>{cfg.label}</span>
       {isLive && elapsed > 0 && (

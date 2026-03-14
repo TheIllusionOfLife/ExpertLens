@@ -78,12 +78,29 @@ steps:
     waitFor: ["push-frontend"]
     id: deploy-frontend
 
+  # Persist CORS origins on every deploy so the env var can never drift from Terraform defaults.
+  # Terraform manages cloud_run.tf with ignore_changes on env, so this step is the source of truth.
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: gcloud
+    args:
+      - run
+      - services
+      - update
+      - expertlens-backend
+      - "--update-env-vars=CORS_ORIGINS=${_CORS_ORIGINS}"
+      - "--region=${_REGION}"
+      - "--project=${PROJECT_ID}"
+      - "--quiet"
+    waitFor: ["deploy-backend"]
+    id: set-cors
+
 substitutions:
   _REGION: us-central1
   # Set _BACKEND_URL in the Cloud Build trigger to the deployed backend Cloud Run URL.
   # Cloud Build is the CI/CD path for iterative image updates after initial provisioning
   # via deploy.sh. deploy.sh must be run first to provision Terraform infra and wire URLs.
   _BACKEND_URL: ""
+  _CORS_ORIGINS: "https://expertlens-frontend-pk4kcjevqa-uc.a.run.app,http://localhost:3000,http://localhost:3001,http://localhost:3002"
 
 options:
   logging: CLOUD_LOGGING_ONLY
