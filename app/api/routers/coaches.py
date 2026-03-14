@@ -4,11 +4,13 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException
 
 from app.api.db.coach_repo import (
     create_coach,
+    delete_coach,
     get_coach,
     list_coaches,
     make_coach_slug,
     update_coach,
 )
+from app.api.db.knowledge_repo import delete_knowledge_for_coach
 from app.api.db.models import Coach, CoachCreate, CoachUpdate
 from app.api.knowledge.builder import (
     KNOWN_PRESET_IDS,
@@ -73,3 +75,16 @@ async def update_coach_endpoint(coach_id: str, updates: CoachUpdate) -> Coach:
     if not coach:
         raise HTTPException(status_code=404, detail=f"Coach '{coach_id}' not found")
     return coach
+
+
+@router.delete("/{coach_id}", status_code=200)
+async def delete_coach_endpoint(coach_id: str) -> dict:
+    """Delete a custom coach and all its knowledge chunks. Preset coaches cannot be deleted."""
+    if coach_id in KNOWN_PRESET_IDS:
+        raise HTTPException(status_code=403, detail="Preset coaches cannot be deleted")
+    coach = await get_coach(coach_id)
+    if not coach:
+        raise HTTPException(status_code=404, detail="Coach not found")
+    await delete_knowledge_for_coach(coach_id)
+    await delete_coach(coach_id)
+    return {"ok": True}

@@ -43,7 +43,7 @@ PREF_INSTRUCTIONS: dict[str, dict[str, str]] = {
 
 # Context budget: system instruction knowledge capped to preserve token budget
 # for image frames + conversation. 128k total; ~8 000 chars (~2 000 tokens at 4 chars/token) for knowledge.
-MAX_KNOWLEDGE_CHARS = 8000
+MAX_KNOWLEDGE_CHARS = 40_000  # was 8_000 — see context budget analysis in CLAUDE.md
 
 
 def build_system_instruction(
@@ -114,7 +114,7 @@ async def build_system_instruction_from_firestore(coach_id: str, user_id: str = 
     from app.api.db.session_repo import get_sessions
 
     prefs_task = asyncio.create_task(get_preferences(user_id))
-    sessions_task = asyncio.create_task(get_sessions(coach_id, limit=3))
+    sessions_task = asyncio.create_task(get_sessions(coach_id, user_id=user_id, limit=3))
 
     user_prefs = None
     knowledge_snippets: list[str] = []

@@ -30,6 +30,7 @@ class Coach(BaseModel):
 class Session(BaseModel):
     session_id: str
     coach_id: str
+    user_id: str = ""
     started_at: str
     ended_at: str | None = None
     summary: str | None = None

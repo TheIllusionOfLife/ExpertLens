@@ -7,11 +7,12 @@ from app.api.db.firestore import SESSIONS_COLLECTION, get_client
 from app.api.db.models import Session
 
 
-async def create_session(coach_id: str) -> Session:
+async def create_session(coach_id: str, user_id: str = "") -> Session:
     session_id = str(uuid.uuid4())
     session = Session(
         session_id=session_id,
         coach_id=coach_id,
+        user_id=user_id,
         started_at=datetime.now(UTC).isoformat(),
     )
     await (
@@ -35,11 +36,16 @@ async def end_session(session_id: str, summary: str, last_topics: list[str]) -> 
     return Session.model_validate(doc.to_dict())
 
 
-async def get_sessions(coach_id: str, limit: int = 10) -> list[Session]:
+async def get_sessions(coach_id: str, user_id: str = "", limit: int = 10) -> list[Session]:
     query = (
         get_client()
         .collection(SESSIONS_COLLECTION)
         .where("coach_id", "==", coach_id)
+    )
+    if user_id:
+        query = query.where("user_id", "==", user_id)
+    query = (
+        query
         .order_by("started_at", direction="DESCENDING")
         .limit(limit)
     )

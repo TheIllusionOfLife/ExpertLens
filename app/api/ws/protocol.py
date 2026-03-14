@@ -34,6 +34,7 @@ class StartSessionMessage(BaseModel):
     type: MessageType = MessageType.START_SESSION
     coach_id: str
     session_handle: str | None = None  # For resumption
+    user_id: str | None = None
 
 
 class EndSessionMessage(BaseModel):

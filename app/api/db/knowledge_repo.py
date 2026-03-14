@@ -46,3 +46,22 @@ async def get_all_knowledge_for_software(software_name: str) -> list[KnowledgeCh
     async for doc in query.stream():
         chunks.append(KnowledgeChunk.model_validate(doc.to_dict()))
     return chunks
+
+
+async def delete_knowledge_for_coach(coach_id: str) -> None:
+    """Delete all knowledge chunks for a coach using batched writes."""
+    query = (
+        get_client()
+        .collection(KNOWLEDGE_COLLECTION)
+        .where("software_name", "==", coach_id)
+    )
+    batch_size = 500
+    docs = []
+    async for doc in query.stream():
+        docs.append(doc.reference)
+
+    for i in range(0, len(docs), batch_size):
+        batch = get_client().batch()
+        for ref in docs[i:i + batch_size]:
+            batch.delete(ref)
+        await batch.commit()
