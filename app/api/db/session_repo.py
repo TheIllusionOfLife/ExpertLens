@@ -37,18 +37,10 @@ async def end_session(session_id: str, summary: str, last_topics: list[str]) -> 
 
 
 async def get_sessions(coach_id: str, user_id: str = "", limit: int = 10) -> list[Session]:
-    query = (
-        get_client()
-        .collection(SESSIONS_COLLECTION)
-        .where("coach_id", "==", coach_id)
-    )
+    query = get_client().collection(SESSIONS_COLLECTION).where("coach_id", "==", coach_id)
     if user_id:
         query = query.where("user_id", "==", user_id)
-    query = (
-        query
-        .order_by("started_at", direction="DESCENDING")
-        .limit(limit)
-    )
+    query = query.order_by("started_at", direction="DESCENDING").limit(limit)
     sessions: list[Session] = []
     async for doc in query.stream():
         sessions.append(Session.model_validate(doc.to_dict()))

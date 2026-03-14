@@ -14,8 +14,12 @@ from app.api.knowledge.builder import _parse_sections, build_knowledge_for_coach
 def test_build_knowledge_parse_sections_all_present():
     sections = _parse_sections(VALID_RESPONSE_TEXT)
     assert set(sections.keys()) == {
-        "shortcuts", "workflows", "common_errors",
-        "deep_concepts", "version_changes", "quick_reference",
+        "shortcuts",
+        "workflows",
+        "common_errors",
+        "deep_concepts",
+        "version_changes",
+        "quick_reference",
     }
     assert "Ctrl+S" in sections["shortcuts"]
     assert "Open the app" in sections["workflows"]
@@ -104,8 +108,12 @@ async def test_build_knowledge_success():
     assert mock_save.call_count == 6
     saved_topics = {call.args[0].topic for call in mock_save.call_args_list}
     assert saved_topics == {
-        "shortcuts", "workflows", "common_errors",
-        "deep_concepts", "version_changes", "quick_reference",
+        "shortcuts",
+        "workflows",
+        "common_errors",
+        "deep_concepts",
+        "version_changes",
+        "quick_reference",
     }
 
     # Status set to ready, error cleared

@@ -274,7 +274,7 @@ class GeminiLiveSession:
                 self._on_text_response(sc.output_transcription.text, finished)
 
         # Input transcription — user speech text
-        if sc and hasattr(sc, 'input_transcription') and sc.input_transcription:
+        if sc and hasattr(sc, "input_transcription") and sc.input_transcription:
             if sc.input_transcription.text and sc.input_transcription.finished:
                 if self._on_input_text:
                     self._on_input_text(sc.input_transcription.text)

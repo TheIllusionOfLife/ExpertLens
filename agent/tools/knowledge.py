@@ -6,6 +6,7 @@ from app.api.db.knowledge_repo import get_knowledge
 
 logger = logging.getLogger(__name__)
 
+
 async def get_coach_knowledge(software_name: str, topic: str) -> dict:
     """Query Firestore for knowledge chunks matching software + topic."""
     try:
