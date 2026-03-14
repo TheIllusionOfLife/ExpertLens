@@ -72,7 +72,28 @@ function KnowledgeSection({
   );
 }
 
-const ICON_OPTIONS = ["🎯", "🎨", "🎮", "🎬", "🖥️", "🎵", "📐", "🔧", "🎲", "🏗️", "🖼️", "🎭", "🔬", "📷", "🎸", "🌐", "🚀", "💡", "🎓", "🛠️"];
+const ICON_OPTIONS = [
+  "🎯",
+  "🎨",
+  "🎮",
+  "🎬",
+  "🖥️",
+  "🎵",
+  "📐",
+  "🔧",
+  "🎲",
+  "🏗️",
+  "🖼️",
+  "🎭",
+  "🔬",
+  "📷",
+  "🎸",
+  "🌐",
+  "🚀",
+  "💡",
+  "🎓",
+  "🛠️",
+];
 
 function CoachProfileForm({
   coach,
@@ -91,7 +112,11 @@ function CoachProfileForm({
     setSaving(true);
     setSaved(false);
     try {
-      const updated = await updateCoach(coach.coach_id, { display_name: displayName, icon, persona });
+      const updated = await updateCoach(coach.coach_id, {
+        display_name: displayName,
+        icon,
+        persona,
+      });
       onSaved(updated);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
@@ -105,8 +130,14 @@ function CoachProfileForm({
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-xs font-medium text-(--muted) mb-1.5">Display Name</label>
+        <label
+          htmlFor="coach-display-name"
+          className="block text-xs font-medium text-(--muted) mb-1.5"
+        >
+          Display Name
+        </label>
         <input
+          id="coach-display-name"
           type="text"
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
@@ -114,7 +145,7 @@ function CoachProfileForm({
         />
       </div>
       <div>
-        <label className="block text-xs font-medium text-(--muted) mb-1.5">Icon</label>
+        <p className="block text-xs font-medium text-(--muted) mb-1.5">Icon</p>
         <div className="flex flex-wrap gap-2">
           {ICON_OPTIONS.map((emoji) => (
             <button
@@ -133,8 +164,11 @@ function CoachProfileForm({
         </div>
       </div>
       <div>
-        <label className="block text-xs font-medium text-(--muted) mb-1.5">Persona</label>
+        <label htmlFor="coach-persona" className="block text-xs font-medium text-(--muted) mb-1.5">
+          Persona
+        </label>
         <textarea
+          id="coach-persona"
           value={persona}
           onChange={(e) => setPersona(e.target.value)}
           rows={3}
@@ -309,10 +343,7 @@ export default function CoachDetailPage({ params }: Props) {
           <p className="text-(--muted) text-sm mb-5">
             Customize the name, icon, and persona for this coach.
           </p>
-          <CoachProfileForm
-            coach={coach}
-            onSaved={(updated) => setCoach(updated)}
-          />
+          <CoachProfileForm coach={coach} onSaved={(updated) => setCoach(updated)} />
         </section>
 
         {/* Preferences */}

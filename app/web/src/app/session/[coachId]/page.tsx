@@ -202,7 +202,8 @@ export default function LiveSessionPage() {
   // Cleanup on unmount
   useEffect(() => () => stopSession(), [stopSession]);
 
-  const hasDisplayMedia = typeof navigator !== "undefined" &&
+  const hasDisplayMedia =
+    typeof navigator !== "undefined" &&
     "mediaDevices" in navigator &&
     "getDisplayMedia" in navigator.mediaDevices;
   const isMobileUA = typeof navigator !== "undefined" && /Mobi|Android/i.test(navigator.userAgent);

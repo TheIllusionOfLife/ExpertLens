@@ -331,8 +331,9 @@ class SessionHandler:
 
     async def _enforce_session_limit(self) -> None:
         await asyncio.sleep(settings.max_session_seconds)
+        mins = settings.max_session_seconds // 60
         await self._send_error(
-            f"Session ended after {settings.max_session_seconds // 60} minutes. Start a new session to continue."
+            f"Session ended after {mins} minutes. Start a new session to continue."
         )
         if self._gemini:
             await self._gemini.close()

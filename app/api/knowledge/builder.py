@@ -23,7 +23,8 @@ _VALIDATE_TIMEOUT_SECONDS = 20
 
 PROMPT_TEMPLATE = """
 You are building a reference knowledge base for a real-time AI voice coach named ExpertLens.
-The coach watches the user's screen and answers questions about {software_name} while the user works.
+The coach watches the user's screen and answers questions about {software_name}
+while the user works.
 
 Use Google Search to verify all content against the LATEST stable release of {software_name}.
 Flag version-specific behavior where it differs across major releases.
@@ -35,7 +36,8 @@ Output ONLY the six sections separated by their exact ## headers.
 ## SHORTCUTS
 A comprehensive keyboard shortcut reference organized by context/mode.
 Requirements:
-- Minimum 30 shortcuts total, organized into labeled subsections (### headers) by mode or workflow area
+- Minimum 30 shortcuts total, organized into labeled subsections (### headers)
+  by mode or workflow area
 - Format each subsection as: | Action | Windows/Linux | macOS |
 - Include modifier combinations (Shift+, Ctrl+, Alt+)
 - Flag shortcuts that changed in the latest major version with "(NEW in vX.Y)"
@@ -54,7 +56,8 @@ Sort by frequency (most common first). Fix must be actionable — no "check docu
 
 ## DEEP_CONCEPTS
 In-depth explanations of 5 foundational concepts users frequently misunderstand.
-Each concept: ### title, 150-300 words, a practical example, and the single most common misconception.
+Each concept: ### title, 150-300 words, a practical example, and the single most
+common misconception.
 
 ## VERSION_CHANGES
 Breaking changes and significant new features in the latest 2 major versions.
@@ -68,7 +71,14 @@ Cover: top shortcuts, most common beginner mistake, key jargon, version gotchas.
 """
 
 
-REQUIRED_SECTIONS = {"shortcuts", "workflows", "common_errors", "deep_concepts", "version_changes", "quick_reference"}
+REQUIRED_SECTIONS = {
+    "shortcuts",
+    "workflows",
+    "common_errors",
+    "deep_concepts",
+    "version_changes",
+    "quick_reference",
+}
 
 
 def _parse_sections(text: str) -> dict[str, str]:
@@ -86,7 +96,8 @@ def _parse_sections(text: str) -> dict[str, str]:
         "## QUICK_REFERENCE": "quick_reference",
     }
 
-    # re.split with a capturing group returns alternating: [before, header1, content1, header2, content2, ...]
+    # re.split with a capturing group returns alternating:
+    # [before, header1, content1, header2, content2, ...]
     parts = re.split(r"^(## [A-Z_]+)$", text, flags=re.MULTILINE)
 
     sections: dict[str, str] = {}
