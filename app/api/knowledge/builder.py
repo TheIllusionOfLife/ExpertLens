@@ -173,7 +173,7 @@ async def build_knowledge_for_coach(coach_id: str, software_name: str) -> None:
 
 
 async def validate_software_exists(software_name: str) -> None:
-    """Raise ValueError if software_name is not a recognizable native desktop application.
+    """Raise ValueError if software_name is not a recognized software application.
 
     Uses Gemini with Google Search grounding: grounding_chunks presence (real web sources found)
     combined with a Yes/No text answer. Both signals must agree before accepting.
@@ -185,8 +185,9 @@ async def validate_software_exists(software_name: str) -> None:
             response = await client.aio.models.generate_content(
                 model=_GEMINI_MODEL,
                 contents=(
-                    f"Is '{software_name}' a well-known native desktop application "
-                    f"(not a browser-based tool)? Answer only Yes or No."
+                    f"Is '{software_name}' a recognized software application "
+                    f"(desktop, mobile, or game) that users can run and interact with? "
+                    f"Answer only Yes or No."
                 ),
                 config=types.GenerateContentConfig(
                     tools=[types.Tool(google_search=types.GoogleSearch())],
@@ -206,7 +207,7 @@ async def validate_software_exists(software_name: str) -> None:
 
     if not has_grounding or not is_yes:
         raise ValueError(
-            f"'{software_name}' doesn't appear to be a recognized desktop application. "
+            f"'{software_name}' doesn't appear to be a recognized software application. "
             f"Please check the spelling and use the exact name "
-            f"(e.g., 'DaVinci Resolve', 'Adobe Photoshop', 'Blender')."
+            f"(e.g., 'DaVinci Resolve', 'Roblox Studio', 'Microsoft Excel')."
         )
