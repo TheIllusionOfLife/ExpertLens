@@ -98,6 +98,11 @@ async def test_build_knowledge_success():
         patch("app.api.knowledge.builder.genai.Client", return_value=mock_genai_client),
         patch("app.api.knowledge.builder.save_chunk", new_callable=AsyncMock) as mock_save,
         patch("app.api.knowledge.builder.update_coach", new_callable=AsyncMock) as mock_update,
+        patch(
+            "app.api.knowledge.builder.get_coach",
+            new_callable=AsyncMock,
+            return_value=MagicMock(),
+        ),
     ):
         await build_knowledge_for_coach("blender", "Blender")
 
