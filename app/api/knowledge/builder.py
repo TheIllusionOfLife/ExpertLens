@@ -16,6 +16,10 @@ logger = logging.getLogger(__name__)
 # Coach IDs that are pre-validated presets — skip software validation for these.
 KNOWN_PRESET_IDS = frozenset({"blender", "affinity_photo", "unreal_engine", "fusion", "zbrush"})
 
+_GEMINI_MODEL = "gemini-3-flash-preview"
+_BUILD_TIMEOUT_SECONDS = 240
+_VALIDATE_TIMEOUT_SECONDS = 20
+
 PROMPT_TEMPLATE = """
 You are building a knowledge base for an AI coach that helps users learn {software_name}.
 Generate all three sections below. Use Google Search to ensure the content is current
@@ -80,9 +84,9 @@ async def build_knowledge_for_coach(coach_id: str, software_name: str) -> None:
     """Generate knowledge chunks for a coach via a single Gemini call with Search grounding."""
     client = genai.Client()
     try:
-        async with asyncio.timeout(240):
+        async with asyncio.timeout(_BUILD_TIMEOUT_SECONDS):
             response = await client.aio.models.generate_content(
-                model="gemini-3-flash-preview",
+                model=_GEMINI_MODEL,
                 contents=PROMPT_TEMPLATE.format(software_name=software_name),
                 config=types.GenerateContentConfig(
                     tools=[types.Tool(google_search=types.GoogleSearch())],
@@ -135,9 +139,9 @@ async def validate_software_exists(software_name: str) -> None:
     """
     client = genai.Client()
     try:
-        async with asyncio.timeout(20):
+        async with asyncio.timeout(_VALIDATE_TIMEOUT_SECONDS):
             response = await client.aio.models.generate_content(
-                model="gemini-3-flash-preview",
+                model=_GEMINI_MODEL,
                 contents=(
                     f"Is '{software_name}' a well-known native desktop application "
                     f"(not a browser-based tool)? Answer only Yes or No."

@@ -34,7 +34,11 @@ async def get_coach_endpoint(coach_id: str) -> Coach:
 
 @router.post("", response_model=Coach, status_code=201)
 async def create_coach_endpoint(data: CoachCreate, background_tasks: BackgroundTasks) -> Coach:
-    if make_coach_slug(data.software_name) not in KNOWN_PRESET_IDS:
+    try:
+        slug = make_coach_slug(data.software_name)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    if slug not in KNOWN_PRESET_IDS:
         try:
             await validate_software_exists(data.software_name)
         except ValueError as e:
