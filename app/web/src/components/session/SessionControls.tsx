@@ -93,10 +93,11 @@ export function SessionControls({
         <button
           type="button"
           onClick={onStart}
+          aria-label="Start session"
           className="flex items-center gap-2 px-5 py-2.5 bg-(--accent) hover:bg-(--accent-hover) text-white rounded-lg font-medium text-sm transition-colors"
         >
           <PlayIcon />
-          Start Session
+          <span className="hidden sm:inline">Start Session</span>
         </button>
       ) : (
         <>
@@ -105,6 +106,7 @@ export function SessionControls({
             type="button"
             onClick={onToggleMic}
             aria-pressed={micActive}
+            aria-label={micActive ? "Mute microphone" : "Unmute microphone"}
             title={micActive ? "Click to mute" : "Click to unmute"}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
               micActive
@@ -113,7 +115,7 @@ export function SessionControls({
             }`}
           >
             <MicIcon muted={!micActive} />
-            {micActive ? "Mic On" : "Mic Off"}
+            <span className="hidden sm:inline">{micActive ? "Mic On" : "Mic Off"}</span>
           </button>
 
           {/* Screen share status */}
@@ -125,17 +127,18 @@ export function SessionControls({
             }`}
           >
             {screenSharing ? <MonitorIcon /> : <MonitorOffIcon />}
-            {screenSharing ? "Sharing" : "No Screen"}
+            <span className="hidden sm:inline">{screenSharing ? "Sharing" : "No Screen"}</span>
           </div>
 
           {/* Stop session */}
           <button
             type="button"
             onClick={onStop}
+            aria-label="Stop session"
             className="flex items-center gap-2 px-4 py-2 bg-(--error) hover:opacity-90 text-white rounded-lg font-semibold text-sm transition-all"
           >
             <StopIcon />
-            Stop
+            <span className="hidden sm:inline">Stop</span>
           </button>
         </>
       )}

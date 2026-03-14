@@ -16,11 +16,13 @@ interface Props {
 function KnowledgeSection({
   status,
   updatedAt,
+  knowledgeError,
   coachId,
   onRebuild,
 }: {
   status: string | undefined;
   updatedAt?: string;
+  knowledgeError?: string;
   coachId: string;
   onRebuild: () => void;
 }) {
@@ -52,8 +54,11 @@ function KnowledgeSection({
         </div>
       )}
       {status === "error" && (
-        <div className="px-4 py-3 rounded-lg border border-red-500/40 bg-red-500/5 text-sm text-red-400">
-          Knowledge generation failed — session uses base model training
+        <div className="px-4 py-3 rounded-lg border border-red-500/40 bg-red-500/5 text-sm text-red-400 space-y-1">
+          <p>Knowledge generation failed — session uses base model training</p>
+          {knowledgeError && (
+            <p className="font-mono text-xs text-red-400/70 break-all">{knowledgeError}</p>
+          )}
         </div>
       )}
       <div className="flex items-center justify-between">
@@ -310,6 +315,7 @@ export default function CoachDetailPage({ params }: Props) {
         <KnowledgeSection
           status={knowledgeStatus}
           updatedAt={coach.knowledge_updated_at}
+          knowledgeError={coach.knowledge_error}
           coachId={coachId}
           onRebuild={() => setKnowledgeStatus("building")}
         />
