@@ -2,9 +2,19 @@
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 
-from app.api.db.coach_repo import create_coach, get_coach, list_coaches, update_coach
+from app.api.db.coach_repo import (
+    create_coach,
+    get_coach,
+    list_coaches,
+    make_coach_slug,
+    update_coach,
+)
 from app.api.db.models import Coach, CoachCreate, CoachUpdate
-from app.api.knowledge.builder import build_knowledge_for_coach
+from app.api.knowledge.builder import (
+    KNOWN_PRESET_IDS,
+    build_knowledge_for_coach,
+    validate_software_exists,
+)
 
 router = APIRouter(prefix="/coaches", tags=["coaches"])
 
@@ -24,6 +34,11 @@ async def get_coach_endpoint(coach_id: str) -> Coach:
 
 @router.post("", response_model=Coach, status_code=201)
 async def create_coach_endpoint(data: CoachCreate, background_tasks: BackgroundTasks) -> Coach:
+    if make_coach_slug(data.software_name) not in KNOWN_PRESET_IDS:
+        try:
+            await validate_software_exists(data.software_name)
+        except ValueError as e:
+            raise HTTPException(status_code=422, detail=str(e))
     coach = await create_coach(data)
     if not coach:
         raise HTTPException(
