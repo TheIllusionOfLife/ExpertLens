@@ -2,6 +2,12 @@ import { AbsoluteFill, Sequence } from "remotion";
 import { Slide } from "./Slide";
 import { NarrationCard } from "./NarrationCard";
 import { ActLabel } from "./ActLabel";
+import { VOICEOVER_TIMINGS } from "../voiceover-timings";
+
+// act2a: 4 phrases → 4 messages; card appears at phrase 0 (frame 0)
+const { phraseOffsets } = VOICEOVER_TIMINGS.act2a;
+const CARD_FROM = phraseOffsets[0]; // 0
+const MESSAGE_DELAYS = phraseOffsets.map((o) => o - CARD_FROM);
 
 export const Act2aSession1: React.FC = () => {
   return (
@@ -19,9 +25,10 @@ export const Act2aSession1: React.FC = () => {
         <ActLabel text="Act 2a — Session 1" />
       </Sequence>
 
-      <Sequence from={300} durationInFrames={900}>
+      <Sequence from={CARD_FROM} durationInFrames={1200}>
         <NarrationCard
           title="Live Session — Blender Expert"
+          messageDelayFrames={MESSAGE_DELAYS}
           messages={[
             {
               speaker: "User",

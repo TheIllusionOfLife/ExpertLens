@@ -1,6 +1,6 @@
-import { CalculateMetadataFunction, Composition, staticFile } from "remotion";
+import { CalculateMetadataFunction, Composition } from "remotion";
 import { ExpertLensDemo, type DemoProps } from "./ExpertLensDemo";
-import { getAudioDuration } from "./get-audio-duration";
+import { VOICEOVER_TIMINGS } from "./voiceover-timings";
 import { SCENE_IDS } from "./voiceover-config";
 
 const FPS = 30;
@@ -10,13 +10,8 @@ const FPS = 30;
 const DEFAULT_SCENE_DURATIONS: number[] = [900, 1200, 1200, 1200, 900, 900, 600, 300];
 
 const calculateMetadata: CalculateMetadataFunction<DemoProps> = async () => {
-  const durationSeconds = await Promise.all(
-    SCENE_IDS.map((id) => getAudioDuration(staticFile(`voiceover/${id}.m4a`))),
-  );
-
-  const sceneDurations = durationSeconds.map((secs) => Math.ceil(secs * FPS));
+  const sceneDurations = SCENE_IDS.map((id) => VOICEOVER_TIMINGS[id].durationFrames);
   const total = sceneDurations.reduce((sum, d) => sum + d, 0);
-
   return {
     durationInFrames: total,
     props: { sceneDurations },

@@ -1,6 +1,5 @@
 import { AbsoluteFill, Sequence, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 import { Slide } from "./Slide";
-import { NarrationCard } from "./NarrationCard";
 import { ActLabel } from "./ActLabel";
 
 export const Act1DesktopGap: React.FC = () => {
@@ -24,9 +23,9 @@ export const Act1DesktopGap: React.FC = () => {
         <ActLabel text="Act 1 — The Desktop GUI Gap" />
       </Sequence>
 
-      {/* Three-column comparison cards */}
-      <Sequence from={15 * fps} durationInFrames={15 * fps} layout="none">
-        <ComparisonRow frame={frame - 15 * fps} fps={fps} />
+      {/* Comparison cards — appear at frame 30 so they're visible throughout the narration */}
+      <Sequence from={30} durationInFrames={900} layout="none">
+        <ComparisonRow frame={frame - 30} fps={fps} />
       </Sequence>
     </AbsoluteFill>
   );
