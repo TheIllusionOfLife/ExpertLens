@@ -50,6 +50,7 @@ def build_system_instruction(
     coach_id: str,
     user_preferences: dict | None = None,
     knowledge_snippets: list[str] | None = None,
+    session_history: list[dict] | None = None,
 ) -> str:
     """
     Assemble the full system instruction for a coaching session.
@@ -77,6 +78,19 @@ def build_system_instruction(
         if pref_lines:
             parts.append("## Session-Specific Instructions\n" + "\n".join(pref_lines))
 
+    # Previous session notes for cross-session memory
+    if session_history:
+        note_lines = []
+        for s in session_history:
+            if s.get("summary"):
+                topics = ", ".join(s.get("last_topics", []))
+                line = f"- {s['summary']}"
+                if topics:
+                    line += f" (topics: {topics})"
+                note_lines.append(line)
+        if note_lines:
+            parts.append("## Previous Session Notes\n" + "\n".join(note_lines))
+
     # Curated knowledge snippets (capped for context budget)
     if knowledge_snippets:
         combined = "\n\n".join(knowledge_snippets)
@@ -97,8 +111,10 @@ async def build_system_instruction_from_firestore(coach_id: str, user_id: str = 
 
     from app.api.db.knowledge_repo import get_all_knowledge_for_software
     from app.api.db.preferences_repo import get_preferences
+    from app.api.db.session_repo import get_sessions
 
     prefs_task = asyncio.create_task(get_preferences(user_id))
+    sessions_task = asyncio.create_task(get_sessions(coach_id, limit=3))
 
     user_prefs = None
     knowledge_snippets: list[str] = []
@@ -118,8 +134,17 @@ async def build_system_instruction_from_firestore(coach_id: str, user_id: str = 
     except Exception as e:
         logger.warning(f"Failed to load knowledge for {coach_id}: {e}")
 
+    session_history: list[dict] = []
+    try:
+        # Strict 1s timeout — session start must not block waiting for history
+        sessions = await asyncio.wait_for(sessions_task, timeout=1.0)
+        session_history = [s.model_dump() for s in sessions if s.summary]
+    except Exception as e:
+        logger.warning(f"Failed to load sessions for {coach_id}: {e}")
+
     return build_system_instruction(
         coach_id=coach_id,
         user_preferences=user_prefs,
         knowledge_snippets=knowledge_snippets,
+        session_history=session_history or None,
     )

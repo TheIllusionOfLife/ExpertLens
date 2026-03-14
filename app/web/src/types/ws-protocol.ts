@@ -8,6 +8,7 @@ export type MessageType =
   | "interrupted"
   | "reconnecting"
   | "reconnected"
+  | "text_response"
   | "error";
 
 // Binary media frame tag bytes
@@ -46,6 +47,12 @@ export interface ReconnectedMessage {
   type: "reconnected";
 }
 
+export interface TextResponseMessage {
+  type: "text_response";
+  text: string;
+  finished: boolean;
+}
+
 export interface ErrorMessage {
   type: "error";
   message: string;
@@ -57,4 +64,5 @@ export type ServerMessage =
   | InterruptedMessage
   | ReconnectingMessage
   | ReconnectedMessage
+  | TextResponseMessage
   | ErrorMessage;

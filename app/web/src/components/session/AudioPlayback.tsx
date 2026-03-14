@@ -8,7 +8,7 @@ const OUTPUT_SAMPLE_RATE = 24000;
 // Max seconds of audio to buffer ahead. Gemini sends chunks faster than
 // real-time, but with barge-in clearing the queue on interruption, we
 // don't need a large buffer. 15s balances long responses vs responsiveness.
-const BUFFER_CAP_SECONDS = 15;
+const BUFFER_CAP_SECONDS = 60;
 
 export interface AudioPlaybackHandle {
   playChunk: (pcm: ArrayBuffer) => void;

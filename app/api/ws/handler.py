@@ -25,10 +25,14 @@ from app.api.ws.protocol import (
     SessionHandleMessage,
     SessionStartedMessage,
     StartSessionMessage,
+    TextResponseMessage,
     parse_control_message,
 )
 
 logger = logging.getLogger(__name__)
+
+_MAX_TURN_CHARS = 500      # truncate a single very long turn
+_MAX_TRANSCRIPT_TURNS = 30  # cap total turns stored
 
 
 class SessionHandler:
@@ -38,12 +42,15 @@ class SessionHandler:
         self._ws = websocket
         self._coach_id = coach_id
         self._gemini: GeminiLiveSession | None = None
-        self._audio_queue: asyncio.Queue[bytes] = asyncio.Queue(maxsize=100)
+        self._audio_queue: asyncio.Queue[bytes] = asyncio.Queue(maxsize=500)
         self._gemini_task: asyncio.Task | None = None
         self._audio_forward_task: asyncio.Task | None = None
         self._firestore_session_id: str | None = None
         # Serialize all WebSocket writes to prevent concurrent send race conditions
         self._ws_send_lock = asyncio.Lock()
+        # Transcript accumulation for end-of-session summarization
+        self._current_turn_text: str = ""
+        self._coach_transcript: list[str] = []
 
     async def run(self) -> None:
         """Main session loop."""
@@ -130,6 +137,7 @@ class SessionHandler:
             on_reconnecting=self._notify_reconnecting,
             on_reconnected=self._notify_reconnected,
             on_interrupted=self._notify_interrupted,
+            on_text_response=self._notify_text_response,
         )
         self._gemini = gemini
 
@@ -247,7 +255,7 @@ class SessionHandler:
                 break
             except Exception as e:
                 logger.warning(f"Audio forward error: {e}")
-                break
+                continue
 
     async def _ws_send(self, payload: str | bytes, *, is_text: bool) -> None:
         """Serialize all WebSocket sends to prevent concurrent write races."""
@@ -269,6 +277,8 @@ class SessionHandler:
 
     def _notify_interrupted(self) -> None:
         """Called by GeminiSession when model turn is interrupted by user barge-in."""
+        # Drop incomplete turn — interrupted speech is not useful for summarization
+        self._current_turn_text = ""
         # Flush pending audio so the client doesn't keep playing stale audio
         while not self._audio_queue.empty():
             try:
@@ -278,6 +288,23 @@ class SessionHandler:
         task = asyncio.create_task(
             self._ws_send(InterruptedMessage().model_dump_json(), is_text=True),
             name="notify-interrupted",
+        )
+        task.add_done_callback(self._log_task_exception)
+
+    def _notify_text_response(self, text: str, finished: bool) -> None:
+        """Called by GeminiSession when output transcription text arrives."""
+        self._current_turn_text += text
+        if finished and self._current_turn_text.strip():
+            turn = self._current_turn_text[:_MAX_TURN_CHARS]
+            if len(self._coach_transcript) < _MAX_TRANSCRIPT_TURNS:
+                self._coach_transcript.append(turn)
+            self._current_turn_text = ""
+        task = asyncio.create_task(
+            self._ws_send(
+                TextResponseMessage(text=text, finished=finished).model_dump_json(),
+                is_text=True,
+            ),
+            name="notify-text",
         )
         task.add_done_callback(self._log_task_exception)
 
@@ -319,8 +346,20 @@ class SessionHandler:
                 pass
 
         if self._firestore_session_id:
+            summary, last_topics = "", []
+            if self._coach_transcript:
+                try:
+                    from agent.memory.summarize import summarize_session
+                    summary, last_topics = await asyncio.wait_for(
+                        summarize_session(self._coach_id, self._coach_transcript),
+                        timeout=5.0,
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to generate session summary: {e}")
             try:
-                await end_fs_session(self._firestore_session_id, summary="", last_topics=[])
+                await end_fs_session(
+                    self._firestore_session_id, summary=summary, last_topics=last_topics
+                )
             except Exception as e:
                 logger.warning(f"Failed to end Firestore session: {e}")
 

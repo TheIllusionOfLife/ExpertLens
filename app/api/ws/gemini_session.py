@@ -51,6 +51,7 @@ class GeminiLiveSession:
         on_reconnecting: Callable[[], None] | None = None,
         on_reconnected: Callable[[], None] | None = None,
         on_interrupted: Callable[[], None] | None = None,
+        on_text_response: Callable[[str, bool], None] | None = None,
     ):
         self._system_instruction = system_instruction
         self._coach_id = coach_id
@@ -60,6 +61,7 @@ class GeminiLiveSession:
         self._on_reconnecting = on_reconnecting
         self._on_reconnected = on_reconnected
         self._on_interrupted = on_interrupted
+        self._on_text_response = on_text_response
 
         self._client = genai.Client(api_key=settings.gemini_api_key)
         self._session: Any = None
@@ -89,6 +91,7 @@ class GeminiLiveSession:
         return types.LiveConnectConfig(
             system_instruction=self._system_instruction,
             response_modalities=[types.Modality.AUDIO],
+            output_audio_transcription=types.AudioTranscriptionConfig(),
             context_window_compression=types.ContextWindowCompressionConfig(
                 sliding_window=types.SlidingWindow(),
             ),
@@ -259,6 +262,12 @@ class GeminiLiveSession:
                 if hasattr(part, "inline_data") and part.inline_data and part.inline_data.data:
                     if self._on_audio_response:
                         self._on_audio_response(part.inline_data.data)
+
+        # Output transcription — text alongside audio for display
+        if sc and sc.output_transcription and sc.output_transcription.text:
+            if self._on_text_response:
+                finished = bool(sc.output_transcription.finished)
+                self._on_text_response(sc.output_transcription.text, finished)
 
         # Tool calls
         if hasattr(response, "tool_call") and response.tool_call:

@@ -16,6 +16,7 @@ class MessageType(StrEnum):
     INTERRUPTED = "interrupted"  # Model turn interrupted by user barge-in
     RECONNECTING = "reconnecting"
     RECONNECTED = "reconnected"
+    TEXT_RESPONSE = "text_response"
     ERROR = "error"
 
 
@@ -59,6 +60,12 @@ class ReconnectedMessage(BaseModel):
 
 class InterruptedMessage(BaseModel):
     type: MessageType = MessageType.INTERRUPTED
+
+
+class TextResponseMessage(BaseModel):
+    type: MessageType = MessageType.TEXT_RESPONSE
+    text: str
+    finished: bool = False
 
 
 class ErrorMessage(BaseModel):
