@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import re
 from datetime import UTC, datetime
 
 from google import genai
@@ -16,59 +17,84 @@ logger = logging.getLogger(__name__)
 # Coach IDs that are pre-validated presets — skip software validation for these.
 KNOWN_PRESET_IDS = frozenset({"blender", "affinity_photo", "unreal_engine", "fusion", "zbrush"})
 
-_GEMINI_MODEL = "gemini-3-flash-preview"
-_BUILD_TIMEOUT_SECONDS = 240
+_GEMINI_MODEL = "gemini-2.0-flash"  # was "gemini-3-flash-preview" which doesn't resolve
+_BUILD_TIMEOUT_SECONDS = 300  # was 240 — more content takes slightly longer
 _VALIDATE_TIMEOUT_SECONDS = 20
 
 PROMPT_TEMPLATE = """
-You are building a knowledge base for an AI coach that helps users learn {software_name}.
-Generate all three sections below. Use Google Search to ensure the content is current
-(latest stable version).
+You are building a reference knowledge base for a real-time AI voice coach named ExpertLens.
+The coach watches the user's screen and answers questions about {software_name} while the user works.
+
+Use Google Search to verify all content against the LATEST stable release of {software_name}.
+Flag version-specific behavior where it differs across major releases.
+
+Generate ALL SIX sections below, exactly as specified. Each section must be self-contained
+and dense — no preamble, no commentary, no repetition across sections.
+Output ONLY the six sections separated by their exact ## headers.
 
 ## SHORTCUTS
-A markdown table of the 20 most important keyboard shortcuts organized by category.
-Format: | Action | Windows/Linux | macOS |
+A comprehensive keyboard shortcut reference organized by context/mode.
+Requirements:
+- Minimum 30 shortcuts total, organized into labeled subsections (### headers) by mode or workflow area
+- Format each subsection as: | Action | Windows/Linux | macOS |
+- Include modifier combinations (Shift+, Ctrl+, Alt+)
+- Flag shortcuts that changed in the latest major version with "(NEW in vX.Y)"
 
-## WORKFLOW
-Step-by-step guides for the 5 most common beginner workflows. Use numbered lists.
+## WORKFLOWS
+Step-by-step guides for the 6 most common beginner-to-intermediate tasks.
+Requirements:
+- Each workflow has a ### title (e.g., "### UV Unwrap a Mesh")
+- Numbered steps; max 10 steps per workflow; every step with a shortcut shows: Key (Menu fallback)
+- End each workflow with: > Common mistake: ...
 
 ## COMMON_ERRORS
-The 10 most frequent mistakes/errors beginners encounter with their solutions. Use a table:
-| Error | Cause | Fix |
+The 15 most frequent mistakes and errors beginners encounter.
+Format as a markdown table: | Error/Symptom | Cause | Fix |
+Sort by frequency (most common first). Fix must be actionable — no "check documentation".
 
-Output ONLY the three sections separated by the exact headers:
-## SHORTCUTS, ## WORKFLOW, ## COMMON_ERRORS
+## DEEP_CONCEPTS
+In-depth explanations of 5 foundational concepts users frequently misunderstand.
+Each concept: ### title, 150-300 words, a practical example, and the single most common misconception.
+
+## VERSION_CHANGES
+Breaking changes and significant new features in the latest 2 major versions.
+Format as a table: | Feature | Old Behavior | New Behavior | Impact |
+Impact must be HIGH, MEDIUM, or LOW. Sort HIGH first. Minimum 8 entries.
+
+## QUICK_REFERENCE
+A dense cheatsheet of 20+ things a coach should know at a glance.
+Plain bullet list, one line per item. No tables, no subheaders.
+Cover: top shortcuts, most common beginner mistake, key jargon, version gotchas.
 """
 
 
-REQUIRED_SECTIONS = {"shortcuts", "workflow", "common_errors"}
+REQUIRED_SECTIONS = {"shortcuts", "workflows", "common_errors", "deep_concepts", "version_changes", "quick_reference"}
 
 
 def _parse_sections(text: str) -> dict[str, str]:
-    """Split generated text on ## section headers into a topic → content map.
+    """Split generated text on ## section headers using regex line-anchored matching.
 
+    Uses re.split to prevent mis-splits when section content contains header-like strings.
     Raises ValueError if any required section is missing or empty.
     """
     header_map = {
         "## SHORTCUTS": "shortcuts",
-        "## WORKFLOW": "workflow",
+        "## WORKFLOWS": "workflows",
         "## COMMON_ERRORS": "common_errors",
+        "## DEEP_CONCEPTS": "deep_concepts",
+        "## VERSION_CHANGES": "version_changes",
+        "## QUICK_REFERENCE": "quick_reference",
     }
-    # Find each header's position and slice the content between them
-    positions: list[tuple[int, str]] = []
-    for header, topic in header_map.items():
-        idx = text.find(header)
-        if idx != -1:
-            positions.append((idx, topic))
-    positions.sort()
+
+    # re.split with a capturing group returns alternating: [before, header1, content1, header2, content2, ...]
+    parts = re.split(r"^(## [A-Z_]+)$", text, flags=re.MULTILINE)
 
     sections: dict[str, str] = {}
-    for i, (start, topic) in enumerate(positions):
-        # Content starts after the header line; guard against missing newline
-        newline_pos = text.find("\n", start)
-        content_start = (newline_pos + 1) if newline_pos != -1 else len(text)
-        content_end = positions[i + 1][0] if i + 1 < len(positions) else len(text)
-        sections[topic] = text[content_start:content_end].strip()
+    for i in range(1, len(parts) - 1, 2):
+        header = parts[i].strip()
+        content = parts[i + 1].strip() if i + 1 < len(parts) else ""
+        if header in header_map and content:
+            sections[header_map[header]] = content
 
     missing = REQUIRED_SECTIONS - sections.keys()
     if missing:

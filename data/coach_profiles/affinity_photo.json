@@ -13,10 +13,7 @@
     "response_language": "english"
   },
   "knowledge_index_id": "affinity_photo",
-  "seed_sources": [
-    "shortcuts",
-    "retouching",
-    "layers",
-    "v3_changes"
-  ]
+  "knowledge_status": "none",
+  "knowledge_error": "",
+  "knowledge_updated_at": ""
 }
