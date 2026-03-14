@@ -67,7 +67,7 @@
 
 > **User (voice):** "How do I mask just the sky in this photo?"
 
-> **Coach (audio):** "Go to Select menu, choose Select Subject — Affinity will detect the foreground. Then invert the selection with Ctrl+Shift+I and apply a Pixel Mask from the Layers panel."
+> **Coach (audio):** "Go to Select menu, choose Select Subject — Affinity will detect the foreground. Then invert the selection with Command+Shift+I and apply a Pixel Mask from the Layers panel."
 
 > "Same live coaching. Different device, different capture method, same result."
 
@@ -103,7 +103,7 @@
 
 **[Show validation passing, knowledge building progress indicator]**
 
-> "Knowledge builds automatically using Gemini 3 with real-time search grounding. When complete, the coach is ready for live sessions."
+> "Knowledge builds automatically using Gemini 3 Flash Preview with real-time search grounding. When complete, the coach is ready for live sessions."
 
 ---
 

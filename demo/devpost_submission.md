@@ -81,7 +81,7 @@ ExpertLens is a real-time AI coaching agent for any software where the human is 
 
 **Grounding:** Context stuffing as primary strategy (zero latency). Firestore `get_coach_knowledge` tool as fallback (~150ms). No vector database.
 
-**Knowledge builder:** `gemini-3-flash-preview` with `ThinkingConfig(thinking_level=MINIMAL)` and Google Search grounding. Generates six structured sections per coach. Knowledge errors surface in the UI with the full exception detail for debugging.
+**Knowledge builder:** `gemini-3-flash-preview` with `ThinkingConfig(thinking_level=MINIMAL)` and Google Search grounding. Generates six structured sections per coach. Knowledge errors surface in the UI with exception detail for debugging.
 
 **Session persistence:** `contextWindowCompression` with `SlidingWindow` for unlimited session duration (bypasses 2-minute image session limit). `sessionResumption` with handle-based reconnect for ~10-minute WebSocket rotation.
 

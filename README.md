@@ -116,12 +116,7 @@ firebase deploy --only firestore:indexes
 
 ### Continuous Deployment
 
-After the first deploy, every push to `main` automatically builds and deploys both services via Cloud Build. No manual steps needed.
-
-To set up the CD trigger:
-```bash
-cd infra/terraform && terraform apply -var="project_id=<project_id>" ...
-```
+After the first deploy, every push to `main` automatically builds and deploys both services via Cloud Build. No manual steps needed — the Cloud Build trigger is provisioned by the same `terraform apply` that handles the initial infrastructure.
 
 See `infra/terraform/cloudbuild.tf` for the trigger and IAM configuration.
 

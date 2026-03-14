@@ -30,7 +30,7 @@ Record a screen capture showing:
 
 Deployment is fully automated. Every push to `main` triggers a Cloud Build pipeline (`deploy-on-main-push`) that builds both Docker images, pushes to Artifact Registry, deploys to Cloud Run, and updates CORS configuration — no manual steps needed.
 
-For the **first deploy** (infrastructure provisioning only), run:
+For the **first deploy** (one-time setup: provisions infrastructure, builds images, and deploys both services), run:
 
 ```bash
 # From project root:
