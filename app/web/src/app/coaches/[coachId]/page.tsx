@@ -247,6 +247,7 @@ export default function CoachDetailPage({ params }: Props) {
       try {
         const c = await getCoach(coachId);
         setKnowledgeStatus(c.knowledge_status);
+        setCoach(c);
         if (c.knowledge_status !== "building") clearInterval(id);
       } catch {
         // ignore transient poll errors

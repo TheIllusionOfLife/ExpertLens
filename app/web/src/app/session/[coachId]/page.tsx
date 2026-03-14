@@ -66,8 +66,9 @@ function TranscriptPanel({
       <p className="font-medium text-(--foreground)/60 uppercase tracking-wide text-[10px] mb-2">
         Coach
       </p>
-      {transcriptLines.map((line) => (
-        <p key={line} className="text-xs text-(--muted) leading-relaxed">
+      {transcriptLines.map((line, i) => (
+        // eslint-disable-next-line react/no-array-index-key
+        <p key={`${i}-${line.slice(0, 20)}`} className="text-xs text-(--muted) leading-relaxed">
           {line}
         </p>
       ))}
@@ -160,7 +161,7 @@ export default function LiveSessionPage() {
             const completed = currentTextRef.current + msg.text;
             currentTextRef.current = "";
             setCurrentText("");
-            setTranscriptLines((prev) => [...prev.slice(-20), completed]);
+            setTranscriptLines((prev) => [...prev, completed].slice(-20));
           } else {
             currentTextRef.current += msg.text;
             setCurrentText(currentTextRef.current);

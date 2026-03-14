@@ -1,5 +1,7 @@
 """REST API routes for coaches."""
 
+import logging
+
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 
 from app.api.db.coach_repo import (
@@ -17,6 +19,8 @@ from app.api.knowledge.builder import (
     build_knowledge_for_coach,
     validate_software_exists,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/coaches", tags=["coaches"])
 
@@ -86,5 +90,12 @@ async def delete_coach_endpoint(coach_id: str) -> dict:
     if not coach:
         raise HTTPException(status_code=404, detail="Coach not found")
     await delete_knowledge_for_coach(coach_id)
-    await delete_coach(coach_id)
+    try:
+        await delete_coach(coach_id)
+    except Exception as e:
+        logger.error(f"delete_coach failed after knowledge deletion (coach={coach_id}): {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Knowledge deleted but coach profile could not be removed. Retry the delete.",
+        )
     return {"ok": True}

@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import uuid
 
 from fastapi import WebSocket, WebSocketDisconnect
 
@@ -95,11 +96,11 @@ class SessionHandler:
         if msg.coach_id != self._coach_id:
             raise ValueError(f"coach_id mismatch: path={self._coach_id!r}, body={msg.coach_id!r}")
 
-        # Always use the path param as authoritative identity — no client-supplied user_id.
-        # In this demo there is no auth layer; coach_id acts as the per-coach user scope.
         coach_id = self._coach_id
         saved_handle = msg.session_handle
-        user_id = msg.user_id or self._coach_id
+        # Use client-supplied user_id if present; generate an anonymous ID otherwise.
+        # Never fall back to coach_id — that merges all users under one session history.
+        user_id = msg.user_id or f"anon-{uuid.uuid4()}"
 
         # Check knowledge status — degrade gracefully rather than blocking the session.
         try:
@@ -303,8 +304,9 @@ class SessionHandler:
         if finished:
             if self._current_turn_text.strip():
                 turn = self._current_turn_text[:_MAX_TURN_CHARS]
-                if len(self._transcript) < _MAX_TRANSCRIPT_TURNS:
-                    self._transcript.append(f"Coach: {turn}")
+                self._transcript.append(f"Coach: {turn}")
+                if len(self._transcript) > _MAX_TRANSCRIPT_TURNS:
+                    self._transcript.pop(0)
             self._current_turn_text = ""
         task = asyncio.create_task(
             self._ws_send(
@@ -346,8 +348,9 @@ class SessionHandler:
         """Called by GeminiSession when input transcription completes."""
         if text.strip():
             turn = text[:_MAX_TURN_CHARS]
-            if len(self._transcript) < _MAX_TRANSCRIPT_TURNS:
-                self._transcript.append(f"User: {turn}")
+            self._transcript.append(f"User: {turn}")
+            if len(self._transcript) > _MAX_TRANSCRIPT_TURNS:
+                self._transcript.pop(0)
 
     async def _send_error(self, message: str) -> None:
         """Send error message to client."""
