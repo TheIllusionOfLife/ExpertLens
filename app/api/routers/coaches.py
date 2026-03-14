@@ -1,20 +1,26 @@
 """REST API routes for coaches."""
 
+import logging
+
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 
 from app.api.db.coach_repo import (
     create_coach,
+    delete_coach,
     get_coach,
     list_coaches,
     make_coach_slug,
     update_coach,
 )
+from app.api.db.knowledge_repo import delete_knowledge_for_coach
 from app.api.db.models import Coach, CoachCreate, CoachUpdate
 from app.api.knowledge.builder import (
     KNOWN_PRESET_IDS,
     build_knowledge_for_coach,
     validate_software_exists,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/coaches", tags=["coaches"])
 
@@ -73,3 +79,23 @@ async def update_coach_endpoint(coach_id: str, updates: CoachUpdate) -> Coach:
     if not coach:
         raise HTTPException(status_code=404, detail=f"Coach '{coach_id}' not found")
     return coach
+
+
+@router.delete("/{coach_id}", status_code=200)
+async def delete_coach_endpoint(coach_id: str) -> dict:
+    """Delete a custom coach and all its knowledge chunks. Preset coaches cannot be deleted."""
+    if coach_id in KNOWN_PRESET_IDS:
+        raise HTTPException(status_code=403, detail="Preset coaches cannot be deleted")
+    coach = await get_coach(coach_id)
+    if not coach:
+        raise HTTPException(status_code=404, detail="Coach not found")
+    await delete_knowledge_for_coach(coach_id)
+    try:
+        await delete_coach(coach_id)
+    except Exception as e:
+        logger.error(f"delete_coach failed after knowledge deletion (coach={coach_id}): {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Knowledge deleted but coach profile could not be removed. Retry the delete.",
+        )
+    return {"ok": True}

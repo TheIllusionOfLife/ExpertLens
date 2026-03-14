@@ -18,6 +18,7 @@ class Settings(BaseSettings):
 
     # Gemini
     gemini_connect_timeout: float = Field(default=30.0, gt=0)
+    max_session_seconds: int = Field(default=3600, gt=0)
 
     # Server
     host: str = "0.0.0.0"

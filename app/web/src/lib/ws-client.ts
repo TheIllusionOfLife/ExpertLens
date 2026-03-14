@@ -46,11 +46,23 @@ export class WsClient {
     this.ws.binaryType = "arraybuffer";
 
     this.ws.onopen = () => {
+      // Read or generate a persistent user ID from localStorage
+      let userId: string | undefined;
+      try {
+        userId = localStorage.getItem("expertlens_user_id") ?? undefined;
+        if (!userId) {
+          userId = crypto.randomUUID();
+          localStorage.setItem("expertlens_user_id", userId);
+        }
+      } catch {
+        // localStorage unavailable (SSR, private mode) — omit user_id
+      }
       // Send start_session control message
       this.sendText({
         type: "start_session",
         coach_id: this.options.coachId,
         session_handle: this._currentHandle,
+        ...(userId ? { user_id: userId } : {}),
       });
     };
 

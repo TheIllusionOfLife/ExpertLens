@@ -58,6 +58,11 @@ async def create_coach(data: CoachCreate) -> Coach | None:
     return coach
 
 
+async def delete_coach(coach_id: str) -> None:
+    """Delete a coach document from Firestore."""
+    await get_client().collection(COACHES_COLLECTION).document(coach_id).delete()
+
+
 async def update_coach(coach_id: str, updates: dict) -> Coach | None:
     # NOTE: local merge is only safe for flat primitive updates (strings, numbers).
     # Do NOT use this path for Firestore server transforms (ArrayUnion, SERVER_TIMESTAMP,

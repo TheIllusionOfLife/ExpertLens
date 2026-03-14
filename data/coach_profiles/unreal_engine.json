@@ -13,10 +13,7 @@
     "response_language": "english"
   },
   "knowledge_index_id": "unreal_engine",
-  "seed_sources": [
-    "shortcuts",
-    "blueprints",
-    "materials",
-    "ue5_modern_features"
-  ]
+  "knowledge_status": "none",
+  "knowledge_error": "",
+  "knowledge_updated_at": ""
 }

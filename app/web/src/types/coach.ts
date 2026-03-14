@@ -8,6 +8,7 @@ export interface Coach {
   default_preferences: UserPreferences;
   knowledge_status?: "none" | "building" | "ready" | "error";
   knowledge_error?: string;
+  knowledge_updated_at?: string;
 }
 
 export interface UserPreferences {

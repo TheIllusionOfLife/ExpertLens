@@ -13,10 +13,11 @@ logger = logging.getLogger(__name__)
 _client = genai.Client(api_key=settings.gemini_api_key)
 
 PROMPT = """\
-Summarize this {software} coaching session in 2-3 sentences covering what was worked on.
+Summarize this {software} coaching session in 2-3 sentences covering what was worked on
+and what the user was trying to accomplish.
 Then extract 3-5 topic keywords.
 
-Coach turns:
+Session transcript (User = student, Coach = AI expert):
 {transcript}"""
 
 

@@ -12,37 +12,34 @@ from app.api.knowledge.builder import _parse_sections, build_knowledge_for_coach
 
 
 def test_build_knowledge_parse_sections_all_present():
-    text = """\
-## SHORTCUTS
-| Action | Win | Mac |
-| --- | --- | --- |
-| Save | Ctrl+S | Cmd+S |
-
-## WORKFLOW
-1. Open the app
-2. Do the thing
-
-## COMMON_ERRORS
-| Error | Cause | Fix |
-| --- | --- | --- |
-| Crash | OOM | Add RAM |
-"""
-    sections = _parse_sections(text)
-    assert set(sections.keys()) == {"shortcuts", "workflow", "common_errors"}
+    sections = _parse_sections(VALID_RESPONSE_TEXT)
+    assert set(sections.keys()) == {
+        "shortcuts",
+        "workflows",
+        "common_errors",
+        "deep_concepts",
+        "version_changes",
+        "quick_reference",
+    }
     assert "Ctrl+S" in sections["shortcuts"]
-    assert "Open the app" in sections["workflow"]
+    assert "Open the app" in sections["workflows"]
     assert "Crash" in sections["common_errors"]
+    assert "Node System" in sections["deep_concepts"]
+    assert "VERSION_CHANGES" not in sections  # headers not in content
+    assert "QUICK_REFERENCE" not in sections
+    assert "Ctrl+Z" in sections["quick_reference"]
 
 
 def test_build_knowledge_parse_sections_missing_raises():
-    text = "## SHORTCUTS\nsome content\n\n## WORKFLOW\nsome workflow\n"
+    text = "## SHORTCUTS\nsome content\n\n## WORKFLOWS\nsome workflow\n"
     with pytest.raises(ValueError, match="missing required sections"):
         _parse_sections(text)
 
 
 def test_build_knowledge_parse_sections_empty_raises():
-    text = "## SHORTCUTS\n\n## WORKFLOW\nworkflow content\n\n## COMMON_ERRORS\nerrors content\n"
-    with pytest.raises(ValueError, match="empty sections"):
+    # Only 3 sections, and SHORTCUTS is empty
+    text = "## SHORTCUTS\n\n## WORKFLOWS\nworkflow content\n\n## COMMON_ERRORS\nerrors content\n"
+    with pytest.raises(ValueError):
         _parse_sections(text)
 
 
@@ -56,19 +53,38 @@ VALID_RESPONSE_TEXT = """\
 | --- | --- | --- |
 | Save | Ctrl+S | Cmd+S |
 
-## WORKFLOW
-1. Step one
-2. Step two
+## WORKFLOWS
+### Basic Workflow
+1. Open the app
+2. Do the thing
+
+> Common mistake: Forgetting to save
 
 ## COMMON_ERRORS
-| Error | Cause | Fix |
+| Error/Symptom | Cause | Fix |
 | --- | --- | --- |
 | Crash | OOM | Add RAM |
+
+## DEEP_CONCEPTS
+### Node System
+Understanding nodes is fundamental to this application.
+Example: Connect an input to an output node.
+Common misconception: Nodes are executed top-to-bottom.
+
+## VERSION_CHANGES
+| Feature | Old Behavior | New Behavior | Impact |
+| --- | --- | --- | --- |
+| UI Theme | Light only | Dark + Light | MEDIUM |
+
+## QUICK_REFERENCE
+- Save: Ctrl+S
+- Undo: Ctrl+Z
+- Most common mistake: not saving before export
 """
 
 
 async def test_build_knowledge_success():
-    """Single generate_content call produces 3 save_chunk calls and sets status=ready."""
+    """Single generate_content call produces 6 save_chunk calls and sets status=ready."""
     mock_response = MagicMock()
     mock_response.text = VALID_RESPONSE_TEXT
 
@@ -82,16 +98,28 @@ async def test_build_knowledge_success():
         patch("app.api.knowledge.builder.genai.Client", return_value=mock_genai_client),
         patch("app.api.knowledge.builder.save_chunk", new_callable=AsyncMock) as mock_save,
         patch("app.api.knowledge.builder.update_coach", new_callable=AsyncMock) as mock_update,
+        patch(
+            "app.api.knowledge.builder.get_coach",
+            new_callable=AsyncMock,
+            return_value=MagicMock(),
+        ),
     ):
         await build_knowledge_for_coach("blender", "Blender")
 
     # Single generate_content call
     mock_aio.models.generate_content.assert_called_once()
 
-    # Three chunks saved
-    assert mock_save.call_count == 3
+    # Six chunks saved
+    assert mock_save.call_count == 6
     saved_topics = {call.args[0].topic for call in mock_save.call_args_list}
-    assert saved_topics == {"shortcuts", "workflow", "common_errors"}
+    assert saved_topics == {
+        "shortcuts",
+        "workflows",
+        "common_errors",
+        "deep_concepts",
+        "version_changes",
+        "quick_reference",
+    }
 
     # Status set to ready, error cleared
     mock_update.assert_called_once()

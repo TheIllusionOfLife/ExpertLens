@@ -24,6 +24,15 @@
         { "fieldPath": "coach_id", "order": "ASCENDING" },
         { "fieldPath": "started_at", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "sessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "coach_id", "order": "ASCENDING" },
+        { "fieldPath": "user_id", "order": "ASCENDING" },
+        { "fieldPath": "started_at", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

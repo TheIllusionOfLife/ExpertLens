@@ -52,6 +52,7 @@ class GeminiLiveSession:
         on_reconnected: Callable[[], None] | None = None,
         on_interrupted: Callable[[], None] | None = None,
         on_text_response: Callable[[str, bool], None] | None = None,
+        on_input_text: Callable[[str], None] | None = None,
     ):
         self._system_instruction = system_instruction
         self._coach_id = coach_id
@@ -62,6 +63,7 @@ class GeminiLiveSession:
         self._on_reconnected = on_reconnected
         self._on_interrupted = on_interrupted
         self._on_text_response = on_text_response
+        self._on_input_text = on_input_text
 
         self._client = genai.Client(api_key=settings.gemini_api_key)
         self._session: Any = None
@@ -92,6 +94,7 @@ class GeminiLiveSession:
             system_instruction=self._system_instruction,
             response_modalities=[types.Modality.AUDIO],
             output_audio_transcription=types.AudioTranscriptionConfig(),
+            input_audio_transcription=types.AudioTranscriptionConfig(),
             context_window_compression=types.ContextWindowCompressionConfig(
                 sliding_window=types.SlidingWindow(),
             ),
@@ -134,7 +137,8 @@ class GeminiLiveSession:
                         ),
                     ),
                 ]
-            )
+            ),
+            types.Tool(google_search=types.GoogleSearch()),
         ]
 
     async def run(self, saved_handle: str | None = None) -> None:
@@ -268,6 +272,12 @@ class GeminiLiveSession:
             if self._on_text_response:
                 finished = bool(sc.output_transcription.finished)
                 self._on_text_response(sc.output_transcription.text, finished)
+
+        # Input transcription — user speech text
+        if sc and hasattr(sc, "input_transcription") and sc.input_transcription:
+            if sc.input_transcription.text and sc.input_transcription.finished:
+                if self._on_input_text:
+                    self._on_input_text(sc.input_transcription.text)
 
         # Tool calls
         if hasattr(response, "tool_call") and response.tool_call:

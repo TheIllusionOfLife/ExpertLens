@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import uuid
 
 from fastapi import WebSocket, WebSocketDisconnect
 
@@ -51,7 +52,8 @@ class SessionHandler:
         self._ws_send_lock = asyncio.Lock()
         # Transcript accumulation for end-of-session summarization
         self._current_turn_text: str = ""
-        self._coach_transcript: list[str] = []
+        self._transcript: list[str] = []  # interleaved User/Coach turns
+        self._timeout_task: asyncio.Task | None = None
 
     async def run(self) -> None:
         """Main session loop."""
@@ -94,11 +96,11 @@ class SessionHandler:
         if msg.coach_id != self._coach_id:
             raise ValueError(f"coach_id mismatch: path={self._coach_id!r}, body={msg.coach_id!r}")
 
-        # Always use the path param as authoritative identity — no client-supplied user_id.
-        # In this demo there is no auth layer; coach_id acts as the per-coach user scope.
         coach_id = self._coach_id
         saved_handle = msg.session_handle
-        user_id = self._coach_id
+        # Use client-supplied user_id if present; generate an anonymous ID otherwise.
+        # Never fall back to coach_id — that merges all users under one session history.
+        user_id = msg.user_id or f"anon-{uuid.uuid4()}"
 
         # Check knowledge status — degrade gracefully rather than blocking the session.
         try:
@@ -118,7 +120,7 @@ class SessionHandler:
         # Build system instruction and create Firestore session record in parallel.
         system_instruction, fs_session = await asyncio.gather(
             build_system_instruction_from_firestore(coach_id=coach_id, user_id=user_id),
-            create_fs_session(coach_id),
+            create_fs_session(coach_id, user_id),
             return_exceptions=True,
         )
         if isinstance(fs_session, BaseException):
@@ -139,6 +141,7 @@ class SessionHandler:
             on_reconnected=self._notify_reconnected,
             on_interrupted=self._notify_interrupted,
             on_text_response=self._notify_text_response,
+            on_input_text=self._notify_input_text,
         )
         self._gemini = gemini
 
@@ -167,6 +170,9 @@ class SessionHandler:
         # Start managed audio forward task
         self._audio_forward_task = asyncio.create_task(
             self._forward_audio_loop(), name="audio-forward"
+        )
+        self._timeout_task = asyncio.create_task(
+            self._enforce_session_limit(), name="session-timeout"
         )
 
         # Monitor the Gemini task so we know if it dies
@@ -298,8 +304,9 @@ class SessionHandler:
         if finished:
             if self._current_turn_text.strip():
                 turn = self._current_turn_text[:_MAX_TURN_CHARS]
-                if len(self._coach_transcript) < _MAX_TRANSCRIPT_TURNS:
-                    self._coach_transcript.append(turn)
+                self._transcript.append(f"Coach: {turn}")
+                if len(self._transcript) > _MAX_TRANSCRIPT_TURNS:
+                    self._transcript.pop(0)
             self._current_turn_text = ""
         task = asyncio.create_task(
             self._ws_send(
@@ -324,12 +331,40 @@ class SessionHandler:
             name="notify-reconnected",
         )
 
+    async def _enforce_session_limit(self) -> None:
+        await asyncio.sleep(settings.max_session_seconds)
+        mins = settings.max_session_seconds // 60
+        await self._send_error(
+            f"Session ended after {mins} minutes. Start a new session to continue."
+        )
+        if self._gemini:
+            await self._gemini.close()
+        try:
+            await self._ws.close(code=1000, reason="Session time limit reached")
+        except Exception:
+            pass
+
+    def _notify_input_text(self, text: str) -> None:
+        """Called by GeminiSession when input transcription completes."""
+        if text.strip():
+            turn = text[:_MAX_TURN_CHARS]
+            self._transcript.append(f"User: {turn}")
+            if len(self._transcript) > _MAX_TRANSCRIPT_TURNS:
+                self._transcript.pop(0)
+
     async def _send_error(self, message: str) -> None:
         """Send error message to client."""
         await self._ws_send(ErrorMessage(message=message).model_dump_json(), is_text=True)
 
     async def _cleanup(self) -> None:
         """Cancel all background tasks and close Gemini session."""
+        if self._timeout_task and not self._timeout_task.done():
+            self._timeout_task.cancel()
+            try:
+                await self._timeout_task
+            except asyncio.CancelledError:
+                pass
+
         if self._audio_forward_task and not self._audio_forward_task.done():
             self._audio_forward_task.cancel()
             try:
@@ -349,10 +384,10 @@ class SessionHandler:
 
         if self._firestore_session_id:
             summary, last_topics = "", []
-            if self._coach_transcript:
+            if self._transcript:
                 try:
                     summary, last_topics = await asyncio.wait_for(
-                        summarize_session(self._coach_id, self._coach_transcript),
+                        summarize_session(self._coach_id, self._transcript),
                         timeout=5.0,
                     )
                 except Exception as e:

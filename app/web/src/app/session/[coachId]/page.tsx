@@ -53,6 +53,35 @@ function Tips({ items = DEFAULT_TIPS }: { items?: string[] }) {
   );
 }
 
+function TranscriptPanel({
+  transcriptLines,
+  currentText,
+}: {
+  transcriptLines: string[];
+  currentText: string;
+}) {
+  if (transcriptLines.length === 0 && !currentText) return <Tips />;
+  return (
+    <div className="w-full p-4 bg-(--surface) border border-(--border) rounded-xl space-y-1 max-h-72 overflow-y-auto">
+      <p className="font-medium text-(--foreground)/60 uppercase tracking-wide text-[10px] mb-2">
+        Coach
+      </p>
+      {transcriptLines.map((line, i) => (
+        // eslint-disable-next-line react/no-array-index-key
+        <p key={`${i}-${line.slice(0, 20)}`} className="text-xs text-(--muted) leading-relaxed">
+          {line}
+        </p>
+      ))}
+      {currentText && (
+        <p className="text-xs text-(--foreground)/80 leading-relaxed">
+          {currentText}
+          <span className="animate-pulse">▌</span>
+        </p>
+      )}
+    </div>
+  );
+}
+
 const STEPS = (softwareName: string) => [
   "Click Start Session below",
   `Share your ${softwareName} window when prompted`,
@@ -132,7 +161,7 @@ export default function LiveSessionPage() {
             const completed = currentTextRef.current + msg.text;
             currentTextRef.current = "";
             setCurrentText("");
-            setTranscriptLines((prev) => [...prev.slice(-4), completed]);
+            setTranscriptLines((prev) => [...prev, completed].slice(-20));
           } else {
             currentTextRef.current += msg.text;
             setCurrentText(currentTextRef.current);
@@ -174,13 +203,20 @@ export default function LiveSessionPage() {
   // Cleanup on unmount
   useEffect(() => () => stopSession(), [stopSession]);
 
+  const hasDisplayMedia =
+    typeof navigator !== "undefined" &&
+    "mediaDevices" in navigator &&
+    !!navigator.mediaDevices &&
+    "getDisplayMedia" in navigator.mediaDevices;
+  const isMobileUA = typeof navigator !== "undefined" && /Mobi|Android/i.test(navigator.userAgent);
+
   const coachName = coach?.display_name ?? coachId;
   const softwareName = coach?.software_name ?? "desktop app";
 
   return (
     <div className="min-h-screen bg-(--background) flex flex-col">
       {/* Header */}
-      <header className="flex items-center justify-between px-16 py-5 border-b border-(--border) bg-(--surface)">
+      <header className="flex items-center justify-between px-4 sm:px-8 md:px-16 py-5 border-b border-(--border) bg-(--surface)">
         <button
           type="button"
           onClick={() => router.push("/")}
@@ -209,7 +245,7 @@ export default function LiveSessionPage() {
             <div className="relative mx-auto w-24 h-24">
               <div className="absolute inset-0 rounded-2xl bg-(--accent-glow) blur-xl" />
               <div className="relative w-24 h-24 rounded-2xl bg-(--surface-elevated) border border-(--border) flex items-center justify-center">
-                <CoachIcon coachId={coachId} size={52} />
+                <CoachIcon coachId={coachId} iconKey={coach?.icon} size={52} />
               </div>
             </div>
 
@@ -243,7 +279,7 @@ export default function LiveSessionPage() {
           </div>
         )}
 
-        {/* Connected, no screen: full-viewport Share Screen CTA */}
+        {/* Connected, no screen: full-viewport Share Screen / Camera CTA */}
         {status === "connected" && !screenSharing && (
           <div className="flex flex-col items-center gap-7 text-center max-w-sm w-full">
             <div className="relative">
@@ -252,25 +288,36 @@ export default function LiveSessionPage() {
                 <MonitorIcon size={32} className="text-(--accent)" />
               </div>
             </div>
-            <div>
-              <h2 className="text-2xl font-bold mb-2">Share your screen</h2>
-              <p className="text-(--muted) text-sm leading-relaxed max-w-xs mx-auto">
-                Let your coach see <strong className="text-(--foreground)">{softwareName}</strong>{" "}
-                for real-time visual guidance
-              </p>
-            </div>
+            {!hasDisplayMedia ? (
+              <div>
+                <h2 className="text-2xl font-bold mb-2">Point your camera</h2>
+                <p className="text-(--muted) text-sm leading-relaxed max-w-xs mx-auto">
+                  Point your device camera at{" "}
+                  <strong className="text-(--foreground)">{softwareName}</strong> on screen for
+                  real-time visual guidance
+                </p>
+              </div>
+            ) : (
+              <div>
+                <h2 className="text-2xl font-bold mb-2">Share your screen</h2>
+                <p className="text-(--muted) text-sm leading-relaxed max-w-xs mx-auto">
+                  Let your coach see <strong className="text-(--foreground)">{softwareName}</strong>{" "}
+                  for real-time visual guidance
+                </p>
+              </div>
+            )}
             <button
               type="button"
               onClick={() => setScreenSharing(true)}
               className="flex items-center gap-2.5 px-8 py-3.5 bg-(--accent) hover:bg-(--accent-hover) text-white rounded-xl font-semibold text-base transition-all shadow-[0_0_40px_rgba(124,106,247,0.3)] hover:shadow-[0_0_50px_rgba(124,106,247,0.4)] cursor-pointer"
             >
               <MonitorIcon />
-              Share Screen
+              {hasDisplayMedia ? (isMobileUA ? "Tap to Record" : "Share Screen") : "Start Camera"}
             </button>
             <p className="text-xs text-(--muted)">
               Audio coaching is active — your coach can hear you
             </p>
-            <Tips />
+            <TranscriptPanel transcriptLines={transcriptLines} currentText={currentText} />
           </div>
         )}
 
@@ -280,26 +327,7 @@ export default function LiveSessionPage() {
             <div className="p-3.5 bg-(--success)/8 border border-(--success)/20 rounded-xl text-sm text-(--success) text-center font-medium">
               Screen shared — coach can see your {softwareName}
             </div>
-            {transcriptLines.length > 0 || currentText ? (
-              <div className="w-full p-4 bg-(--surface) border border-(--border) rounded-xl space-y-1 max-h-72 overflow-y-auto">
-                <p className="font-medium text-(--foreground)/60 uppercase tracking-wide text-[10px] mb-2">
-                  Coach
-                </p>
-                {transcriptLines.map((line) => (
-                  <p key={line} className="text-xs text-(--muted) leading-relaxed">
-                    {line}
-                  </p>
-                ))}
-                {currentText && (
-                  <p className="text-xs text-(--foreground)/80 leading-relaxed">
-                    {currentText}
-                    <span className="animate-pulse">▌</span>
-                  </p>
-                )}
-              </div>
-            ) : (
-              <Tips />
-            )}
+            <TranscriptPanel transcriptLines={transcriptLines} currentText={currentText} />
           </div>
         )}
 
@@ -344,6 +372,7 @@ export default function LiveSessionPage() {
         active={screenSharing}
         onFrame={handleScreenFrame}
         onStopped={handleScreenStopped}
+        mode={hasDisplayMedia ? "display" : "camera"}
       />
     </div>
   );

@@ -55,3 +55,21 @@ export async function updatePreferences(
     body: JSON.stringify(prefs),
   });
 }
+
+export async function deleteCoach(coachId: string): Promise<void> {
+  await apiFetch<{ ok: boolean }>(`/coaches/${coachId}`, { method: "DELETE" });
+}
+
+export async function rebuildKnowledge(coachId: string): Promise<void> {
+  await apiFetch<{ status: string }>(`/coaches/${coachId}/rebuild-knowledge`, { method: "POST" });
+}
+
+export async function updateCoach(
+  coachId: string,
+  updates: Partial<Pick<Coach, "display_name" | "icon" | "persona">>
+): Promise<Coach> {
+  return apiFetch<Coach>(`/coaches/${coachId}`, {
+    method: "PUT",
+    body: JSON.stringify(updates),
+  });
+}

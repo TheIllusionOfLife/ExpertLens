@@ -13,12 +13,7 @@
     "response_language": "english"
   },
   "knowledge_index_id": "blender",
-  "seed_sources": [
-    "shortcuts",
-    "modeling_basics",
-    "common_errors",
-    "modifiers",
-    "rendering",
-    "blender_4x_changes"
-  ]
+  "knowledge_status": "none",
+  "knowledge_error": "",
+  "knowledge_updated_at": ""
 }
