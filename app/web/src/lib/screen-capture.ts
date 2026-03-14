@@ -19,11 +19,9 @@ export async function startScreenCapture(
   onFrame: (jpeg: Blob) => void
 ): Promise<ScreenCaptureHandle> {
   const stream = await navigator.mediaDevices.getDisplayMedia({
-    video: {
-      frameRate: { ideal: 5, max: 10 },
-      // @ts-ignore — Chrome-specific hint to offer full screen rather than current tab
-      preferCurrentTab: false,
-    },
+    // @ts-ignore — Chrome-specific top-level hint to offer full screen over current tab; ignored by other browsers
+    preferCurrentTab: false,
+    video: { frameRate: { ideal: 5, max: 10 } },
     audio: false,
   });
 

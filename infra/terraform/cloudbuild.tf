@@ -28,26 +28,36 @@ resource "google_cloudbuild_trigger" "deploy_on_main" {
   filename = "infra/cloudbuild.yaml"
 
   substitutions = {
-    _BACKEND_URL  = "https://expertlens-backend-pk4kcjevqa-uc.a.run.app"
-    _CORS_ORIGINS = "https://expertlens-frontend-pk4kcjevqa-uc.a.run.app,http://localhost:3000,http://localhost:3001,http://localhost:3002"
+    _BACKEND_URL = google_cloud_run_v2_service.backend.uri
+    # Frontend URL + localhost origins for local dev. Uses ^#^ delimiter in set-cors step
+    # so commas in the value are not misinterpreted as key=value separators by gcloud.
+    _CORS_ORIGINS = "${google_cloud_run_v2_service.frontend.uri},http://localhost:3000,http://localhost:3001,http://localhost:3002"
   }
 
   depends_on = [google_project_service.apis]
 }
 
-# IAM: grant Cloud Build SA the roles required by cloudbuild.yaml
-# (build → push to Artifact Registry, deploy to Cloud Run, write logs)
+# IAM: grant Cloud Build SA the minimum roles required by cloudbuild.yaml
+# (push to Artifact Registry, deploy to Cloud Run, write logs)
 
-resource "google_project_iam_member" "cloudbuild_run_admin" {
+resource "google_project_iam_member" "cloudbuild_run_developer" {
   project = var.project_id
-  role    = "roles/run.admin"
+  role    = "roles/run.developer"
   member  = "serviceAccount:${local.cloudbuild_sa}"
 }
 
-resource "google_project_iam_member" "cloudbuild_sa_user" {
-  project = var.project_id
-  role    = "roles/iam.serviceAccountUser"
-  member  = "serviceAccount:${local.cloudbuild_sa}"
+# Scope iam.serviceAccountUser to only the runtime SAs that Cloud Run uses,
+# not the entire project (principle of least privilege).
+resource "google_service_account_iam_member" "cloudbuild_sa_user_backend" {
+  service_account_id = google_service_account.backend.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${local.cloudbuild_sa}"
+}
+
+resource "google_service_account_iam_member" "cloudbuild_sa_user_frontend" {
+  service_account_id = google_service_account.frontend.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${local.cloudbuild_sa}"
 }
 
 resource "google_project_iam_member" "cloudbuild_ar_writer" {
