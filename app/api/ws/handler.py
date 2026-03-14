@@ -31,7 +31,7 @@ from app.api.ws.protocol import (
 
 logger = logging.getLogger(__name__)
 
-_MAX_TURN_CHARS = 500      # truncate a single very long turn
+_MAX_TURN_CHARS = 500  # truncate a single very long turn
 _MAX_TRANSCRIPT_TURNS = 30  # cap total turns stored
 
 
@@ -350,6 +350,7 @@ class SessionHandler:
             if self._coach_transcript:
                 try:
                     from agent.memory.summarize import summarize_session
+
                     summary, last_topics = await asyncio.wait_for(
                         summarize_session(self._coach_id, self._coach_transcript),
                         timeout=5.0,

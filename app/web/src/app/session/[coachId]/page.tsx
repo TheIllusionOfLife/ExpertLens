@@ -275,13 +275,13 @@ export default function LiveSessionPage() {
             <div className="p-3.5 bg-(--success)/8 border border-(--success)/20 rounded-xl text-sm text-(--success) text-center font-medium">
               Screen shared — coach can see your {softwareName}
             </div>
-            {(transcriptLines.length > 0 || currentText) ? (
+            {transcriptLines.length > 0 || currentText ? (
               <div className="w-full p-4 bg-(--surface) border border-(--border) rounded-xl space-y-1 max-h-72 overflow-y-auto">
                 <p className="font-medium text-(--foreground)/60 uppercase tracking-wide text-[10px] mb-2">
                   Coach
                 </p>
-                {transcriptLines.map((line, i) => (
-                  <p key={i} className="text-xs text-(--muted) leading-relaxed">
+                {transcriptLines.map((line) => (
+                  <p key={line} className="text-xs text-(--muted) leading-relaxed">
                     {line}
                   </p>
                 ))}
