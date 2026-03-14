@@ -70,6 +70,7 @@ export default function LiveSessionPage() {
   const [elapsed, setElapsed] = useState(0);
   const [transcriptLines, setTranscriptLines] = useState<string[]>([]);
   const [currentText, setCurrentText] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const currentTextRef = useRef("");
 
   const wsRef = useRef<WsClient | null>(null);
@@ -138,6 +139,8 @@ export default function LiveSessionPage() {
           }
         } else if (msg.type === "error") {
           console.error("Session error:", msg.message);
+          setStatus("error");
+          setErrorMessage(msg.message);
         }
       },
       onAudio: handleAudioResponse,
@@ -164,6 +167,7 @@ export default function LiveSessionPage() {
     currentTextRef.current = "";
     setCurrentText("");
     setTranscriptLines([]);
+    setErrorMessage(null);
   }, []);
 
   // Cleanup on unmount
@@ -313,6 +317,9 @@ export default function LiveSessionPage() {
           <div className="w-full max-w-md space-y-3">
             <div className="p-3.5 bg-(--error)/8 border border-(--error)/20 rounded-xl text-sm text-(--error) text-center">
               Connection error — could not reach the coaching server
+              {errorMessage && (
+                <p className="mt-1.5 text-xs text-(--error)/70 font-normal">{errorMessage}</p>
+              )}
             </div>
             <button
               type="button"
