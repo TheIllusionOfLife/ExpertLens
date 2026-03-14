@@ -14,7 +14,7 @@ Record a screen capture showing:
 2. **Health check** — In terminal, run:
    ```bash
    curl https://<backend-url>/health
-   # Expected: {"status":"ok","model":"gemini-2.5-flash-live-preview"}
+   # Expected: {"status":"ok","model":"gemini-2.5-flash-native-audio-latest"}
    ```
 
 3. **Live session** — Open the frontend URL in browser
@@ -26,28 +26,18 @@ Record a screen capture showing:
    - Show `INFO` log entries from a live session (WebSocket connect, session start, disconnect)
    - The JSON structured log format should be visible
 
-## Deploy Command
+## Deployment
+
+Deployment is fully automated. Every push to `main` triggers a Cloud Build pipeline (`deploy-on-main-push`) that builds both Docker images, pushes to Artifact Registry, deploys to Cloud Run, and updates CORS configuration — no manual steps needed.
+
+For the **first deploy** (one-time setup: provisions infrastructure, builds images, and deploys both services), run:
 
 ```bash
 # From project root:
 ./infra/deploy.sh <your-project-id>
 ```
 
-Expected output:
-```text
-==> Configuring Docker for Artifact Registry
-==> Building backend image
-==> Building frontend image
-==> Pushing images
-==> Terraform init + apply (infrastructure provisioning)
-==> Backend:  https://expertlens-backend-<hash>-uc.a.run.app
-==> Frontend: https://expertlens-frontend-<hash>-uc.a.run.app
-==> Re-deploying with correct inter-service URLs
-==> Deployment complete!
-    Frontend: https://expertlens-frontend-<hash>-uc.a.run.app
-    Backend:  https://expertlens-backend-<hash>-uc.a.run.app
-    Health:   {"status":"ok","model":"gemini-2.5-flash-live-preview"}
-```
+After the first deploy, all subsequent deployments happen automatically on merge to `main`.
 
 ## Submission Checklist
 

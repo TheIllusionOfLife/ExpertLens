@@ -1,19 +1,33 @@
 # ExpertLens
 
-Real-time multimodal AI coaching agent. Share your screen, speak naturally, and get expert coaching for any desktop software — Blender, Affinity Photo, Unreal Engine, and more.
+Real-time multimodal AI coaching agent. Share your screen or point your camera, speak naturally, and get expert coaching for any software you control directly — Blender, Affinity Photo, Unreal Engine, mobile apps, and more.
 
 Built on [Gemini Live API](https://ai.google.dev/gemini-api/docs/live) for the **Gemini Live Agent Challenge**.
 
-**Live:** https://expertlens-frontend-1085534867079.us-central1.run.app
+**Live:** https://expertlens-frontend-pk4kcjevqa-uc.a.run.app
+
+---
+
+## The Idea
+
+AI can automate browser apps with Playwright. AI can run CLI tools directly. But for the rest of software — desktop apps, mobile apps, professional tools — the human is the only operator. There is no API. The keyboard, mouse, or touchscreen is the only way in.
+
+ExpertLens coaches you inside that space. It watches what you're doing and advises you on how to do it better. You stay in control. The AI makes you faster.
 
 ---
 
 ## How It Works
 
-1. Open ExpertLens in your browser alongside your desktop app
+**Desktop / Android:**
+1. Open ExpertLens in your browser alongside your app
 2. Click **Share Screen** and select your application window
 3. Enable your microphone
 4. Ask questions or work naturally — ExpertLens watches and coaches in real time
+
+**iOS / Mobile:**
+1. Open ExpertLens in Safari
+2. Point your camera at your screen or device
+3. Enable your microphone and start coaching
 
 The agent sees your screen (~1 fps), hears your voice, and responds with audio. It knows your software's shortcuts, workflows, and common pitfalls.
 
@@ -72,14 +86,7 @@ Without Firestore, the app falls back to default preferences and hardcoded knowl
 
 ## Cloud Deployment (GCP)
 
-### Prerequisites
-
-- GCP project with billing enabled
-- `gcloud` CLI authenticated: `gcloud auth login`
-- `terraform` CLI 1.6+
-- Docker
-
-### One-Command Deploy
+### First Deploy
 
 ```bash
 # 1. Load your Gemini API key into Secret Manager
@@ -97,7 +104,7 @@ gcloud secrets versions add gemini-api-key \
 # - Wire inter-service URLs and confirm health
 ```
 
-### After Deploy
+### After First Deploy
 
 ```bash
 # Seed coaches and knowledge into Firestore
@@ -105,8 +112,13 @@ GCP_PROJECT_ID=<project_id> uv run python scripts/seed_firestore.py
 
 # Deploy Firestore composite indexes
 firebase deploy --only firestore:indexes
-# Or: gcloud firestore indexes create --project=<project_id>
 ```
+
+### Continuous Deployment
+
+After the first deploy, every push to `main` automatically builds and deploys both services via Cloud Build. No manual steps needed — the Cloud Build trigger is provisioned by the same `terraform apply` that handles the initial infrastructure.
+
+See `infra/terraform/cloudbuild.tf` for the trigger and IAM configuration.
 
 ---
 
@@ -117,6 +129,10 @@ firebase deploy --only firestore:indexes
 **Grounding strategy (two-layer):**
 1. **Context stuffing** — Curated shortcuts, workflows, and common errors pre-loaded into system instruction at session start. Zero latency.
 2. **Firestore fallback** — `get_coach_knowledge(topic)` tool for deeper queries not covered by context.
+
+**Capture strategy:**
+- **Desktop / Android Chrome**: `getDisplayMedia()` — full screen or window capture
+- **iOS Safari**: `getUserMedia()` — rear camera capture, point at screen or device
 
 ---
 
@@ -160,6 +176,8 @@ JSON control messages flow both directions:
 | Affinity Photo Expert | Affinity Photo | Calm mentor, build confidence |
 | Unreal Engine Expert | Unreal Engine 5 | Technical guide, blueprint focus |
 
+You can create a coach for any software using the Coach Builder.
+
 ---
 
 ## Project Structure
@@ -177,10 +195,11 @@ data/
   coach_profiles/ — Coach definitions (JSON)
   seed_sources/   — Curated knowledge (Markdown)
 infra/
-  terraform/      — GCP infrastructure as code
-  deploy.sh       — One-command deployment
+  terraform/      — GCP infrastructure as code (including CD trigger)
+  cloudbuild.yaml — CI/CD pipeline (auto-deploys on push to main)
+  deploy.sh       — One-command initial deployment
 scripts/          — seed_firestore.py, test scripts
-demo/             — Video script, deployment notes
+demo/             — Video script, blog post, submission docs
 ```
 
 ---
