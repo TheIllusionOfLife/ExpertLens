@@ -40,6 +40,7 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    settings.validate_required()
     yield
     # Close the Firestore client on shutdown to release gRPC channels.
     try:
