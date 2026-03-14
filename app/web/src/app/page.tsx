@@ -145,7 +145,7 @@ function CoachCard({ coach, index }: { coach: Coach; index: number }) {
       {/* Icon header */}
       <div className="flex items-center justify-between px-6 pt-6 pb-5">
         <div className="w-12 h-12 rounded-xl bg-(--surface-elevated) border border-(--border) flex items-center justify-center">
-          <CoachIcon coachId={coach.coach_id} size={28} />
+          <CoachIcon coachId={coach.coach_id} iconKey={coach.icon} size={28} />
         </div>
         <Link
           href={`/coaches/${coach.coach_id}`}

@@ -1,6 +1,6 @@
 "use client";
 
-import { CoachIcon } from "@/components/CoachIcon";
+import { CoachIcon, GENERIC_ICONS, GENERIC_ICON_KEYS } from "@/components/CoachIcon";
 import { PreferencesForm } from "@/components/PreferencesForm";
 import { deleteCoach, getCoach, rebuildKnowledge, updateCoach } from "@/lib/api-client";
 import type { Coach } from "@/types/coach";
@@ -72,28 +72,8 @@ function KnowledgeSection({
   );
 }
 
-const ICON_OPTIONS = [
-  "🎯",
-  "🎨",
-  "🎮",
-  "🎬",
-  "🖥️",
-  "🎵",
-  "📐",
-  "🔧",
-  "🎲",
-  "🏗️",
-  "🖼️",
-  "🎭",
-  "🔬",
-  "📷",
-  "🎸",
-  "🌐",
-  "🚀",
-  "💡",
-  "🎓",
-  "🛠️",
-];
+// Default icon key for coaches that don't have one yet
+const DEFAULT_ICON_KEY = GENERIC_ICON_KEYS[0];
 
 function CoachProfileForm({
   coach,
@@ -103,7 +83,9 @@ function CoachProfileForm({
   onSaved: (updated: Coach) => void;
 }) {
   const [displayName, setDisplayName] = useState(coach.display_name);
-  const [icon, setIcon] = useState(coach.icon);
+  const [icon, setIcon] = useState(
+    GENERIC_ICON_KEYS.includes(coach.icon) ? coach.icon : DEFAULT_ICON_KEY
+  );
   const [persona, setPersona] = useState(coach.persona);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -147,20 +129,24 @@ function CoachProfileForm({
       <div>
         <p className="block text-xs font-medium text-(--muted) mb-1.5">Icon</p>
         <div className="flex flex-wrap gap-2">
-          {ICON_OPTIONS.map((emoji) => (
-            <button
-              key={emoji}
-              type="button"
-              onClick={() => setIcon(emoji)}
-              className={`w-9 h-9 rounded-lg text-lg flex items-center justify-center border transition-colors ${
-                icon === emoji
-                  ? "border-(--accent) bg-(--accent)/10"
-                  : "border-(--border) bg-(--surface-elevated) hover:border-(--accent)/40"
-              }`}
-            >
-              {emoji}
-            </button>
-          ))}
+          {GENERIC_ICON_KEYS.map((key) => {
+            const IconSvg = GENERIC_ICONS[key];
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setIcon(key)}
+                title={key}
+                className={`w-10 h-10 rounded-lg flex items-center justify-center border transition-colors ${
+                  icon === key
+                    ? "border-(--accent) bg-(--accent)/10"
+                    : "border-(--border) bg-(--surface-elevated) hover:border-(--accent)/40"
+                }`}
+              >
+                <IconSvg size={20} />
+              </button>
+            );
+          })}
         </div>
       </div>
       <div>
@@ -329,7 +315,7 @@ export default function CoachDetailPage({ params }: Props) {
         {/* Coach info */}
         <div className="flex items-start gap-4">
           <div className="w-14 h-14 rounded-xl bg-(--surface-elevated) border border-(--border) flex items-center justify-center flex-shrink-0">
-            <CoachIcon coachId={coachId} size={32} />
+            <CoachIcon coachId={coachId} iconKey={coach?.icon} size={32} />
           </div>
           <div>
             <h1 className="text-2xl font-bold mb-1">{coach.display_name}</h1>
