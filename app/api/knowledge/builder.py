@@ -130,7 +130,7 @@ async def build_knowledge_for_coach(coach_id: str, software_name: str) -> None:
                     # temperature removed — Gemini 3: setting temperature < 1.0 degrades complex
                     # reasoning. Default 1.0 is required.
                     thinking_config=types.ThinkingConfig(
-                        thinking_level="minimal",
+                        thinking_level=types.ThinkingLevel.MINIMAL,
                     ),
                 ),
             )
@@ -191,7 +191,7 @@ async def validate_software_exists(software_name: str) -> None:
                 config=types.GenerateContentConfig(
                     tools=[types.Tool(google_search=types.GoogleSearch())],
                     thinking_config=types.ThinkingConfig(
-                        thinking_level="minimal",
+                        thinking_level=types.ThinkingLevel.MINIMAL,
                     ),
                 ),
             )
