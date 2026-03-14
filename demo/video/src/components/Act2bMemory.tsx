@@ -1,0 +1,39 @@
+import { AbsoluteFill, Sequence } from "remotion";
+import { Slide } from "./Slide";
+import { NarrationCard } from "./NarrationCard";
+import { ActLabel } from "./ActLabel";
+
+export const Act2bMemory: React.FC = () => {
+  return (
+    <AbsoluteFill>
+      <Sequence from={0} durationInFrames={1200} premountFor={30}>
+        <Slide
+          imageSrc="assets/03-session-idle.png"
+          headline="Cross-Session Memory"
+          body="After every session, ExpertLens summarizes what you worked on. The next session picks up where you left off."
+          dimImage
+        />
+      </Sequence>
+
+      <Sequence from={0} durationInFrames={1200} layout="none" premountFor={30}>
+        <ActLabel text="Act 2b — Cross-Session Memory" />
+      </Sequence>
+
+      <Sequence from={300} durationInFrames={900} premountFor={30}>
+        <NarrationCard
+          title="Session 2 — Blender Expert (Next Day)"
+          messages={[
+            {
+              speaker: "Coach",
+              text: "Welcome back. Last session we covered subdivision surface modifiers and normal smoothing — your faceted mesh issue. Picking up from there, or something new?",
+            },
+            {
+              speaker: "Narrator",
+              text: "The coach remembers. Session transcripts are summarized by Gemini and stored in Firestore. Each new session loads the last 3 summaries into its system instruction.",
+            },
+          ]}
+        />
+      </Sequence>
+    </AbsoluteFill>
+  );
+};
