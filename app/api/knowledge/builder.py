@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 from google import genai
 from google.genai import types
 
-from app.api.db.coach_repo import update_coach
+from app.api.db.coach_repo import get_coach, update_coach
 from app.api.db.knowledge_repo import save_chunk
 from app.api.db.models import KnowledgeChunk
 
@@ -133,6 +133,10 @@ async def build_knowledge_for_coach(coach_id: str, software_name: str) -> None:
         if not response.text:
             raise ValueError("Gemini returned an empty response")
         sections = _parse_sections(response.text)
+        # Guard against race with a concurrent delete: abort if coach no longer exists.
+        if not await get_coach(coach_id):
+            logger.info(f"Coach {coach_id} deleted during build — aborting chunk write")
+            return
         for topic, content in sections.items():
             chunk = KnowledgeChunk(
                 chunk_id=f"{coach_id}_{topic}",

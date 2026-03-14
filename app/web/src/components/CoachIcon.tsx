@@ -1064,11 +1064,12 @@ export const GENERIC_ICONS: Record<string, (props: { size: number }) => React.JS
 export const GENERIC_ICON_KEYS = Object.keys(GENERIC_ICONS);
 
 export function CoachIcon({ coachId, iconKey, size = 32 }: Props) {
-  const PresetIcon = PRESET_ICONS[coachId];
-  if (PresetIcon) return <PresetIcon size={size} />;
-
+  // User-saved icon takes priority; fall back to branded preset, then default.
   const GenericIcon = iconKey ? GENERIC_ICONS[iconKey] : undefined;
   if (GenericIcon) return <GenericIcon size={size} />;
+
+  const PresetIcon = PRESET_ICONS[coachId];
+  if (PresetIcon) return <PresetIcon size={size} />;
 
   return <DefaultIcon size={size} />;
 }

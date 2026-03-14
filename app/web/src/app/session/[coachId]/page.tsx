@@ -206,6 +206,7 @@ export default function LiveSessionPage() {
   const hasDisplayMedia =
     typeof navigator !== "undefined" &&
     "mediaDevices" in navigator &&
+    !!navigator.mediaDevices &&
     "getDisplayMedia" in navigator.mediaDevices;
   const isMobileUA = typeof navigator !== "undefined" && /Mobi|Android/i.test(navigator.userAgent);
 

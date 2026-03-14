@@ -3,6 +3,7 @@
 import { CoachIcon, GENERIC_ICONS, GENERIC_ICON_KEYS } from "@/components/CoachIcon";
 import { PreferencesForm } from "@/components/PreferencesForm";
 import { deleteCoach, getCoach, rebuildKnowledge, updateCoach } from "@/lib/api-client";
+import { PRESET_COACH_IDS } from "@/lib/constants";
 import type { Coach } from "@/types/coach";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -343,7 +344,7 @@ export default function CoachDetailPage({ params }: Props) {
         </section>
 
         {/* Danger Zone — only for custom coaches */}
-        {!["blender", "affinity_photo", "unreal_engine", "fusion", "zbrush"].includes(coachId) && (
+        {!PRESET_COACH_IDS.has(coachId) && (
           <section className="border-t border-(--border) pt-8">
             <h2 className="text-lg font-semibold mb-1 text-red-400">Danger Zone</h2>
             <p className="text-(--muted) text-sm mb-5">
