@@ -23,7 +23,7 @@ export default async function DashboardPage() {
     <div className="min-h-screen bg-(--background)">
       {/* Nav — inner constrained to match content width */}
       <header className="border-b border-(--border) bg-(--surface)">
-        <div className="flex items-center justify-between px-16 py-5 max-w-[64rem] mx-auto">
+        <div className="flex items-center justify-between px-4 sm:px-8 md:px-16 py-5 max-w-[64rem] mx-auto">
           <div className="flex items-center gap-3">
             <span className="text-xl font-bold tracking-tight">
               Expert<span className="text-(--accent)">Lens</span>
@@ -42,7 +42,7 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      <main className="px-16 py-16 max-w-[64rem] mx-auto">
+      <main className="px-4 sm:px-8 md:px-16 py-16 max-w-[64rem] mx-auto">
         {/* Hero */}
         <div className="mb-16">
           <p className="font-mono text-sm text-(--accent) tracking-[0.18em] uppercase mb-5 opacity-90">
@@ -159,22 +159,6 @@ function CoachCard({ coach, index }: { coach: Coach; index: number }) {
       <div className="px-6 pb-6 flex flex-col flex-1">
         <h2 className="font-bold text-[15px] mb-3 text-(--foreground)">{coach.display_name}</h2>
         <p className="text-(--muted) text-xs mb-5 leading-relaxed line-clamp-2">{coach.persona}</p>
-
-        <div className="flex flex-wrap gap-1.5 mb-6">
-          {coach.focus_areas.slice(0, 3).map((area) => (
-            <span
-              key={area}
-              className="text-xs px-2.5 py-0.5 bg-(--surface-elevated) border border-(--border) rounded-full text-(--muted)"
-            >
-              {area}
-            </span>
-          ))}
-          {coach.focus_areas.length > 3 && (
-            <span className="text-xs px-2 py-0.5 text-(--muted)">
-              +{coach.focus_areas.length - 3}
-            </span>
-          )}
-        </div>
 
         <Link
           href={`/session/${coach.coach_id}`}

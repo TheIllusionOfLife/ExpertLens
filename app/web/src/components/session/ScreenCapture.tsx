@@ -1,16 +1,21 @@
 "use client";
-// ScreenCapture: getDisplayMedia → JPEG frames → onFrame callback
+// ScreenCapture: getDisplayMedia or camera → JPEG frames → onFrame callback
 
-import { type ScreenCaptureHandle, startScreenCapture } from "@/lib/screen-capture";
+import {
+  type ScreenCaptureHandle,
+  startCameraCapture,
+  startScreenCapture,
+} from "@/lib/screen-capture";
 import { useCallback, useEffect, useRef } from "react";
 
 interface Props {
   active: boolean;
   onFrame: (jpeg: Blob) => void;
   onStopped?: () => void;
+  mode?: "display" | "camera";
 }
 
-export function ScreenCapture({ active, onFrame, onStopped }: Props) {
+export function ScreenCapture({ active, onFrame, onStopped, mode = "display" }: Props) {
   const handleRef = useRef<ScreenCaptureHandle | null>(null);
   const prevActiveRef = useRef(false);
 
@@ -23,16 +28,16 @@ export function ScreenCapture({ active, onFrame, onStopped }: Props) {
   useEffect(() => {
     if (active && !prevActiveRef.current) {
       let cancelled = false;
+      const capturePromise =
+        mode === "camera" ? startCameraCapture(onFrame) : startScreenCapture(onFrame);
 
-      startScreenCapture(onFrame)
+      capturePromise
         .then((h) => {
           if (cancelled) {
-            // Component deactivated before capture resolved — stop immediately
             h.stop();
             return;
           }
           handleRef.current = h;
-          // 'ended' listener is already registered inside startScreenCapture (lib layer)
         })
         .catch((err) => {
           if (!cancelled) {
@@ -45,7 +50,6 @@ export function ScreenCapture({ active, onFrame, onStopped }: Props) {
       return () => {
         cancelled = true;
         prevActiveRef.current = false;
-        // Stop any running capture so deactivation works even when cleanup fires
         handleRef.current?.stop();
         handleRef.current = null;
       };
@@ -55,7 +59,7 @@ export function ScreenCapture({ active, onFrame, onStopped }: Props) {
       stop();
       prevActiveRef.current = false;
     }
-  }, [active, onFrame, stop, onStopped]);
+  }, [active, onFrame, stop, onStopped, mode]);
 
   useEffect(() => () => stop(), [stop]);
 

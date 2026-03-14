@@ -117,9 +117,6 @@ async def build_knowledge_for_coach(coach_id: str, software_name: str) -> None:
                 config=types.GenerateContentConfig(
                     tools=[types.Tool(google_search=types.GoogleSearch())],
                     temperature=0.2,
-                    thinking_config=types.ThinkingConfig(
-                        thinking_level=types.ThinkingLevel.MINIMAL,
-                    ),
                 ),
             )
         if not response.text:
@@ -174,9 +171,6 @@ async def validate_software_exists(software_name: str) -> None:
                 ),
                 config=types.GenerateContentConfig(
                     tools=[types.Tool(google_search=types.GoogleSearch())],
-                    thinking_config=types.ThinkingConfig(
-                        thinking_level=types.ThinkingLevel.MINIMAL,
-                    ),
                 ),
             )
     except TimeoutError:
