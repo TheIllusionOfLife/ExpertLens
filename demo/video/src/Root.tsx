@@ -10,7 +10,7 @@ const FPS = 30;
 const DEFAULT_SCENE_DURATIONS: number[] = [900, 1200, 1200, 1200, 900, 900, 600, 300];
 
 const calculateMetadata: CalculateMetadataFunction<DemoProps> = async () => {
-  const sceneDurations = SCENE_IDS.map((id) => VOICEOVER_TIMINGS[id].durationFrames);
+  const sceneDurations = SCENE_IDS.map((id, i) => VOICEOVER_TIMINGS[id]?.durationFrames ?? DEFAULT_SCENE_DURATIONS[i]);
   const total = sceneDurations.reduce((sum, d) => sum + d, 0);
   return {
     durationInFrames: total,

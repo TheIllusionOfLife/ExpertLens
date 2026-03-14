@@ -25,6 +25,9 @@ export type DemoProps = {
 };
 
 export const ExpertLensDemo: React.FC<DemoProps> = ({ sceneDurations }) => {
+  if (sceneDurations.length !== SCENE_IDS.length) {
+    throw new Error(`Expected ${SCENE_IDS.length} scene durations, got ${sceneDurations.length}`);
+  }
   const [d1, d2, d3, d4, d5, d6, d7, d8] = sceneDurations;
 
   // Absolute start frame for each scene (cumulative sum of previous durations).
