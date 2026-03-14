@@ -46,7 +46,10 @@ async function capture() {
   await page.waitForLoadState("networkidle");
   const coachLink = page.locator('a[href^="/session/"]').first();
   const href = await coachLink.getAttribute("href");
-  const coachId = href?.split("/session/")[1] ?? "blender";
+  if (!href) {
+    throw new Error("No coach session links found on dashboard — seed Firestore coaches first");
+  }
+  const coachId = href.split("/session/")[1];
 
   console.log(`Capturing 03-session-idle.png (coach: ${coachId})...`);
   await page.goto(`${BASE_URL}/session/${coachId}`);

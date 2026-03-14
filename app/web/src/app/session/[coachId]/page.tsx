@@ -146,6 +146,7 @@ export default function LiveSessionPage() {
       onAudio: handleAudioResponse,
       onStatusChange: (s) => {
         setStatus(s);
+        if (s !== "error") setErrorMessage(null);
         if (s === "disconnected") {
           setScreenSharing(false);
           setMicActive(false);
