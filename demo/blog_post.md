@@ -1,14 +1,14 @@
-# Building ExpertLens: Real-time AI Coaching for Desktop Software Using Gemini Live API
+# Building ExpertLens: Real-time AI Coaching for Software You Control Directly
 
 *Built for the #GeminiLiveAgentChallenge*
 
-ExpertLens is a real-time voice and vision coaching agent for desktop software. Share your screen, speak naturally, and get expert guidance for Blender, Affinity Photo, Unreal Engine, or any desktop app — from an AI that watches what you're doing and responds in milliseconds.
+ExpertLens is a real-time voice and vision coaching agent for any software where the human must be the operator. Share your screen or point your camera, speak naturally, and get expert guidance — for Blender, Affinity Photo, Unreal Engine, a mobile game, or any app an AI cannot run on your behalf.
 
-This post covers why desktop GUI apps are the right target, how it's built on Gemini Live API, and four specific technical challenges that required non-obvious solutions.
+This post covers the core insight behind the project, how it's built on Gemini Live API, and four specific technical challenges that required non-obvious solutions.
 
 ---
 
-## 1. The Desktop GUI Gap
+## 1. The Human-Control Gap
 
 When deciding what to build for this hackathon, I mapped the landscape of AI assistance by tool type:
 
@@ -16,9 +16,13 @@ When deciding what to build for this hackathon, I mapped the landscape of AI ass
 
 **CLI and API-friendly tools** (git, ffmpeg, AWS CLI): LLMs can call these directly via tool use. An agent with shell access can run `git rebase -i` for you. No coaching needed.
 
-**Desktop GUI apps** (Blender, Affinity Photo, Unreal Engine, DaVinci Resolve): There is no programmatic interface accessible to an AI. The application is a closed binary. The mouse and keyboard are the only way in — and only the human can use them. AI cannot automate anything. Coaching is the only viable form of AI assistance.
+**Everything else** — desktop GUI apps (Blender, Affinity Photo, Unreal Engine, DaVinci Resolve), native mobile apps, professional hardware interfaces, games: there is no programmatic interface accessible to an AI. The application is a closed binary. The mouse, keyboard, or touchscreen is the only way in — and only the human can use them. AI cannot automate anything. Coaching is the only viable form of AI assistance.
 
-ExpertLens exists precisely in this gap. For Blender's procedural node graphs, Affinity Photo's layer blend modes, Unreal's Blueprint visual scripting — the user is irreplaceable. ExpertLens makes them faster.
+ExpertLens exists precisely in this gap. It watches your screen, listens to your voice, and advises you so you can command the application better. You stay in control. The AI makes you faster.
+
+### Mobile support
+
+ExpertLens works on mobile devices too. On iOS, `getDisplayMedia` is not available — but the rear camera works perfectly as a capture source. Point your phone at your screen or at a physical device, and ExpertLens can see exactly what you're looking at. On Android Chrome, full screen sharing works the same as desktop. The same agent, the same knowledge pipeline, the same live voice interaction — regardless of the device.
 
 ---
 
@@ -48,7 +52,9 @@ ExpertLens uses a two-layer grounding strategy designed for minimal latency:
 
 ![Architecture](architecture.png)
 
-The backend is FastAPI + ADK running on Cloud Run. The browser streams JPEG frames (~1fps, resized to 768×768) and PCM 16kHz audio over WebSocket. The Gemini Live session relays responses as PCM 24kHz audio back to the browser.
+The backend is FastAPI + ADK running on Cloud Run. The browser streams JPEG frames (~1fps, resized to 768×768) and PCM 16kHz audio over WebSocket. The Gemini Live session relays responses as PCM 24kHz audio back to the browser. The knowledge builder uses `gemini-3-flash-preview` with Google Search grounding to generate and keep coach knowledge current.
+
+**Deployment** is fully automated: every push to `main` triggers a Cloud Build pipeline that builds both Docker images, pushes to Artifact Registry, deploys to Cloud Run, and persists CORS configuration — no manual steps.
 
 ---
 
@@ -123,7 +129,7 @@ The memory pipeline runs entirely in the background and adds less than 1 second 
 
 **Summarization:** On session cleanup, `summarize.py` calls `gemini-2.0-flash` with `response_mime_type="application/json"` and a typed schema. It returns a structured `(summary, topics)` object. The call has a 5-second timeout — if it fails, the session still ends cleanly.
 
-**Storage:** The summary is written to Firestore under the session document.
+**Storage:** The summary is written to Firestore under the session document, keyed by `user_id` (an anonymous UUID per browser connection) and `coach_id`.
 
 **Injection:** At the start of the next session, `base.py`'s `build_system_instruction_from_firestore` queries the last 3 session summaries with a strict 1-second timeout. If Firestore is slow, the session starts without history — acceptable graceful degradation. The summaries are injected as "## Previous Session Notes" in the system instruction, before the knowledge reference section.
 
@@ -141,8 +147,8 @@ Two features are on the roadmap:
 
 ---
 
-ExpertLens is live at: https://expertlens-frontend-1085534867079.us-central1.run.app
+ExpertLens is live at: https://expertlens-frontend-pk4kcjevqa-uc.a.run.app
 
-Source: [GitHub repo — link after making public]
+Source: https://github.com/TheIllusionOfLife/ExpertLens
 
 *#GeminiLiveAgentChallenge*

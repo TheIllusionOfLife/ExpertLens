@@ -5,13 +5,19 @@
 
 ---
 
-## Act 1 — The Desktop GUI Gap (0:00–0:30)
+## Act 1 — The Human-Control Gap (0:00–0:30)
 
 **[Show desktop with Blender open alongside a browser tab with Playwright docs and a terminal with git commands]**
 
-> "You could use Playwright to automate a browser app. You could give an LLM a terminal and it will use your CLI tools directly. But open Blender, Affinity Photo, or Unreal Engine — and there is no API. No automation. The mouse is the only way in. ExpertLens coaches you inside that gap."
+> "You could use Playwright to automate a browser app. You could give an LLM a terminal and it will use your CLI tools directly. But open Blender, Affinity Photo, or Unreal Engine — and there is no API. No automation. The keyboard is the only way in, and only you can use it."
+
+**[Cut to phone camera pointing at a mobile game in progress]**
+
+> "Same story on mobile. A complex game, a creative app, a professional tool — the touchscreen is the interface. AI cannot operate it for you."
 
 **[Cut to ExpertLens dashboard in browser alongside Blender]**
+
+> "ExpertLens coaches you inside that space. It watches what you're doing and advises you — so you can control the application better."
 
 ---
 
@@ -51,25 +57,23 @@
 
 ---
 
-## Act 3 — vs Gemini AI Studio Live (1:45–2:20)
+## Act 3 — Mobile Demo (1:45–2:15)
 
-**[Side-by-side: Gemini AI Studio Live mode on the left, ExpertLens on the right]**
+**[Switch to iPhone running Safari on ExpertLens. Camera is pointing at an iPad with Affinity Photo open.]**
 
-> "Google AI Studio has a built-in Live mode. You can share your screen and talk to Gemini. ExpertLens adds four things."
+> "ExpertLens works on mobile too. iOS can't share the screen — but the camera works just as well. Point it at your screen or device and the agent sees exactly what you see."
 
-**[Highlight each point as spoken:]**
+**[Tap Start Session on the Affinity Photo coach. Camera activates.]**
 
-> "One: software-specific knowledge that is current — like the fact that Auto Smooth was removed from Blender 4.1 and replaced with the Smooth by Angle modifier."
+> **User (voice):** "How do I mask just the sky in this photo?"
 
-> "Two: user preferences that change how the coach talks to you — shortcut-first versus mouse-guided, concise expert versus calm mentor."
+> **Coach (audio):** "Go to Select menu, choose Select Subject — Affinity will detect the foreground. Then invert the selection with Ctrl+Shift+I and apply a Pixel Mask from the Layers panel."
 
-> "Three: memory of what you worked on last time."
-
-> "Four: a coaching persona built specifically for your software."
+> "Same live coaching. Different device, different capture method, same result."
 
 ---
 
-## Act 4 — Preferences (2:20–2:50)
+## Act 4 — Preferences (2:15–2:45)
 
 **[Navigate to coach settings panel]**
 
@@ -87,27 +91,29 @@
 
 ---
 
-## Act 5 — Coach Builder (2:50–3:30)
+## Act 5 — Coach Builder (2:45–3:25)
 
 **[Click '+ New Coach']**
 
-> "ExpertLens isn't limited to these three apps. You can create a coach for any desktop software."
+> "ExpertLens isn't limited to these three apps. You can create a coach for any software."
 
 **[Type 'DaVinci Resolve' as software name]**
 
-> "The software name is validated — ExpertLens uses Gemini with Google Search grounding to confirm it's a real desktop application before building the coach."
+> "The software name is validated — ExpertLens uses Gemini with Google Search grounding to confirm it's a real application before building the coach."
 
 **[Show validation passing, knowledge building progress indicator]**
 
-> "Knowledge builds automatically. When complete, the coach is ready for live sessions."
+> "Knowledge builds automatically using Gemini 3 with real-time search grounding. When complete, the coach is ready for live sessions."
 
 ---
 
-## Act 6 — Architecture (3:30–3:50)
+## Act 6 — Architecture (3:25–3:50)
 
 **[Show architecture diagram]**
 
 > "ExpertLens runs on Google Cloud Run. The browser streams screen frames and audio over WebSocket to a FastAPI backend, which relays to Gemini Live API in real time."
+
+> "On desktop and Android, that's a screen capture. On iOS, it's the rear camera. Same pipeline either way."
 
 > "SlidingWindow compression keeps sessions running indefinitely. Session resumption with stored handles survives the 10-minute WebSocket rotation."
 
@@ -117,18 +123,20 @@
 
 **[Return to ExpertLens dashboard]**
 
-> "ExpertLens. Expert coaching for the apps AI cannot automate."
+> "ExpertLens. Expert coaching for the software only you can operate."
 
-**[Show live URL: https://expertlens-frontend-1085534867079.us-central1.run.app]**
+**[Show live URL: https://expertlens-frontend-pk4kcjevqa-uc.a.run.app]**
 
 ---
 
 ## Recording Notes
 
-- Record at 1920×1080 minimum
+- Record desktop at 1920×1080 minimum; record mobile at native resolution
 - Blender window should be clearly visible alongside the browser
+- For the mobile act: film with a second device or simulate with browser DevTools mobile viewport
 - Keep microphone quality high — audio quality demonstrates the voice interaction
 - Show the status indicator turning green when the session connects
 - Demo the barge-in clearly — it's a key differentiator
-- For Act 2b: can use a prepared second session where the coach opens with the memory recall
+- For Act 2b: prepare a second session where the coach opens with the memory recall
+- For Act 3: an iPad or external display works well as the "screen the phone points at"
 - Keep energy up; the demo is the product
