@@ -6,12 +6,22 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, {
-    headers: { "Content-Type": "application/json" },
     ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options?.headers as Record<string, string>),
+    },
   });
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`API error ${res.status}: ${text}`);
+    let detail: string | undefined;
+    try {
+      const json = JSON.parse(text);
+      detail = json.detail as string | undefined;
+    } catch {
+      // Not JSON — fall through to generic error
+    }
+    throw new Error(detail ?? `API error ${res.status}: ${text}`);
   }
   return res.json() as Promise<T>;
 }
