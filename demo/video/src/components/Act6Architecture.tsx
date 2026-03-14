@@ -11,7 +11,7 @@ export const Act6Architecture: React.FC = () => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#1a1a2e", opacity }}>
-      <Sequence from={0} durationInFrames={600} layout="none" premountFor={30}>
+      <Sequence from={0} durationInFrames={600} layout="none">
         <ActLabel text="Act 6 — Architecture" />
       </Sequence>
 

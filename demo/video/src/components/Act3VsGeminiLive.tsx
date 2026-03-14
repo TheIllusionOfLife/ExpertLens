@@ -2,11 +2,17 @@ import { AbsoluteFill, Sequence } from "remotion";
 import { Slide } from "./Slide";
 import { NarrationCard } from "./NarrationCard";
 import { ActLabel } from "./ActLabel";
+import { VOICEOVER_TIMINGS } from "../voiceover-timings";
+
+// act3: phrase 0 = intro (slide-only); phrases 1-4 → 4 NarrationCard messages
+const { phraseOffsets } = VOICEOVER_TIMINGS.act3;
+const CARD_FROM = phraseOffsets[1]; // 209 — card appears when enumeration starts
+const MESSAGE_DELAYS = phraseOffsets.slice(1).map((o) => o - CARD_FROM);
 
 export const Act3VsGeminiLive: React.FC = () => {
   return (
     <AbsoluteFill>
-      <Sequence from={0} durationInFrames={1200} premountFor={30}>
+      <Sequence from={0} durationInFrames={1200}>
         <Slide
           imageSrc="assets/01-dashboard.png"
           headline="vs. Gemini AI Studio Live"
@@ -15,13 +21,14 @@ export const Act3VsGeminiLive: React.FC = () => {
         />
       </Sequence>
 
-      <Sequence from={0} durationInFrames={1200} layout="none" premountFor={30}>
+      <Sequence from={0} durationInFrames={1200} layout="none">
         <ActLabel text="Act 3 — ExpertLens vs Gemini AI Studio Live" />
       </Sequence>
 
-      <Sequence from={300} durationInFrames={900} premountFor={30}>
+      <Sequence from={CARD_FROM} durationInFrames={1200}>
         <NarrationCard
           title="What ExpertLens Adds"
+          messageDelayFrames={MESSAGE_DELAYS}
           messages={[
             {
               speaker: "Narrator",

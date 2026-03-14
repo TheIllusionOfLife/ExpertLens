@@ -8,6 +8,9 @@ type Message = {
 type NarrationCardProps = {
   messages: Message[];
   title?: string;
+  /** Per-message start frame relative to this component's frame 0.
+   *  Defaults to index * 20 if omitted (original stagger). */
+  messageDelayFrames?: number[];
 };
 
 const SPEAKER_COLORS: Record<Message["speaker"], string> = {
@@ -16,7 +19,7 @@ const SPEAKER_COLORS: Record<Message["speaker"], string> = {
   Narrator: "#a0a8c0",
 };
 
-export const NarrationCard: React.FC<NarrationCardProps> = ({ messages, title }) => {
+export const NarrationCard: React.FC<NarrationCardProps> = ({ messages, title, messageDelayFrames }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -69,7 +72,13 @@ export const NarrationCard: React.FC<NarrationCardProps> = ({ messages, title })
           </p>
         )}
         {messages.map((msg, i) => (
-          <MessageBubble key={i} message={msg} index={i} totalFrames={frame} fps={fps} />
+          <MessageBubble
+            key={i}
+            message={msg}
+            delayFrames={messageDelayFrames?.[i] ?? i * 20}
+            totalFrames={frame}
+            fps={fps}
+          />
         ))}
       </div>
     </AbsoluteFill>
@@ -78,11 +87,10 @@ export const NarrationCard: React.FC<NarrationCardProps> = ({ messages, title })
 
 const MessageBubble: React.FC<{
   message: Message;
-  index: number;
+  delayFrames: number;
   totalFrames: number;
   fps: number;
-}> = ({ message, index, totalFrames, fps }) => {
-  const delayFrames = index * 20;
+}> = ({ message, delayFrames, totalFrames, fps }) => {
   const localFrame = Math.max(0, totalFrames - delayFrames);
 
   const opacity = interpolate(localFrame, [0, 15], [0, 1], {

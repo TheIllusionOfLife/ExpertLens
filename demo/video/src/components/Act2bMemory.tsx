@@ -2,11 +2,17 @@ import { AbsoluteFill, Sequence } from "remotion";
 import { Slide } from "./Slide";
 import { NarrationCard } from "./NarrationCard";
 import { ActLabel } from "./ActLabel";
+import { VOICEOVER_TIMINGS } from "../voiceover-timings";
+
+// act2b: 2 phrases → 2 messages; card appears at phrase 0 (frame 0)
+const { phraseOffsets } = VOICEOVER_TIMINGS.act2b;
+const CARD_FROM = phraseOffsets[0]; // 0
+const MESSAGE_DELAYS = phraseOffsets.map((o) => o - CARD_FROM);
 
 export const Act2bMemory: React.FC = () => {
   return (
     <AbsoluteFill>
-      <Sequence from={0} durationInFrames={1200} premountFor={30}>
+      <Sequence from={0} durationInFrames={1200}>
         <Slide
           imageSrc="assets/03-session-idle.png"
           headline="Cross-Session Memory"
@@ -15,13 +21,14 @@ export const Act2bMemory: React.FC = () => {
         />
       </Sequence>
 
-      <Sequence from={0} durationInFrames={1200} layout="none" premountFor={30}>
+      <Sequence from={0} durationInFrames={1200} layout="none">
         <ActLabel text="Act 2b — Cross-Session Memory" />
       </Sequence>
 
-      <Sequence from={300} durationInFrames={900} premountFor={30}>
+      <Sequence from={CARD_FROM} durationInFrames={1200}>
         <NarrationCard
           title="Session 2 — Blender Expert (Next Day)"
+          messageDelayFrames={MESSAGE_DELAYS}
           messages={[
             {
               speaker: "Coach",
