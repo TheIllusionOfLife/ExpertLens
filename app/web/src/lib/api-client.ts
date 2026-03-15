@@ -1,6 +1,4 @@
-// REST API client — placeholder for PR3 Firestore integration
 import type { Coach, UserPreferences } from "@/types/coach";
-import { DEMO_COACHES } from "@/types/coach";
 import { clearAuth, getToken } from "./auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -17,11 +15,19 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   });
   if (!res.ok) {
     if (res.status === 401) {
+      const text = await res.text();
+      let detail: string | undefined;
+      try {
+        const json = JSON.parse(text);
+        detail = json.detail as string | undefined;
+      } catch {
+        // Not JSON
+      }
       clearAuth();
       if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
         window.location.href = "/login";
       }
-      throw new Error("Unauthorized");
+      throw new Error(detail ?? "Unauthorized");
     }
     const text = await res.text();
     let detail: string | undefined;
@@ -37,12 +43,7 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export async function getCoaches(): Promise<Coach[]> {
-  try {
-    return await apiFetch<Coach[]>("/coaches");
-  } catch {
-    // Fallback to demo coaches until PR3 wires up the REST API
-    return DEMO_COACHES;
-  }
+  return apiFetch<Coach[]>("/coaches");
 }
 
 export async function getCoach(coachId: string): Promise<Coach> {

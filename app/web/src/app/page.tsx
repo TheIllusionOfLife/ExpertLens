@@ -19,11 +19,20 @@ export default function DashboardPage() {
   useAuthGuard();
   const router = useRouter();
   const [coaches, setCoaches] = useState<Coach[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
+    setLoading(true);
     getCoaches()
-      .then(setCoaches)
-      .catch(() => {});
+      .then((data) => {
+        setCoaches(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setHasError(true);
+        setLoading(false);
+      });
   }, []);
 
   function handleLogout() {
@@ -76,7 +85,11 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {coaches.length === 0 ? (
+        {!loading && hasError ? (
+          <p className="text-(--muted) text-sm text-center py-24">
+            Failed to load coaches. Please refresh the page.
+          </p>
+        ) : !loading && coaches.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 max-w-sm mx-auto text-center">
             <div className="w-20 h-20 rounded-2xl bg-(--surface-elevated) border border-(--border) flex items-center justify-center mb-6">
               <svg width="36" height="36" viewBox="0 0 32 32" fill="none" aria-hidden="true">

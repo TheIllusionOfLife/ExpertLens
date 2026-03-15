@@ -26,6 +26,18 @@ BUILDING_COACH = Coach(
     persona="Expert coach for DaVinci Resolve",
     knowledge_status="building",
     default_preferences=DEFAULT_PREFS,
+    owner_id="test-user-id",  # owned by the test user
+)
+
+# User-owned coach in ready state — used for rebuild/update happy-path tests
+USER_OWNED_COACH = Coach(
+    coach_id="my_app",
+    software_name="MyApp",
+    display_name="MyApp Expert",
+    persona="Expert coach for MyApp",
+    knowledge_status="ready",
+    default_preferences=DEFAULT_PREFS,
+    owner_id="test-user-id",
 )
 
 # Owned by a different user — used for 403 ownership denial tests
@@ -149,13 +161,13 @@ async def test_create_coach_triggers_builder(authed_client, monkeypatch):
 async def test_rebuild_knowledge_endpoint(authed_client, monkeypatch):
     monkeypatch.setattr(
         "app.api.routers.coaches.get_coach",
-        AsyncMock(return_value=BLENDER_COACH),
+        AsyncMock(return_value=USER_OWNED_COACH),
     )
     monkeypatch.setattr(
-        "app.api.routers.coaches.update_coach", AsyncMock(return_value=BLENDER_COACH)
+        "app.api.routers.coaches.update_coach", AsyncMock(return_value=USER_OWNED_COACH)
     )
     monkeypatch.setattr("app.api.routers.coaches.build_knowledge_for_coach", AsyncMock())
-    response = await authed_client.post("/coaches/blender/rebuild-knowledge")
+    response = await authed_client.post("/coaches/my_app/rebuild-knowledge")
     assert response.status_code == 202
     assert response.json()["status"] == "building"
 
@@ -186,12 +198,13 @@ async def test_update_coach_not_found(authed_client, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-async def test_get_coach_forbidden_when_not_owner(authed_client, monkeypatch):
+async def test_get_coach_not_found_when_not_owner(authed_client, monkeypatch):
+    """Private coaches return 404 (not 403) to avoid leaking existence."""
     monkeypatch.setattr(
         "app.api.routers.coaches.get_coach", AsyncMock(return_value=OTHER_USER_COACH)
     )
     response = await authed_client.get("/coaches/other_coach")
-    assert response.status_code == 403
+    assert response.status_code == 404
 
 
 async def test_rebuild_knowledge_forbidden_when_not_owner(authed_client, monkeypatch):

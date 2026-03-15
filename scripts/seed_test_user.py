@@ -19,7 +19,7 @@ if os.environ.get("SEED_TEST_USER") != "1":
     sys.exit(1)
 
 project = os.environ.get("GOOGLE_CLOUD_PROJECT", "")
-if project and not any(env in project for env in ("-dev", "-local", "local-")):
+if not project or not any(env in project for env in ("-dev", "-local", "local-")):
     print(
         f"ERROR: GOOGLE_CLOUD_PROJECT={project!r} does not look like a dev/local project. "
         "Refusing to seed test user."

@@ -110,9 +110,12 @@ class SessionHandler:
             await self._ws.close(code=4001, reason="Authentication required")
             return
 
-        # Check knowledge status — degrade gracefully rather than blocking the session.
+        # Authorization: verify user can access this coach, then check knowledge status.
         try:
             coach = await get_coach(coach_id)
+            if coach and coach.owner_id is not None and coach.owner_id != user_id:
+                await self._ws.close(code=4003, reason="Not authorized")
+                return
             if coach and coach.knowledge_status == "building":
                 logger.info(f"Session started while knowledge is still building (coach={coach_id})")
             elif coach and coach.knowledge_status == "error":

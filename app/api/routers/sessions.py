@@ -4,8 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from app.api.auth import TokenPayload, get_current_user
+from app.api.db.coach_repo import get_coach
 from app.api.db.models import Session
-from app.api.db.session_repo import create_session, end_session, get_sessions
+from app.api.db.session_repo import create_session, end_session, get_session, get_sessions
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 
@@ -20,6 +21,11 @@ async def start_session(
     coach_id: str,
     current_user: TokenPayload = Depends(get_current_user),
 ) -> Session:
+    coach = await get_coach(coach_id)
+    if not coach:
+        raise HTTPException(status_code=404, detail=f"Coach '{coach_id}' not found")
+    if coach.owner_id is not None and coach.owner_id != current_user.sub:
+        raise HTTPException(status_code=403, detail="Not authorized")
     return await create_session(coach_id, current_user.sub)
 
 
@@ -29,12 +35,10 @@ async def finish_session(
     body: EndSessionRequest,
     current_user: TokenPayload = Depends(get_current_user),
 ) -> Session:
-    from app.api.db.session_repo import get_session
-
     existing = await get_session(session_id)
     if not existing:
         raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
-    if existing.user_id and existing.user_id != current_user.sub:
+    if not existing.user_id or existing.user_id != current_user.sub:
         raise HTTPException(status_code=403, detail="Not authorized")
     session = await end_session(session_id, body.summary, body.last_topics)
     if not session:

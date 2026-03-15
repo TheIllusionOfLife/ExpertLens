@@ -42,7 +42,7 @@ async def get_coach_endpoint(
     if not coach:
         raise HTTPException(status_code=404, detail=f"Coach '{coach_id}' not found")
     if coach.owner_id is not None and coach.owner_id != current_user.sub:
-        raise HTTPException(status_code=403, detail="Not authorized")
+        raise HTTPException(status_code=404, detail=f"Coach '{coach_id}' not found")
     return coach
 
 
@@ -80,7 +80,9 @@ async def rebuild_knowledge_endpoint(
     coach = await get_coach(coach_id)
     if not coach:
         raise HTTPException(status_code=404, detail=f"Coach '{coach_id}' not found")
-    if coach.owner_id is not None and coach.owner_id != current_user.sub:
+    if coach.owner_id is None:
+        raise HTTPException(status_code=403, detail="Preset coaches cannot be rebuilt")
+    if coach.owner_id != current_user.sub:
         raise HTTPException(status_code=403, detail="Not authorized")
     if coach.knowledge_status == "building":
         return {"status": "building"}  # already in progress, no-op

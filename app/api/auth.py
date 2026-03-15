@@ -8,13 +8,13 @@ from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from google.cloud.firestore_v1.base_query import FieldFilter
 from pwdlib import PasswordHash
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.api.config import settings
 from app.api.db.firestore import USERS_COLLECTION, get_client
 
 _ph = PasswordHash.recommended()
-_bearer = HTTPBearer()
+_bearer = HTTPBearer(auto_error=False)
 
 
 class TokenPayload(BaseModel):
@@ -31,10 +31,40 @@ class RegisterRequest(BaseModel):
     username: str = Field(min_length=1)
     password: str = Field(min_length=1)
 
+    @field_validator("username", mode="before")
+    @classmethod
+    def normalize_username(cls, v: str) -> str:
+        v = v.strip().lower()
+        if not v:
+            raise ValueError("username must not be blank")
+        return v
+
+    @field_validator("password", mode="before")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("password must not be blank")
+        return v  # do not strip/lowercase passwords
+
 
 class LoginRequest(BaseModel):
     username: str = Field(min_length=1)
     password: str = Field(min_length=1)
+
+    @field_validator("username", mode="before")
+    @classmethod
+    def normalize_username(cls, v: str) -> str:
+        v = v.strip().lower()
+        if not v:
+            raise ValueError("username must not be blank")
+        return v
+
+    @field_validator("password", mode="before")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("password must not be blank")
+        return v  # do not strip/lowercase passwords
 
 
 class TokenResponse(BaseModel):
@@ -102,6 +132,8 @@ async def create_user(username: str, password: str) -> UserRecord:
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(_bearer),
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
 ) -> TokenPayload:
+    if credentials is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
     return decode_token(credentials.credentials)

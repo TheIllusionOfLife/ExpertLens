@@ -70,7 +70,8 @@ async function readBody(req: http.IncomingMessage): Promise<unknown> {
 }
 
 function requireAuth(req: http.IncomingMessage, res: http.ServerResponse): boolean {
-  if (!req.headers.authorization?.startsWith("Bearer ")) {
+  const token = req.headers.authorization?.slice(7);
+  if (!token || token !== "mock-token") {
     json(res, 401, { detail: "Not authenticated" });
     return false;
   }
