@@ -52,13 +52,13 @@ echo "==> Pushing images"
 docker push "${REPO}/backend:latest"
 docker push "${REPO}/frontend:latest"
 
-echo "==> Re-deploying with correct images and inter-service URLs"
-# Deploy backend with real image + frontend URL in CORS_ORIGINS
+echo "==> Re-deploying with correct images"
+# Env vars (GCP_PROJECT_ID, GEMINI_API_KEY, JWT_SECRET_KEY, CORS_ORIGINS) are managed by
+# Terraform — do NOT set --update-env-vars here or it will overwrite secret references.
 gcloud run services update expertlens-backend \
   --project="${PROJECT_ID}" \
   --region="${REGION}" \
   --image="${REPO}/backend:latest" \
-  --update-env-vars="CORS_ORIGINS=${FRONTEND_URL}" \
   --quiet
 
 # Deploy frontend with real image (NEXT_PUBLIC_API_URL already baked into the image)

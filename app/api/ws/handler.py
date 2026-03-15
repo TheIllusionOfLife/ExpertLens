@@ -399,7 +399,7 @@ class SessionHandler:
                 try:
                     summary, last_topics = await asyncio.wait_for(
                         summarize_session(self._coach_id, self._transcript),
-                        timeout=5.0,
+                        timeout=15.0,
                     )
                 except Exception as e:
                     logger.warning(f"Failed to generate session summary: {e}")

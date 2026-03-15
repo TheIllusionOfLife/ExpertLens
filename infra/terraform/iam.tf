@@ -18,9 +18,15 @@ resource "google_project_iam_member" "backend_firestore" {
   member  = "serviceAccount:${google_service_account.backend.email}"
 }
 
-# Secret Manager access (read GEMINI_API_KEY) — scoped to the specific secret, not project-wide
-resource "google_secret_manager_secret_iam_member" "backend_secret_accessor" {
+# Secret Manager access — scoped to individual secrets, not project-wide
+resource "google_secret_manager_secret_iam_member" "backend_gemini_key_accessor" {
   secret_id = google_secret_manager_secret.gemini_api_key.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.backend.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "backend_jwt_secret_accessor" {
+  secret_id = google_secret_manager_secret.jwt_secret_key.secret_id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_service_account.backend.email}"
 }
