@@ -55,6 +55,16 @@ resource "google_cloud_run_v2_service" "backend" {
           }
         }
       }
+
+      env {
+        name = "JWT_SECRET_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.jwt_secret_key.secret_id
+            version = "latest"
+          }
+        }
+      }
     }
   }
 
