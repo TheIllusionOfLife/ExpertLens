@@ -7,6 +7,7 @@ import { ScreenCapture } from "@/components/session/ScreenCapture";
 import { SessionControls } from "@/components/session/SessionControls";
 import { SessionStatus } from "@/components/session/SessionStatus";
 import { getCoach } from "@/lib/api-client";
+import { useAuthGuard } from "@/lib/use-auth-guard";
 import { type ConnectionStatus, WsClient } from "@/lib/ws-client";
 import type { Coach } from "@/types/coach";
 import { useParams, useRouter } from "next/navigation";
@@ -89,6 +90,7 @@ const STEPS = (softwareName: string) => [
 ];
 
 export default function LiveSessionPage() {
+  useAuthGuard();
   const { coachId } = useParams<{ coachId: string }>();
   const router = useRouter();
 

@@ -1,9 +1,13 @@
+"use client";
+
 import { CoachIcon } from "@/components/CoachIcon";
 import { getCoaches } from "@/lib/api-client";
+import { clearAuth, getUser } from "@/lib/auth";
+import { useAuthGuard } from "@/lib/use-auth-guard";
 import type { Coach } from "@/types/coach";
 import Link from "next/link";
-
-export const dynamic = "force-dynamic";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const PlayIcon = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -11,12 +15,20 @@ const PlayIcon = () => (
   </svg>
 );
 
-export default async function DashboardPage() {
-  let coaches: Coach[] = [];
-  try {
-    coaches = await getCoaches();
-  } catch {
-    // fallback handled in api-client
+export default function DashboardPage() {
+  useAuthGuard();
+  const router = useRouter();
+  const [coaches, setCoaches] = useState<Coach[]>([]);
+
+  useEffect(() => {
+    getCoaches()
+      .then(setCoaches)
+      .catch(() => {});
+  }, []);
+
+  function handleLogout() {
+    clearAuth();
+    router.push("/login");
   }
 
   return (
@@ -32,13 +44,22 @@ export default async function DashboardPage() {
               Beta
             </span>
           </div>
-          <Link
-            href="/coaches/new"
-            aria-label="Create new coach"
-            className="px-4 py-2 bg-(--accent) hover:bg-(--accent-hover) text-white rounded-lg text-sm font-semibold transition-all shadow-[0_0_20px_rgba(124,106,247,0.35)]"
-          >
-            + New Coach
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/coaches/new"
+              aria-label="Create new coach"
+              className="px-4 py-2 bg-(--accent) hover:bg-(--accent-hover) text-white rounded-lg text-sm font-semibold transition-all shadow-[0_0_20px_rgba(124,106,247,0.35)]"
+            >
+              + New Coach
+            </Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="px-3 py-2 text-sm text-(--muted) hover:text-(--foreground) transition-colors"
+            >
+              Log out
+            </button>
+          </div>
         </div>
       </header>
 

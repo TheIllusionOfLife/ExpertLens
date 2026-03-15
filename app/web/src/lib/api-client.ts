@@ -1,18 +1,28 @@
 // REST API client — placeholder for PR3 Firestore integration
 import type { Coach, UserPreferences } from "@/types/coach";
 import { DEMO_COACHES } from "@/types/coach";
+import { clearAuth, getToken } from "./auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  const token = getToken();
   const res = await fetch(`${API_URL}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options?.headers as Record<string, string>),
     },
   });
   if (!res.ok) {
+    if (res.status === 401) {
+      clearAuth();
+      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+        window.location.href = "/login";
+      }
+      throw new Error("Unauthorized");
+    }
     const text = await res.text();
     let detail: string | undefined;
     try {
@@ -50,7 +60,7 @@ export async function updatePreferences(
   coachId: string,
   prefs: Partial<UserPreferences>
 ): Promise<UserPreferences> {
-  return apiFetch<UserPreferences>(`/preferences/${coachId}`, {
+  return apiFetch<UserPreferences>("/preferences", {
     method: "PUT",
     body: JSON.stringify(prefs),
   });
@@ -71,5 +81,26 @@ export async function updateCoach(
   return apiFetch<Coach>(`/coaches/${coachId}`, {
     method: "PUT",
     body: JSON.stringify(updates),
+  });
+}
+
+export interface AuthResponse {
+  access_token: string;
+  token_type: string;
+  user_id: string;
+  username: string;
+}
+
+export async function login(username: string, password: string): Promise<AuthResponse> {
+  return apiFetch<AuthResponse>("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ username, password }),
+  });
+}
+
+export async function register(username: string, password: string): Promise<AuthResponse> {
+  return apiFetch<AuthResponse>("/auth/register", {
+    method: "POST",
+    body: JSON.stringify({ username, password }),
   });
 }
