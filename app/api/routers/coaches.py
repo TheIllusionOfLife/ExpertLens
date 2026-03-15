@@ -2,8 +2,9 @@
 
 import logging
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 
+from app.api.auth import TokenPayload, get_current_user
 from app.api.db.coach_repo import (
     create_coach,
     delete_coach,
@@ -26,12 +27,17 @@ router = APIRouter(prefix="/coaches", tags=["coaches"])
 
 
 @router.get("", response_model=list[Coach])
-async def list_coaches_endpoint() -> list[Coach]:
-    return await list_coaches()
+async def list_coaches_endpoint(
+    current_user: TokenPayload = Depends(get_current_user),
+) -> list[Coach]:
+    return await list_coaches(user_id=current_user.sub)
 
 
 @router.get("/{coach_id}", response_model=Coach)
-async def get_coach_endpoint(coach_id: str) -> Coach:
+async def get_coach_endpoint(
+    coach_id: str,
+    current_user: TokenPayload = Depends(get_current_user),
+) -> Coach:
     coach = await get_coach(coach_id)
     if not coach:
         raise HTTPException(status_code=404, detail=f"Coach '{coach_id}' not found")
@@ -39,7 +45,11 @@ async def get_coach_endpoint(coach_id: str) -> Coach:
 
 
 @router.post("", response_model=Coach, status_code=201)
-async def create_coach_endpoint(data: CoachCreate, background_tasks: BackgroundTasks) -> Coach:
+async def create_coach_endpoint(
+    data: CoachCreate,
+    background_tasks: BackgroundTasks,
+    current_user: TokenPayload = Depends(get_current_user),
+) -> Coach:
     try:
         slug = make_coach_slug(data.software_name)
     except ValueError as e:
@@ -50,7 +60,7 @@ async def create_coach_endpoint(data: CoachCreate, background_tasks: BackgroundT
             slug = make_coach_slug(data.software_name)  # re-derive from canonical name
         except ValueError as e:
             raise HTTPException(status_code=422, detail=str(e))
-    coach = await create_coach(data)
+    coach = await create_coach(data, owner_id=current_user.sub)
     if not coach:
         raise HTTPException(
             status_code=409, detail=f"Coach for '{data.software_name}' already exists"
@@ -61,11 +71,15 @@ async def create_coach_endpoint(data: CoachCreate, background_tasks: BackgroundT
 
 @router.post("/{coach_id}/rebuild-knowledge", status_code=202)
 async def rebuild_knowledge_endpoint(
-    coach_id: str, background_tasks: BackgroundTasks
+    coach_id: str,
+    background_tasks: BackgroundTasks,
+    current_user: TokenPayload = Depends(get_current_user),
 ) -> dict[str, str]:
     coach = await get_coach(coach_id)
     if not coach:
         raise HTTPException(status_code=404, detail=f"Coach '{coach_id}' not found")
+    if coach.owner_id is not None and coach.owner_id != current_user.sub:
+        raise HTTPException(status_code=403, detail="Not authorized")
     if coach.knowledge_status == "building":
         return {"status": "building"}  # already in progress, no-op
     await update_coach(coach_id, {"knowledge_status": "building", "knowledge_error": ""})
@@ -74,7 +88,16 @@ async def rebuild_knowledge_endpoint(
 
 
 @router.put("/{coach_id}", response_model=Coach)
-async def update_coach_endpoint(coach_id: str, updates: CoachUpdate) -> Coach:
+async def update_coach_endpoint(
+    coach_id: str,
+    updates: CoachUpdate,
+    current_user: TokenPayload = Depends(get_current_user),
+) -> Coach:
+    existing = await get_coach(coach_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail=f"Coach '{coach_id}' not found")
+    if existing.owner_id is not None and existing.owner_id != current_user.sub:
+        raise HTTPException(status_code=403, detail="Not authorized")
     patch = {k: v for k, v in updates.model_dump().items() if v is not None}
     coach = await update_coach(coach_id, patch)
     if not coach:
@@ -83,13 +106,18 @@ async def update_coach_endpoint(coach_id: str, updates: CoachUpdate) -> Coach:
 
 
 @router.delete("/{coach_id}", status_code=200)
-async def delete_coach_endpoint(coach_id: str) -> dict:
+async def delete_coach_endpoint(
+    coach_id: str,
+    current_user: TokenPayload = Depends(get_current_user),
+) -> dict:
     """Delete a custom coach and all its knowledge chunks. Preset coaches cannot be deleted."""
     if coach_id in KNOWN_PRESET_IDS:
         raise HTTPException(status_code=403, detail="Preset coaches cannot be deleted")
     coach = await get_coach(coach_id)
     if not coach:
         raise HTTPException(status_code=404, detail="Coach not found")
+    if coach.owner_id is not None and coach.owner_id != current_user.sub:
+        raise HTTPException(status_code=403, detail="Not authorized")
     await delete_knowledge_for_coach(coach_id)
     try:
         await delete_coach(coach_id)

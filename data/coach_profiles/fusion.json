@@ -15,5 +15,6 @@
   "knowledge_index_id": "fusion",
   "knowledge_status": "none",
   "knowledge_error": "",
-  "knowledge_updated_at": ""
+  "knowledge_updated_at": "",
+  "owner_id": null
 }

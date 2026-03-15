@@ -5,7 +5,10 @@ from unittest.mock import AsyncMock, MagicMock
 import httpx
 import pytest
 
+from app.api.auth import TokenPayload, get_current_user
 from app.api.main import app
+
+TEST_USER = TokenPayload(sub="test-user-id")
 
 
 def _make_mock_doc(data: dict, *, exists: bool = True) -> MagicMock:
@@ -58,6 +61,7 @@ def mock_firestore(monkeypatch):
     monkeypatch.setattr(fs_module, "get_client", _patch)
     monkeypatch.setattr("app.api.db.coach_repo.get_client", _patch)
     monkeypatch.setattr("app.api.db.knowledge_repo.get_client", _patch)
+    monkeypatch.setattr("app.api.auth.get_client", _patch)
 
     yield mock_client
 
@@ -81,3 +85,13 @@ async def async_client(mock_firestore):
         transport=httpx.ASGITransport(app=app), base_url="http://test"
     ) as client:
         yield client
+
+
+@pytest.fixture
+async def authed_client(mock_firestore):
+    app.dependency_overrides[get_current_user] = lambda: TEST_USER
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        yield client
+    app.dependency_overrides.pop(get_current_user, None)

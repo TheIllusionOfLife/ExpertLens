@@ -35,6 +35,7 @@ class StartSessionMessage(BaseModel):
     coach_id: str
     session_handle: str | None = None  # For resumption
     user_id: str | None = None
+    token: str | None = None  # JWT; supersedes user_id when present
 
 
 class EndSessionMessage(BaseModel):

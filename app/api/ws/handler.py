@@ -2,7 +2,6 @@
 
 import asyncio
 import logging
-import uuid
 
 from fastapi import WebSocket, WebSocketDisconnect
 
@@ -98,9 +97,18 @@ class SessionHandler:
 
         coach_id = self._coach_id
         saved_handle = msg.session_handle
-        # Use client-supplied user_id if present; generate an anonymous ID otherwise.
-        # Never fall back to coach_id — that merges all users under one session history.
-        user_id = msg.user_id or f"anon-{uuid.uuid4()}"
+        from app.api.auth import decode_token
+
+        if msg.token:
+            try:
+                payload = decode_token(msg.token)
+                user_id = payload.sub
+            except Exception:
+                await self._ws.close(code=4001, reason="Invalid token")
+                return
+        else:
+            await self._ws.close(code=4001, reason="Authentication required")
+            return
 
         # Check knowledge status — degrade gracefully rather than blocking the session.
         try:

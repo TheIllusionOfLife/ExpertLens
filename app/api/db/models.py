@@ -25,6 +25,7 @@ class Coach(BaseModel):
     knowledge_status: Literal["none", "building", "ready", "error"] = "none"
     knowledge_error: str = ""
     knowledge_updated_at: str = ""
+    owner_id: str | None = None  # None = preset/public; UUID = private to that user
 
 
 class Session(BaseModel):

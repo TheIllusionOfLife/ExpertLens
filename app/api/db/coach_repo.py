@@ -30,15 +30,36 @@ async def get_coach(coach_id: str) -> Coach | None:
     return Coach.model_validate(doc.to_dict())
 
 
-async def list_coaches() -> list[Coach]:
-    docs = get_client().collection(COACHES_COLLECTION).stream()
-    coaches: list[Coach] = []
-    async for doc in docs:
-        coaches.append(Coach.model_validate(doc.to_dict()))
-    return coaches
+async def list_coaches(user_id: str = "") -> list[Coach]:
+    """Return preset coaches (owner_id=None) plus the calling user's coaches."""
+    from google.cloud.firestore_v1.base_query import FieldFilter
+
+    client = get_client()
+    seen: dict[str, Coach] = {}
+
+    # Presets: owner_id is None
+    async for doc in (
+        client.collection(COACHES_COLLECTION)
+        .where(filter=FieldFilter("owner_id", "==", None))
+        .stream()
+    ):
+        coach = Coach.model_validate(doc.to_dict())
+        seen[doc.id] = coach
+
+    # User's private coaches
+    if user_id:
+        async for doc in (
+            client.collection(COACHES_COLLECTION)
+            .where(filter=FieldFilter("owner_id", "==", user_id))
+            .stream()
+        ):
+            coach = Coach.model_validate(doc.to_dict())
+            seen[doc.id] = coach
+
+    return list(seen.values())
 
 
-async def create_coach(data: CoachCreate) -> Coach | None:
+async def create_coach(data: CoachCreate, owner_id: str | None = None) -> Coach | None:
     """Create a coach. Returns None if a coach with the same slug already exists."""
     coach_id = make_coach_slug(data.software_name)
     ref = get_client().collection(COACHES_COLLECTION).document(coach_id)
@@ -50,6 +71,7 @@ async def create_coach(data: CoachCreate) -> Coach | None:
         focus_areas=data.focus_areas,
         icon=data.icon,
         knowledge_status="building",
+        owner_id=owner_id,
     )
     try:
         await ref.create(coach.model_dump())

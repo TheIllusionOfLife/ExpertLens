@@ -13,6 +13,11 @@ class Settings(BaseSettings):
     gemini_live_model: str = "gemini-2.5-flash-native-audio-latest"
     gcp_project_id: str = ""
 
+    # JWT
+    jwt_secret_key: str = ""
+    jwt_algorithm: str = "HS256"
+    jwt_expire_days: int = 7
+
     # CORS
     cors_origins: str = "http://localhost:3000"
 
@@ -39,6 +44,9 @@ class Settings(BaseSettings):
         """
         if not self.gemini_api_key:
             logger.critical("GEMINI_API_KEY is not set or empty — cannot start server")
+            raise SystemExit(1)
+        if not self.jwt_secret_key:
+            logger.critical("JWT_SECRET_KEY is not set or empty — cannot start server")
             raise SystemExit(1)
 
 
