@@ -69,10 +69,10 @@ resource "google_cloud_run_v2_service" "backend" {
   }
 
   lifecycle {
-    # Image and CORS_ORIGINS are updated by the deploy script after initial provisioning.
+    # Image is updated by deploy.sh / Cloud Build after initial provisioning.
+    # Env vars are managed by Terraform — do NOT ignore them, or secret refs won't apply.
     ignore_changes = [
       template[0].containers[0].image,
-      template[0].containers[0].env,
     ]
   }
 }
@@ -111,10 +111,9 @@ resource "google_cloud_run_v2_service" "frontend" {
   }
 
   lifecycle {
-    # Image and NEXT_PUBLIC_API_URL are updated by the deploy script after initial provisioning.
+    # Image is updated by deploy.sh / Cloud Build after initial provisioning.
     ignore_changes = [
       template[0].containers[0].image,
-      template[0].containers[0].env,
     ]
   }
 }
