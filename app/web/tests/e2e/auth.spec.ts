@@ -27,7 +27,7 @@ test("login with invalid credentials shows error message", async ({ page }) => {
   await page.getByLabel(/username/i).fill("baduser");
   await page.getByLabel(/password/i).fill("badpass");
   await page.getByRole("button", { name: /log in/i }).click();
-  await expect(page.getByRole("alert")).toBeVisible();
+  await expect(page.locator("p[role='alert']")).toBeVisible();
 });
 
 test("register new user redirected to /", async ({ page }) => {
@@ -46,7 +46,7 @@ test("register with taken username shows error message", async ({ page }) => {
   await page.getByLabel(/username/i).fill("existinguser");
   await page.getByLabel(/password/i).fill("anypass");
   await page.getByRole("button", { name: /register/i }).last().click();
-  await expect(page.getByRole("alert")).toBeVisible();
+  await expect(page.locator("p[role='alert']")).toBeVisible();
 });
 
 test("logout button clears auth and redirects to /login", async ({ page }) => {

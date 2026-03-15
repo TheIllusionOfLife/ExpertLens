@@ -4,14 +4,8 @@ from unittest.mock import AsyncMock
 
 
 async def test_register_creates_user(async_client, monkeypatch):
-    from app.api import auth as auth_module
     from app.api.auth import UserRecord
 
-    monkeypatch.setattr(
-        auth_module,
-        "get_user_by_username",
-        AsyncMock(return_value=None),
-    )
     mock_record = UserRecord(
         user_id="new-uuid",
         username="newuser",

@@ -29,6 +29,13 @@ async def finish_session(
     body: EndSessionRequest,
     current_user: TokenPayload = Depends(get_current_user),
 ) -> Session:
+    from app.api.db.session_repo import get_session
+
+    existing = await get_session(session_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
+    if existing.user_id and existing.user_id != current_user.sub:
+        raise HTTPException(status_code=403, detail="Not authorized")
     session = await end_session(session_id, body.summary, body.last_topics)
     if not session:
         raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
@@ -41,4 +48,4 @@ async def list_sessions(
     limit: int = Query(default=10, ge=1, le=100),
     current_user: TokenPayload = Depends(get_current_user),
 ) -> list[Session]:
-    return await get_sessions(coach_id, limit=limit)
+    return await get_sessions(coach_id, user_id=current_user.sub, limit=limit)

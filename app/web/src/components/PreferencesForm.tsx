@@ -64,7 +64,7 @@ export function PreferencesForm({ coachId, initial }: Props) {
     setSaving(true);
     setSaveError(null);
     try {
-      await updatePreferences(coachId, prefs);
+      await updatePreferences(prefs);
       setSaved(true);
       setSaveError(null);
       setTimeout(() => setSaved(false), 2000);

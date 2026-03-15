@@ -8,12 +8,21 @@ import asyncio
 import os
 import sys
 
-# Safety gate
-project = os.environ.get("GOOGLE_CLOUD_PROJECT", "")
-if not any(env in project for env in ("dev", "local")):
+# Safety gate: require explicit opt-in flag to prevent accidental execution on production.
+# GOOGLE_CLOUD_PROJECT substring check is intentionally NOT used — it could match
+# project IDs like "prod-devops" which contain "dev".
+if os.environ.get("SEED_TEST_USER") != "1":
     print(
-        f"ERROR: GOOGLE_CLOUD_PROJECT={project!r} does not contain 'dev' or 'local'. "
-        "Refusing to seed test user on non-dev environment."
+        "ERROR: Set SEED_TEST_USER=1 to confirm you intend to seed a test user. "
+        "Refusing to run without explicit opt-in."
+    )
+    sys.exit(1)
+
+project = os.environ.get("GOOGLE_CLOUD_PROJECT", "")
+if project and not any(env in project for env in ("-dev", "-local", "local-")):
+    print(
+        f"ERROR: GOOGLE_CLOUD_PROJECT={project!r} does not look like a dev/local project. "
+        "Refusing to seed test user."
     )
     sys.exit(1)
 

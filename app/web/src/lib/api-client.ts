@@ -56,10 +56,7 @@ export async function createCoach(data: Partial<Coach>): Promise<Coach> {
   });
 }
 
-export async function updatePreferences(
-  coachId: string,
-  prefs: Partial<UserPreferences>
-): Promise<UserPreferences> {
+export async function updatePreferences(prefs: Partial<UserPreferences>): Promise<UserPreferences> {
   return apiFetch<UserPreferences>("/preferences", {
     method: "PUT",
     body: JSON.stringify(prefs),

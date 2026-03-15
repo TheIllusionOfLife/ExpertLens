@@ -28,6 +28,17 @@ BUILDING_COACH = Coach(
     default_preferences=DEFAULT_PREFS,
 )
 
+# Owned by a different user — used for 403 ownership denial tests
+OTHER_USER_COACH = Coach(
+    coach_id="other_coach",
+    software_name="OtherApp",
+    display_name="OtherApp Expert",
+    persona="Expert coach for OtherApp",
+    knowledge_status="ready",
+    default_preferences=DEFAULT_PREFS,
+    owner_id="other-user-id",  # not "test-user-id"
+)
+
 
 # ---------------------------------------------------------------------------
 # Auth
@@ -168,6 +179,56 @@ async def test_update_coach_not_found(authed_client, monkeypatch):
         json={"display_name": "New Name"},
     )
     assert response.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# Ownership 403 denials
+# ---------------------------------------------------------------------------
+
+
+async def test_get_coach_forbidden_when_not_owner(authed_client, monkeypatch):
+    monkeypatch.setattr(
+        "app.api.routers.coaches.get_coach", AsyncMock(return_value=OTHER_USER_COACH)
+    )
+    response = await authed_client.get("/coaches/other_coach")
+    assert response.status_code == 403
+
+
+async def test_rebuild_knowledge_forbidden_when_not_owner(authed_client, monkeypatch):
+    monkeypatch.setattr(
+        "app.api.routers.coaches.get_coach", AsyncMock(return_value=OTHER_USER_COACH)
+    )
+    response = await authed_client.post("/coaches/other_coach/rebuild-knowledge")
+    assert response.status_code == 403
+
+
+async def test_update_coach_forbidden_when_not_owner(authed_client, monkeypatch):
+    monkeypatch.setattr(
+        "app.api.routers.coaches.get_coach", AsyncMock(return_value=OTHER_USER_COACH)
+    )
+    response = await authed_client.put(
+        "/coaches/other_coach", json={"display_name": "Hacked"}
+    )
+    assert response.status_code == 403
+
+
+async def test_delete_coach_forbidden_when_not_owner(authed_client, monkeypatch):
+    monkeypatch.setattr(
+        "app.api.routers.coaches.get_coach", AsyncMock(return_value=OTHER_USER_COACH)
+    )
+    response = await authed_client.delete("/coaches/other_coach")
+    assert response.status_code == 403
+
+
+async def test_update_preset_coach_forbidden(authed_client, monkeypatch):
+    """Preset coaches (owner_id=None) cannot be updated by any user."""
+    monkeypatch.setattr(
+        "app.api.routers.coaches.get_coach", AsyncMock(return_value=BLENDER_COACH)
+    )
+    response = await authed_client.put(
+        "/coaches/blender", json={"display_name": "My Blender"}
+    )
+    assert response.status_code == 403
 
 
 async def test_rebuild_knowledge_idempotent_while_building(authed_client, monkeypatch):

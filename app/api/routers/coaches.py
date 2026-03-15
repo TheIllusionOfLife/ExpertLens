@@ -41,6 +41,8 @@ async def get_coach_endpoint(
     coach = await get_coach(coach_id)
     if not coach:
         raise HTTPException(status_code=404, detail=f"Coach '{coach_id}' not found")
+    if coach.owner_id is not None and coach.owner_id != current_user.sub:
+        raise HTTPException(status_code=403, detail="Not authorized")
     return coach
 
 
@@ -96,7 +98,9 @@ async def update_coach_endpoint(
     existing = await get_coach(coach_id)
     if not existing:
         raise HTTPException(status_code=404, detail=f"Coach '{coach_id}' not found")
-    if existing.owner_id is not None and existing.owner_id != current_user.sub:
+    if existing.owner_id is None:
+        raise HTTPException(status_code=403, detail="Preset coaches cannot be updated")
+    if existing.owner_id != current_user.sub:
         raise HTTPException(status_code=403, detail="Not authorized")
     patch = {k: v for k, v in updates.model_dump().items() if v is not None}
     coach = await update_coach(coach_id, patch)

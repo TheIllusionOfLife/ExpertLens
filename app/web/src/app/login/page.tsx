@@ -1,7 +1,7 @@
 "use client";
 
 import { login, register } from "@/lib/api-client";
-import { clearAuth, isAuthenticated, setAuth } from "@/lib/auth";
+import { isAuthenticated, setAuth } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 

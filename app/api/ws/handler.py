@@ -8,6 +8,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 from agent.memory.summarize import summarize_session
 from agent.prompts.base import build_system_instruction_from_firestore
 from app.api.config import settings
+from app.api.auth import decode_token
 from app.api.db.coach_repo import get_coach
 from app.api.db.session_repo import create_session as create_fs_session
 from app.api.db.session_repo import end_session as end_fs_session
@@ -97,7 +98,6 @@ class SessionHandler:
 
         coach_id = self._coach_id
         saved_handle = msg.session_handle
-        from app.api.auth import decode_token
 
         if msg.token:
             try:

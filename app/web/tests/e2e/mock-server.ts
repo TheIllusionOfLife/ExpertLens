@@ -164,6 +164,33 @@ export function createMockServer(): http.Server {
       return;
     }
 
+    // GET /preferences
+    if (method === "GET" && url === "/preferences") {
+      if (!requireAuth(req, res)) return;
+      json(res, 200, {
+        interaction_style: "shortcuts",
+        tone: "concise_expert",
+        depth: "medium",
+        proactivity: "reactive",
+        response_language: "english",
+      });
+      return;
+    }
+
+    // PUT /preferences
+    if (method === "PUT" && url === "/preferences") {
+      if (!requireAuth(req, res)) return;
+      const body = await readBody(req) as Record<string, string>;
+      json(res, 200, {
+        interaction_style: body.interaction_style ?? "shortcuts",
+        tone: body.tone ?? "concise_expert",
+        depth: body.depth ?? "medium",
+        proactivity: body.proactivity ?? "reactive",
+        response_language: body.response_language ?? "english",
+      });
+      return;
+    }
+
     // Fallback 404
     json(res, 404, { detail: "Not found" });
   });

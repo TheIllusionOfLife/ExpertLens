@@ -68,6 +68,10 @@ export class WsClient {
       if (this.stopped) return;
       if (event.code === 1000) {
         this.options.onStatusChange("disconnected");
+      } else if (event.code === 4001) {
+        // Auth failure — do not reconnect, surface error so UI can redirect to login
+        this.stopped = true;
+        this.options.onStatusChange("error");
       } else {
         // Unexpected close — auto-reconnect after 2s
         this.options.onStatusChange("reconnecting");

@@ -8,7 +8,7 @@ from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from google.cloud.firestore_v1.base_query import FieldFilter
 from pwdlib import PasswordHash
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.api.config import settings
 from app.api.db.firestore import USERS_COLLECTION, get_client
@@ -28,13 +28,13 @@ class UserRecord(BaseModel):
 
 
 class RegisterRequest(BaseModel):
-    username: str
-    password: str
+    username: str = Field(min_length=1)
+    password: str = Field(min_length=1)
 
 
 class LoginRequest(BaseModel):
-    username: str
-    password: str
+    username: str = Field(min_length=1)
+    password: str = Field(min_length=1)
 
 
 class TokenResponse(BaseModel):
@@ -69,7 +69,7 @@ def decode_token(token: str) -> TokenPayload:
             algorithms=[settings.jwt_algorithm],
         )
         return TokenPayload(sub=payload["sub"])
-    except Exception:
+    except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 

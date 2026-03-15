@@ -48,6 +48,9 @@ class Settings(BaseSettings):
         if not self.jwt_secret_key:
             logger.critical("JWT_SECRET_KEY is not set or empty — cannot start server")
             raise SystemExit(1)
+        if len(self.jwt_secret_key) < 32:
+            logger.critical("JWT_SECRET_KEY must be at least 32 characters — cannot start server")
+            raise SystemExit(1)
 
 
 settings = Settings()  # type: ignore[call-arg]  # BaseSettings reads env vars at runtime

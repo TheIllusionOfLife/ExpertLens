@@ -2,7 +2,7 @@
 
 import { CoachIcon } from "@/components/CoachIcon";
 import { getCoaches } from "@/lib/api-client";
-import { clearAuth, getUser } from "@/lib/auth";
+import { clearAuth } from "@/lib/auth";
 import { useAuthGuard } from "@/lib/use-auth-guard";
 import type { Coach } from "@/types/coach";
 import Link from "next/link";

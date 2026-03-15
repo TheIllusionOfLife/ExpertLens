@@ -3,6 +3,7 @@
 import re
 
 from google.api_core.exceptions import AlreadyExists
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 from app.api.db.firestore import COACHES_COLLECTION, get_client
 from app.api.db.models import Coach, CoachCreate
@@ -32,8 +33,6 @@ async def get_coach(coach_id: str) -> Coach | None:
 
 async def list_coaches(user_id: str = "") -> list[Coach]:
     """Return preset coaches (owner_id=None) plus the calling user's coaches."""
-    from google.cloud.firestore_v1.base_query import FieldFilter
-
     client = get_client()
     seen: dict[str, Coach] = {}
 
