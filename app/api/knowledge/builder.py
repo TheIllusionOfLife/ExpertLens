@@ -172,14 +172,14 @@ async def build_knowledge_for_coach(coach_id: str, software_name: str) -> None:
         )
 
 
-async def validate_software_exists(software_name: str) -> None:
-    """Raise ValueError if software_name cannot be resolved to any real software application.
+async def resolve_software_name(raw_name: str) -> str:
+    """Return the canonical software name for raw_name, or raise ValueError.
 
-    Uses Gemini with Google Search grounding. The prompt accepts informal names, abbreviations,
-    and common misspellings (e.g. "power point" → PowerPoint). Only the Yes/No answer is
-    checked — grounding presence is not required, as well-known software may not trigger
-    grounding chunks for informal variants.
-    Fails open on timeout to avoid blocking coach creation.
+    Normalises informal names, abbreviations, and minor misspellings to their
+    canonical form (e.g. 'power point' → 'Microsoft PowerPoint', 'photoshop' →
+    'Adobe Photoshop'). Raises ValueError with a user-facing message when the
+    input cannot be resolved to a known software application.
+    Fails open on timeout — returns raw_name unchanged to avoid blocking creation.
     """
     client = genai.Client()
     try:
@@ -187,9 +187,11 @@ async def validate_software_exists(software_name: str) -> None:
             response = await client.aio.models.generate_content(
                 model=_GEMINI_MODEL,
                 contents=(
-                    f"Does '{software_name}' refer to a real software application "
-                    f"(desktop, mobile, or game), even if the name is informal, "
-                    f"abbreviated, or has minor spelling variations? Answer only Yes or No."
+                    f"What is the canonical software name for '{raw_name}'? "
+                    f"If it refers to a real software application (desktop, mobile, or game), "
+                    f"reply with only the canonical name (e.g. 'Microsoft PowerPoint', "
+                    f"'Adobe Photoshop', 'Roblox Studio'). "
+                    f"If it does not refer to any real software, reply with only: UNKNOWN"
                 ),
                 config=types.GenerateContentConfig(
                     tools=[types.Tool(google_search=types.GoogleSearch())],
@@ -199,13 +201,14 @@ async def validate_software_exists(software_name: str) -> None:
                 ),
             )
     except TimeoutError:
-        logger.warning(f"Software validation timed out for '{software_name}' — allowing through")
-        return  # Fail open on timeout to avoid blocking coach creation
+        logger.warning(f"Software name resolution timed out for '{raw_name}' — using as-is")
+        return raw_name  # Fail open: use the raw name unchanged
 
-    is_yes = (response.text or "").strip().lower().startswith("yes")
-
-    if not is_yes:
+    canonical = (response.text or "").strip()
+    if not canonical or canonical.upper() == "UNKNOWN":
         raise ValueError(
-            f"'{software_name}' doesn't appear to refer to a real software application. "
+            f"'{raw_name}' doesn't appear to refer to a real software application. "
             f"Please check the spelling (e.g., 'PowerPoint', 'Roblox Studio', 'DaVinci Resolve')."
         )
+    logger.info(f"Resolved '{raw_name}' → '{canonical}'")
+    return canonical
