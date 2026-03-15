@@ -35,11 +35,9 @@ async def finish_session(
     body: EndSessionRequest,
     current_user: TokenPayload = Depends(get_current_user),
 ) -> Session:
-    existing = await get_session(session_id)
+    existing = await get_session(session_id, user_id=current_user.sub)
     if not existing:
         raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
-    if not existing.user_id or existing.user_id != current_user.sub:
-        raise HTTPException(status_code=403, detail="Not authorized")
     session = await end_session(session_id, body.summary, body.last_topics)
     if not session:
         raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
