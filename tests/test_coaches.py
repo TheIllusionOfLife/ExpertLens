@@ -75,7 +75,10 @@ async def test_create_coach(async_client, monkeypatch):
         AsyncMock(return_value=BUILDING_COACH),
     )
     monkeypatch.setattr("app.api.routers.coaches.build_knowledge_for_coach", AsyncMock())
-    monkeypatch.setattr("app.api.routers.coaches.validate_software_exists", AsyncMock())
+    monkeypatch.setattr(
+        "app.api.routers.coaches.resolve_software_name",
+        AsyncMock(return_value="DaVinci Resolve"),
+    )
     response = await async_client.post(
         "/coaches",
         json={"software_name": "DaVinci Resolve"},
@@ -104,7 +107,10 @@ async def test_create_coach_triggers_builder(async_client, monkeypatch):
         AsyncMock(return_value=BUILDING_COACH),
     )
     monkeypatch.setattr("app.api.routers.coaches.build_knowledge_for_coach", builder_mock)
-    monkeypatch.setattr("app.api.routers.coaches.validate_software_exists", AsyncMock())
+    monkeypatch.setattr(
+        "app.api.routers.coaches.resolve_software_name",
+        AsyncMock(return_value="DaVinci Resolve"),
+    )
 
     response = await async_client.post(
         "/coaches",

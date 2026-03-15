@@ -17,7 +17,7 @@ from app.api.db.models import Coach, CoachCreate, CoachUpdate
 from app.api.knowledge.builder import (
     KNOWN_PRESET_IDS,
     build_knowledge_for_coach,
-    validate_software_exists,
+    resolve_software_name,
 )
 
 logger = logging.getLogger(__name__)
@@ -46,7 +46,8 @@ async def create_coach_endpoint(data: CoachCreate, background_tasks: BackgroundT
         raise HTTPException(status_code=422, detail=str(e))
     if slug not in KNOWN_PRESET_IDS:
         try:
-            await validate_software_exists(data.software_name)
+            data.software_name = await resolve_software_name(data.software_name)
+            slug = make_coach_slug(data.software_name)  # re-derive from canonical name
         except ValueError as e:
             raise HTTPException(status_code=422, detail=str(e))
     coach = await create_coach(data)
