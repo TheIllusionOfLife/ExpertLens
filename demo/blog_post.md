@@ -2,6 +2,8 @@
 
 *Built for the #GeminiLiveAgentChallenge*
 
+> **Disclaimer:** This post was created for the purposes of entering the Gemini Live Agent Challenge.
+
 ExpertLens is a real-time voice and vision coaching agent for any software where the human must be the operator. Share your screen or point your camera, speak naturally, and get expert guidance — for Blender, Affinity Photo, Unreal Engine, a mobile game, or any app an AI cannot run on your behalf.
 
 This post covers the core insight behind the project, how it's built on Gemini Live API, and four specific technical challenges that required non-obvious solutions.
@@ -137,7 +139,17 @@ The result: the coach opens each session with context about what the user was wo
 
 ---
 
-## 6. What's Next
+## 6. Authentication and Privacy
+
+ExpertLens uses JWT-based authentication. Users log in with credentials, receive a signed token, and all subsequent API requests are authenticated via Bearer token. Each browser connection is assigned an anonymous UUID (`user_id`), which scopes session history and preferences to that user.
+
+**What's stored:** Coach profiles, user preferences, and session summaries (generated text) are persisted in Firestore. Raw audio and video frames are never stored — they stream through the WebSocket to Gemini Live API and are discarded after processing. Session summaries contain only the coach's responses, not user audio transcriptions.
+
+**Coach ownership:** Coaches created by a user are private to that user's account. The API enforces ownership checks on all coach CRUD operations.
+
+---
+
+## 7. What's Next
 
 Two features are on the roadmap:
 
