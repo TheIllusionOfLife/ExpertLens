@@ -136,8 +136,8 @@ async def build_system_instruction_from_firestore(coach_id: str, user_id: str = 
 
     session_history: list[dict] = []
     try:
-        # Strict 1s timeout — session start must not block waiting for history
-        sessions = await asyncio.wait_for(sessions_task, timeout=1.0)
+        # Allow up to 3s for Firestore (cold-start can exceed 1s)
+        sessions = await asyncio.wait_for(sessions_task, timeout=3.0)
         session_history = [s.model_dump() for s in sessions if s.summary]
     except Exception as e:
         logger.warning(f"Failed to load sessions for {coach_id}: {e}")
