@@ -4,6 +4,7 @@ import { CoachIcon, GENERIC_ICONS, GENERIC_ICON_KEYS } from "@/components/CoachI
 import { PreferencesForm } from "@/components/PreferencesForm";
 import { deleteCoach, getCoach, rebuildKnowledge, updateCoach } from "@/lib/api-client";
 import { PRESET_COACH_IDS } from "@/lib/constants";
+import { useAuthGuard } from "@/lib/use-auth-guard";
 import type { Coach } from "@/types/coach";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -231,6 +232,7 @@ function DeleteCoachButton({ coachId, coachName }: { coachId: string; coachName:
 }
 
 export default function CoachDetailPage({ params }: Props) {
+  useAuthGuard();
   const { coachId } = use(params);
   const [coach, setCoach] = useState<Coach | null>(null);
   const [knowledgeStatus, setKnowledgeStatus] = useState<string | undefined>();

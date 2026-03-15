@@ -34,7 +34,7 @@ class StartSessionMessage(BaseModel):
     type: MessageType = MessageType.START_SESSION
     coach_id: str
     session_handle: str | None = None  # For resumption
-    user_id: str | None = None
+    token: str | None = None  # JWT for authentication
 
 
 class EndSessionMessage(BaseModel):

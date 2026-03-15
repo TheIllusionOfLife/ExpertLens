@@ -12,6 +12,8 @@ dependencies = [
     "pydantic-settings>=2.7.0",
     "python-multipart>=0.0.12",
     "httpx>=0.28.0",
+    "PyJWT>=2.8.0",
+    "pwdlib[argon2]>=0.2.0",
 ]
 
 [build-system]

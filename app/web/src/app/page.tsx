@@ -1,9 +1,13 @@
+"use client";
+
 import { CoachIcon } from "@/components/CoachIcon";
 import { getCoaches } from "@/lib/api-client";
+import { clearAuth } from "@/lib/auth";
+import { useAuthGuard } from "@/lib/use-auth-guard";
 import type { Coach } from "@/types/coach";
 import Link from "next/link";
-
-export const dynamic = "force-dynamic";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const PlayIcon = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -11,12 +15,29 @@ const PlayIcon = () => (
   </svg>
 );
 
-export default async function DashboardPage() {
-  let coaches: Coach[] = [];
-  try {
-    coaches = await getCoaches();
-  } catch {
-    // fallback handled in api-client
+export default function DashboardPage() {
+  useAuthGuard();
+  const router = useRouter();
+  const [coaches, setCoaches] = useState<Coach[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setLoading(true);
+    getCoaches()
+      .then((data) => {
+        setCoaches(data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setHasError(true);
+        setLoading(false);
+      });
+  }, []);
+
+  function handleLogout() {
+    clearAuth();
+    router.push("/login");
   }
 
   return (
@@ -32,13 +53,22 @@ export default async function DashboardPage() {
               Beta
             </span>
           </div>
-          <Link
-            href="/coaches/new"
-            aria-label="Create new coach"
-            className="px-4 py-2 bg-(--accent) hover:bg-(--accent-hover) text-white rounded-lg text-sm font-semibold transition-all shadow-[0_0_20px_rgba(124,106,247,0.35)]"
-          >
-            + New Coach
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/coaches/new"
+              aria-label="Create new coach"
+              className="px-4 py-2 bg-(--accent) hover:bg-(--accent-hover) text-white rounded-lg text-sm font-semibold transition-all shadow-[0_0_20px_rgba(124,106,247,0.35)]"
+            >
+              + New Coach
+            </Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="px-3 py-2 text-sm text-(--muted) hover:text-(--foreground) transition-colors"
+            >
+              Log out
+            </button>
+          </div>
         </div>
       </header>
 
@@ -55,7 +85,11 @@ export default async function DashboardPage() {
           </p>
         </div>
 
-        {coaches.length === 0 ? (
+        {!loading && hasError ? (
+          <p className="text-(--muted) text-sm text-center py-24">
+            Failed to load coaches. Please refresh the page.
+          </p>
+        ) : !loading && coaches.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 max-w-sm mx-auto text-center">
             <div className="w-20 h-20 rounded-2xl bg-(--surface-elevated) border border-(--border) flex items-center justify-center mb-6">
               <svg width="36" height="36" viewBox="0 0 32 32" fill="none" aria-hidden="true">

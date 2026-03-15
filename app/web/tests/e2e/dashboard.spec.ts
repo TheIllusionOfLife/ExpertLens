@@ -1,4 +1,9 @@
 import { expect, test } from "@playwright/test";
+import { seedAuth } from "./helpers/auth";
+
+test.beforeEach(async ({ page }) => {
+  await seedAuth(page);
+});
 
 test("page title contains ExpertLens", async ({ page }) => {
   await page.goto("/");

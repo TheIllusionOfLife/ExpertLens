@@ -26,7 +26,40 @@ BUILDING_COACH = Coach(
     persona="Expert coach for DaVinci Resolve",
     knowledge_status="building",
     default_preferences=DEFAULT_PREFS,
+    owner_id="test-user-id",  # owned by the test user
 )
+
+# User-owned coach in ready state — used for rebuild/update happy-path tests
+USER_OWNED_COACH = Coach(
+    coach_id="my_app",
+    software_name="MyApp",
+    display_name="MyApp Expert",
+    persona="Expert coach for MyApp",
+    knowledge_status="ready",
+    default_preferences=DEFAULT_PREFS,
+    owner_id="test-user-id",
+)
+
+# Owned by a different user — used for 403 ownership denial tests
+OTHER_USER_COACH = Coach(
+    coach_id="other_coach",
+    software_name="OtherApp",
+    display_name="OtherApp Expert",
+    persona="Expert coach for OtherApp",
+    knowledge_status="ready",
+    default_preferences=DEFAULT_PREFS,
+    owner_id="other-user-id",  # not "test-user-id"
+)
+
+
+# ---------------------------------------------------------------------------
+# Auth
+# ---------------------------------------------------------------------------
+
+
+async def test_list_coaches_requires_auth(async_client):
+    response = await async_client.get("/coaches")
+    assert response.status_code == 401
 
 
 # ---------------------------------------------------------------------------
@@ -34,19 +67,19 @@ BUILDING_COACH = Coach(
 # ---------------------------------------------------------------------------
 
 
-async def test_list_coaches_empty(async_client, monkeypatch):
+async def test_list_coaches_empty(authed_client, monkeypatch):
     monkeypatch.setattr("app.api.routers.coaches.list_coaches", AsyncMock(return_value=[]))
-    response = await async_client.get("/coaches")
+    response = await authed_client.get("/coaches")
     assert response.status_code == 200
     assert response.json() == []
 
 
-async def test_list_coaches_returns_coaches(async_client, monkeypatch):
+async def test_list_coaches_returns_coaches(authed_client, monkeypatch):
     monkeypatch.setattr(
         "app.api.routers.coaches.list_coaches",
         AsyncMock(return_value=[BLENDER_COACH]),
     )
-    response = await async_client.get("/coaches")
+    response = await authed_client.get("/coaches")
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 1
@@ -58,9 +91,9 @@ async def test_list_coaches_returns_coaches(async_client, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-async def test_get_coach_not_found(async_client, monkeypatch):
+async def test_get_coach_not_found(authed_client, monkeypatch):
     monkeypatch.setattr("app.api.routers.coaches.get_coach", AsyncMock(return_value=None))
-    response = await async_client.get("/coaches/nonexistent")
+    response = await authed_client.get("/coaches/nonexistent")
     assert response.status_code == 404
 
 
@@ -69,7 +102,7 @@ async def test_get_coach_not_found(async_client, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-async def test_create_coach(async_client, monkeypatch):
+async def test_create_coach(authed_client, monkeypatch):
     monkeypatch.setattr(
         "app.api.routers.coaches.create_coach",
         AsyncMock(return_value=BUILDING_COACH),
@@ -79,7 +112,7 @@ async def test_create_coach(async_client, monkeypatch):
         "app.api.routers.coaches.resolve_software_name",
         AsyncMock(return_value="DaVinci Resolve"),
     )
-    response = await async_client.post(
+    response = await authed_client.post(
         "/coaches",
         json={"software_name": "DaVinci Resolve"},
     )
@@ -89,17 +122,17 @@ async def test_create_coach(async_client, monkeypatch):
     assert data["knowledge_status"] == "building"
 
 
-async def test_create_coach_duplicate(async_client, monkeypatch):
+async def test_create_coach_duplicate(authed_client, monkeypatch):
     monkeypatch.setattr("app.api.routers.coaches.create_coach", AsyncMock(return_value=None))
     monkeypatch.setattr("app.api.routers.coaches.build_knowledge_for_coach", AsyncMock())
-    response = await async_client.post(
+    response = await authed_client.post(
         "/coaches",
         json={"software_name": "blender"},
     )
     assert response.status_code == 409
 
 
-async def test_create_coach_triggers_builder(async_client, monkeypatch):
+async def test_create_coach_triggers_builder(authed_client, monkeypatch):
     """Background task must dispatch build_knowledge_for_coach with correct args."""
     builder_mock = AsyncMock()
     monkeypatch.setattr(
@@ -112,7 +145,7 @@ async def test_create_coach_triggers_builder(async_client, monkeypatch):
         AsyncMock(return_value="DaVinci Resolve"),
     )
 
-    response = await async_client.post(
+    response = await authed_client.post(
         "/coaches",
         json={"software_name": "DaVinci Resolve"},
     )
@@ -125,23 +158,23 @@ async def test_create_coach_triggers_builder(async_client, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-async def test_rebuild_knowledge_endpoint(async_client, monkeypatch):
+async def test_rebuild_knowledge_endpoint(authed_client, monkeypatch):
     monkeypatch.setattr(
         "app.api.routers.coaches.get_coach",
-        AsyncMock(return_value=BLENDER_COACH),
+        AsyncMock(return_value=USER_OWNED_COACH),
     )
     monkeypatch.setattr(
-        "app.api.routers.coaches.update_coach", AsyncMock(return_value=BLENDER_COACH)
+        "app.api.routers.coaches.update_coach", AsyncMock(return_value=USER_OWNED_COACH)
     )
     monkeypatch.setattr("app.api.routers.coaches.build_knowledge_for_coach", AsyncMock())
-    response = await async_client.post("/coaches/blender/rebuild-knowledge")
+    response = await authed_client.post("/coaches/my_app/rebuild-knowledge")
     assert response.status_code == 202
     assert response.json()["status"] == "building"
 
 
-async def test_rebuild_knowledge_not_found(async_client, monkeypatch):
+async def test_rebuild_knowledge_not_found(authed_client, monkeypatch):
     monkeypatch.setattr("app.api.routers.coaches.get_coach", AsyncMock(return_value=None))
-    response = await async_client.post("/coaches/nonexistent/rebuild-knowledge")
+    response = await authed_client.post("/coaches/nonexistent/rebuild-knowledge")
     assert response.status_code == 404
 
 
@@ -150,16 +183,62 @@ async def test_rebuild_knowledge_not_found(async_client, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-async def test_update_coach_not_found(async_client, monkeypatch):
+async def test_update_coach_not_found(authed_client, monkeypatch):
     monkeypatch.setattr("app.api.routers.coaches.update_coach", AsyncMock(return_value=None))
-    response = await async_client.put(
+    monkeypatch.setattr("app.api.routers.coaches.get_coach", AsyncMock(return_value=None))
+    response = await authed_client.put(
         "/coaches/nonexistent",
         json={"display_name": "New Name"},
     )
     assert response.status_code == 404
 
 
-async def test_rebuild_knowledge_idempotent_while_building(async_client, monkeypatch):
+# ---------------------------------------------------------------------------
+# Ownership 403 denials
+# ---------------------------------------------------------------------------
+
+
+async def test_get_coach_not_found_when_not_owner(authed_client, monkeypatch):
+    """Private coaches return 404 (not 403) to avoid leaking existence."""
+    monkeypatch.setattr(
+        "app.api.routers.coaches.get_coach", AsyncMock(return_value=OTHER_USER_COACH)
+    )
+    response = await authed_client.get("/coaches/other_coach")
+    assert response.status_code == 404
+
+
+async def test_rebuild_knowledge_forbidden_when_not_owner(authed_client, monkeypatch):
+    monkeypatch.setattr(
+        "app.api.routers.coaches.get_coach", AsyncMock(return_value=OTHER_USER_COACH)
+    )
+    response = await authed_client.post("/coaches/other_coach/rebuild-knowledge")
+    assert response.status_code == 403
+
+
+async def test_update_coach_forbidden_when_not_owner(authed_client, monkeypatch):
+    monkeypatch.setattr(
+        "app.api.routers.coaches.get_coach", AsyncMock(return_value=OTHER_USER_COACH)
+    )
+    response = await authed_client.put("/coaches/other_coach", json={"display_name": "Hacked"})
+    assert response.status_code == 403
+
+
+async def test_delete_coach_forbidden_when_not_owner(authed_client, monkeypatch):
+    monkeypatch.setattr(
+        "app.api.routers.coaches.get_coach", AsyncMock(return_value=OTHER_USER_COACH)
+    )
+    response = await authed_client.delete("/coaches/other_coach")
+    assert response.status_code == 403
+
+
+async def test_update_preset_coach_forbidden(authed_client, monkeypatch):
+    """Preset coaches (owner_id=None) cannot be updated by any user."""
+    monkeypatch.setattr("app.api.routers.coaches.get_coach", AsyncMock(return_value=BLENDER_COACH))
+    response = await authed_client.put("/coaches/blender", json={"display_name": "My Blender"})
+    assert response.status_code == 403
+
+
+async def test_rebuild_knowledge_idempotent_while_building(authed_client, monkeypatch):
     """Rebuild endpoint returns 202 immediately when already building (no duplicate task)."""
     builder_mock = AsyncMock()
     monkeypatch.setattr(
@@ -168,7 +247,7 @@ async def test_rebuild_knowledge_idempotent_while_building(async_client, monkeyp
     )
     monkeypatch.setattr("app.api.routers.coaches.build_knowledge_for_coach", builder_mock)
 
-    response = await async_client.post("/coaches/davinci_resolve/rebuild-knowledge")
+    response = await authed_client.post("/coaches/davinci_resolve/rebuild-knowledge")
     assert response.status_code == 202
     assert response.json()["status"] == "building"
     builder_mock.assert_not_called()

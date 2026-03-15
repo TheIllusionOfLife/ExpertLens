@@ -1,8 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { seedAuth } from "./helpers/auth";
 
 // Reset mock server state before each test so davinciPollCount starts at 0
-test.beforeEach(async ({ request }) => {
+test.beforeEach(async ({ page, request }) => {
   await request.post("http://localhost:8099/__reset");
+  await seedAuth(page);
 });
 
 test("/coaches/new renders software option grid (6 presets)", async ({ page }) => {

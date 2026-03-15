@@ -9,6 +9,7 @@ from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.config import settings
+from app.api.routers.auth import router as auth_router
 from app.api.routers.coaches import router as coaches_router
 from app.api.routers.preferences import router as preferences_router
 from app.api.routers.sessions import router as sessions_router
@@ -71,6 +72,7 @@ app.add_middleware(
 )
 
 
+app.include_router(auth_router)
 app.include_router(coaches_router)
 app.include_router(preferences_router)
 app.include_router(sessions_router)

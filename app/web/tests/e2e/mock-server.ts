@@ -54,9 +54,28 @@ function json(res: http.ServerResponse, status: number, data: unknown): void {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type,Authorization",
   });
   res.end(body);
+}
+
+async function readBody(req: http.IncomingMessage): Promise<unknown> {
+  return new Promise((resolve) => {
+    let body = "";
+    req.on("data", (chunk) => { body += chunk; });
+    req.on("end", () => {
+      try { resolve(JSON.parse(body)); } catch { resolve({}); }
+    });
+  });
+}
+
+function requireAuth(req: http.IncomingMessage, res: http.ServerResponse): boolean {
+  const token = req.headers.authorization?.slice(7);
+  if (!token || token !== "mock-token") {
+    json(res, 401, { detail: "Not authenticated" });
+    return false;
+  }
+  return true;
 }
 
 export function resetDavinciPollCount(): void {
@@ -66,7 +85,7 @@ export function resetDavinciPollCount(): void {
 export function createMockServer(): http.Server {
   davinciPollCount = 0;
 
-  return http.createServer((req, res) => {
+  return http.createServer(async (req, res) => {
     const url = req.url ?? "/";
     const method = req.method ?? "GET";
 
@@ -75,7 +94,7 @@ export function createMockServer(): http.Server {
       res.writeHead(204, {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Headers": "Content-Type,Authorization",
       });
       res.end();
       return;
@@ -88,20 +107,45 @@ export function createMockServer(): http.Server {
       return;
     }
 
+    // POST /auth/login
+    if (method === "POST" && url === "/auth/login") {
+      const body = await readBody(req) as { username?: string; password?: string };
+      if (body.username === "testuser" && body.password === "testpass123") {
+        json(res, 200, { access_token: "mock-token", token_type: "bearer", user_id: "test-user-id", username: "testuser" });
+      } else {
+        json(res, 401, { detail: "Invalid credentials" });
+      }
+      return;
+    }
+
+    // POST /auth/register
+    if (method === "POST" && url === "/auth/register") {
+      const body = await readBody(req) as { username?: string; password?: string };
+      if (body.username === "existinguser") {
+        json(res, 409, { detail: "Username already taken" });
+      } else {
+        json(res, 201, { access_token: "mock-token", token_type: "bearer", user_id: "new-user-id", username: body.username });
+      }
+      return;
+    }
+
     // GET /coaches
     if (method === "GET" && url === "/coaches") {
+      if (!requireAuth(req, res)) return;
       json(res, 200, [BLENDER_COACH, DAVINCI_COACH()]);
       return;
     }
 
     // GET /coaches/blender
     if (method === "GET" && url === "/coaches/blender") {
+      if (!requireAuth(req, res)) return;
       json(res, 200, BLENDER_COACH);
       return;
     }
 
     // GET /coaches/davinci_resolve — simulates polling: building → ready
     if (method === "GET" && url === "/coaches/davinci_resolve") {
+      if (!requireAuth(req, res)) return;
       davinciPollCount++;
       json(res, 200, DAVINCI_COACH());
       return;
@@ -109,13 +153,42 @@ export function createMockServer(): http.Server {
 
     // POST /coaches
     if (method === "POST" && url === "/coaches") {
+      if (!requireAuth(req, res)) return;
       json(res, 201, DAVINCI_COACH());
       return;
     }
 
     // POST /coaches/*/rebuild-knowledge
     if (method === "POST" && /^\/coaches\/[^/]+\/rebuild-knowledge$/.test(url)) {
+      if (!requireAuth(req, res)) return;
       json(res, 202, { status: "building" });
+      return;
+    }
+
+    // GET /preferences
+    if (method === "GET" && url === "/preferences") {
+      if (!requireAuth(req, res)) return;
+      json(res, 200, {
+        interaction_style: "shortcuts",
+        tone: "concise_expert",
+        depth: "medium",
+        proactivity: "reactive",
+        response_language: "english",
+      });
+      return;
+    }
+
+    // PUT /preferences
+    if (method === "PUT" && url === "/preferences") {
+      if (!requireAuth(req, res)) return;
+      const body = await readBody(req) as Record<string, string>;
+      json(res, 200, {
+        interaction_style: body.interaction_style ?? "shortcuts",
+        tone: body.tone ?? "concise_expert",
+        depth: body.depth ?? "medium",
+        proactivity: body.proactivity ?? "reactive",
+        response_language: body.response_language ?? "english",
+      });
       return;
     }
 

@@ -2,12 +2,12 @@
 
 import asyncio
 import logging
-import uuid
 
 from fastapi import WebSocket, WebSocketDisconnect
 
 from agent.memory.summarize import summarize_session
 from agent.prompts.base import build_system_instruction_from_firestore
+from app.api.auth import decode_token
 from app.api.config import settings
 from app.api.db.coach_repo import get_coach
 from app.api.db.session_repo import create_session as create_fs_session
@@ -98,13 +98,24 @@ class SessionHandler:
 
         coach_id = self._coach_id
         saved_handle = msg.session_handle
-        # Use client-supplied user_id if present; generate an anonymous ID otherwise.
-        # Never fall back to coach_id — that merges all users under one session history.
-        user_id = msg.user_id or f"anon-{uuid.uuid4()}"
 
-        # Check knowledge status — degrade gracefully rather than blocking the session.
+        if msg.token:
+            try:
+                payload = decode_token(msg.token)
+                user_id = payload.sub
+            except Exception:
+                await self._ws.close(code=4001, reason="Invalid token")
+                return
+        else:
+            await self._ws.close(code=4001, reason="Authentication required")
+            return
+
+        # Authorization: verify user can access this coach, then check knowledge status.
         try:
             coach = await get_coach(coach_id)
+            if coach and coach.owner_id is not None and coach.owner_id != user_id:
+                await self._ws.close(code=4003, reason="Not authorized")
+                return
             if coach and coach.knowledge_status == "building":
                 logger.info(f"Session started while knowledge is still building (coach={coach_id})")
             elif coach and coach.knowledge_status == "error":

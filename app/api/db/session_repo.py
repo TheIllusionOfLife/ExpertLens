@@ -21,6 +21,13 @@ async def create_session(coach_id: str, user_id: str = "") -> Session:
     return session
 
 
+async def get_session(session_id: str) -> Session | None:
+    doc = await get_client().collection(SESSIONS_COLLECTION).document(session_id).get()
+    if not doc.exists:
+        return None
+    return Session.model_validate(doc.to_dict())
+
+
 async def end_session(session_id: str, summary: str, last_topics: list[str]) -> Session | None:
     ref = get_client().collection(SESSIONS_COLLECTION).document(session_id)
     doc = await ref.get()

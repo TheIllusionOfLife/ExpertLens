@@ -1,4 +1,9 @@
 import { expect, test } from "@playwright/test";
+import { seedAuth } from "./helpers/auth";
+
+test.beforeEach(async ({ page }) => {
+  await seedAuth(page);
+});
 
 test("/session/blender renders disconnected state", async ({ page }) => {
   await page.goto("/session/blender");

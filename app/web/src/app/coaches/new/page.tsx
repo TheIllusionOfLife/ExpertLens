@@ -1,7 +1,11 @@
+"use client";
+
 import { CreateCoachForm } from "@/components/CreateCoachForm";
+import { useAuthGuard } from "@/lib/use-auth-guard";
 import Link from "next/link";
 
 export default function NewCoachPage() {
+  useAuthGuard();
   return (
     <div className="min-h-screen bg-(--background)">
       <header className="flex items-center px-4 sm:px-8 py-5 border-b border-(--border)">
