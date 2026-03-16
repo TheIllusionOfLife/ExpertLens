@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ExpertLens — Demo Presentation</title>
+<title>ExpertLens Demo Presentation</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -75,7 +75,7 @@
      and only you can use it. ExpertLens is built for this gap." -->
 <div class="slide" id="s1">
   <h2>Professional software is hard.<br>AI <span class="accent">can't control it</span> for you.</h2>
-  <p class="subtitle">GUI-heavy desktop and mobile apps have steep learning curves — and no automation API. You must operate them yourself. Coaching is the only way to accelerate.</p>
+  <p class="subtitle">GUI-heavy desktop and mobile apps have steep learning curves and no automation API. You must operate them yourself. Coaching is the only way to accelerate.</p>
   <div class="cards">
     <div class="card">
       <div class="card-icon">🌐</div>
@@ -101,25 +101,25 @@
 
 <!-- ============= SLIDE 2: LIVE DEMO (0:30 - 2:00) ============= -->
 <!-- SCRIPT: "Here's ExpertLens coaching me through a real Blender problem.
-     I share my screen, speak naturally — the coach sees my mesh, hears my question,
-     and responds in real time. Watch — I apply Shade Smooth and the mesh fixes instantly.
-     And when I interrupt mid-sentence — native barge-in — the coach stops and answers
+     I share my screen, speak naturally ·the coach sees my mesh, hears my question,
+     and responds in real time. Watch ·I apply Shade Smooth and the mesh fixes instantly.
+     And when I interrupt mid-sentence ·native barge-in ·the coach stops and answers
      the new question immediately. No push-to-talk, no turn-taking." -->
 <div class="slide video-slide" id="s2">
-  <div class="video-label">Live Blender Session — Screen Share + Voice</div>
+  <div class="video-label">Live Blender Session: Screen Share + Voice</div>
   <video id="v-session" controls>
     <source src="../clip1-blender-session.mov" type="video/quicktime">
   </video>
 </div>
 
 <!-- ============= SLIDE 3: COACH BUILDER (2:00 - 2:30) ============= -->
-<!-- SCRIPT: "ExpertLens works with any software. Type a name — DaVinci Resolve.
+<!-- SCRIPT: "ExpertLens works with any software. Type a name ·DaVinci Resolve.
      Gemini validates it's a real application using Google Search grounding.
      Then it builds a six-section knowledge base: shortcuts, workflows, common errors,
      deep concepts, version changes, and a quick reference card. Two to four minutes,
      and the coach is ready for live sessions." -->
 <div class="slide" id="s3">
-  <h3>Coach Builder — Any Software in Minutes</h3>
+  <h3>Coach Builder: Any Software in Minutes</h3>
   <p class="subtitle" style="font-size:20px; margin-top:12px">Type any software name → validated with Gemini + Google Search → 6-section knowledge base built in 2-4 minutes</p>
   <div class="three-screenshots">
     <img src="assets/coach-builder-02-form.png" alt="New coach form">
@@ -130,11 +130,11 @@
 
 <!-- ============= SLIDE 4: PREFERENCES + MEMORY (2:30 - 3:00) ============= -->
 <!-- SCRIPT: "Every user is different. ExpertLens supports four preference dimensions:
-     interaction style — shortcuts-first or mouse-guided. Tone — concise expert or calm mentor.
+     interaction style ·shortcuts-first or mouse-guided. Tone ·concise expert or calm mentor.
      Response depth. And proactivity. These are injected into every session's system instruction.
 
      Cross-session memory: after each session, the coach's transcript is summarized by Gemini
-     and stored in Firestore. The next session loads the last three summaries — the coach
+     and stored in Firestore. The next session loads the last three summaries ·the coach
      picks up where you left off, without any effort from you." -->
 <div class="slide" id="s4">
   <h3>Personalized Coaching + Memory</h3>
@@ -187,15 +187,15 @@
   <div class="mobile-grid">
     <div class="mobile-card">
       <h4 class="blue">Desktop (Chrome)</h4>
-      <p><code>getDisplayMedia()</code><br>Full screen sharing — coach sees your entire workspace</p>
+      <p><code>getDisplayMedia()</code><br>Full screen sharing. Coach sees your entire workspace.</p>
     </div>
     <div class="mobile-card" style="border-color:var(--green)">
       <h4 class="green">Android (Chrome)</h4>
-      <p><code>getDisplayMedia()</code><br>Full screen sharing — same as desktop, works natively</p>
+      <p><code>getDisplayMedia()</code><br>Full screen sharing. Same as desktop, works natively.</p>
     </div>
     <div class="mobile-card" style="border-color:var(--orange)">
       <h4 class="orange">iOS (Safari)</h4>
-      <p><code>getUserMedia()</code> fallback<br>Rear camera captures your screen — point and coach</p>
+      <p><code>getUserMedia()</code> fallback<br>Rear camera captures your screen. Point and coach.</p>
     </div>
   </div>
   <div style="margin-top:32px; display:flex; gap:24px; align-items:center; justify-content:center">
@@ -211,7 +211,7 @@
 <!-- ============= SLIDE 6: ARCHITECTURE (3:20 - 3:50) ============= -->
 <!-- SCRIPT: "Cloud Run hosts both frontend and backend. The browser streams JPEG frames
      and audio over WebSocket directly to the backend, which proxies to Gemini Live API.
-     SlidingWindow compression means sessions run indefinitely — no 2-minute cutoff.
+     SlidingWindow compression means sessions run indefinitely ·no 2-minute cutoff.
      Session resumption handles WebSocket rotation without losing context.
      Firestore stores coaches, preferences, sessions, and knowledge.
      The knowledge builder uses gemini-3-flash-preview with Google Search grounding.
@@ -230,9 +230,9 @@
     </div>
     <div class="arch-group" style="border-color:rgba(66,133,244,0.3)">
       <div class="arch-group-label blue">Google Cloud</div>
-      <div class="arch-box"><div class="arch-box-title blue">Cloud Run — Frontend</div><div class="arch-box-sub">Next.js 15</div></div>
+      <div class="arch-box"><div class="arch-box-title blue">Cloud Run: Frontend</div><div class="arch-box-sub">Next.js 15</div></div>
       <div class="arch-box glow" style="flex:1">
-        <div class="arch-box-title accent">Cloud Run — Backend (FastAPI + ADK)</div>
+        <div class="arch-box-title accent">Cloud Run: Backend (FastAPI + ADK)</div>
         <div class="arch-box-sub" style="margin-top:6px; line-height:1.6">
           WebSocket Handler · System Instruction Builder<br>
           Gemini Live Session Manager<br>
