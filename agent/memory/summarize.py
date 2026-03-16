@@ -26,7 +26,7 @@ async def summarize_session(coach_id: str, lines: list[str]) -> tuple[str, list[
     software = coach_id.replace("_", " ").title()
     transcript = "\n".join(f"- {line}" for line in lines[-20:])
     response = await _client.aio.models.generate_content(
-        model="gemini-2.0-flash",
+        model="gemini-3-flash-preview",
         contents=PROMPT.format(software=software, transcript=transcript),
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
@@ -38,6 +38,9 @@ async def summarize_session(coach_id: str, lines: list[str]) -> tuple[str, list[
                 },
                 "required": ["summary", "topics"],
             },
+            thinking_config=types.ThinkingConfig(
+                thinking_level=types.ThinkingLevel.MINIMAL,
+            ),
         ),
     )
     data = json.loads(response.text or "{}")
