@@ -124,7 +124,8 @@ See `infra/terraform/cloudbuild.tf` for the trigger and IAM configuration.
 
 ## Architecture
 
-<img width="1610" height="732" alt="expertlens-architecture" src="https://github.com/user-attachments/assets/2ad166bb-b86b-4941-8643-2d542ea6577a" />
+
+<img width="1620" height="730" alt="expertlens-architecture" src="https://github.com/user-attachments/assets/7d2107ef-3f2d-413b-946d-7306cf3b484d" />
 
 
 **Grounding strategy (two-layer):**
