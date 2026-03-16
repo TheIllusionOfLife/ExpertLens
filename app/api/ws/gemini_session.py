@@ -10,6 +10,7 @@ from google import genai
 from google.genai import types
 
 from app.api.config import settings
+from app.api.db.coach_repo import make_coach_slug
 from app.api.ws.audio import INPUT_MIME
 
 logger = logging.getLogger(__name__)
@@ -293,8 +294,8 @@ class GeminiLiveSession:
         for fc in function_calls:
             args = fc.args or {}
             if fc.name == "get_coach_knowledge":
-                # Normalize to canonical software_name (same rules as base.py prompt builder)
-                software_name = self._coach_id.strip().lower().replace("-", "_").replace(" ", "_")
+                # Normalize to canonical software_name using shared slug logic
+                software_name = make_coach_slug(self._coach_id)
                 result = await get_coach_knowledge(
                     software_name=software_name,
                     topic=args.get("topic", ""),

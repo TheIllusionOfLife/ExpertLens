@@ -68,6 +68,7 @@ class SessionHandler:
         self._current_turn_text: str = ""
         self._transcript: list[str] = []  # interleaved User/Coach turns
         self._timeout_task: asyncio.Task | None = None
+        self._last_image_time: float = 0.0
 
     async def run(self) -> None:
         """Main session loop."""
@@ -268,6 +269,10 @@ class SessionHandler:
         payload = data[1:]
 
         if tag == MEDIA_TAG_IMAGE:
+            now = time.monotonic()
+            if now - self._last_image_time < 0.5:
+                return  # throttle: drop frames faster than 2fps
+            self._last_image_time = now
             if len(payload) > MAX_IMAGE_BYTES:
                 logger.warning(f"Image frame too large ({len(payload)} bytes), dropping")
                 return

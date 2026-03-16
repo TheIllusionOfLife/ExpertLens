@@ -6,6 +6,7 @@ from agent.prompts.templates.affinity import AFFINITY_PROMPT
 from agent.prompts.templates.blender import BLENDER_PROMPT
 from agent.prompts.templates.system import SYSTEM_PROMPT
 from agent.prompts.templates.unreal import UNREAL_PROMPT
+from app.api.db.coach_repo import make_coach_slug
 
 logger = logging.getLogger(__name__)
 
@@ -62,8 +63,11 @@ def build_system_instruction(
     """
     parts = [SYSTEM_PROMPT]
 
-    # Coach-specific context
-    software_key = coach_id.strip().lower().replace("-", "_").replace(" ", "_")
+    # Coach-specific context (reuse canonical slug normalization)
+    try:
+        software_key = make_coach_slug(coach_id)
+    except ValueError:
+        software_key = ""
     coach_template = COACH_TEMPLATES.get(software_key, "")
     if coach_template:
         parts.append(coach_template)
@@ -91,12 +95,18 @@ def build_system_instruction(
         if note_lines:
             parts.append("## Previous Session Notes\n" + "\n".join(note_lines))
 
-    # Curated knowledge snippets (capped for context budget)
+    # Curated knowledge snippets (budget accumulation to avoid loading excess data)
     if knowledge_snippets:
-        combined = "\n\n".join(knowledge_snippets)
-        if len(combined) > MAX_KNOWLEDGE_CHARS:
-            combined = combined[:MAX_KNOWLEDGE_CHARS] + "\n[...additional knowledge via tool]"
-        parts.append(f"## Knowledge Reference\n{combined}")
+        combined = ""
+        for snippet in knowledge_snippets:
+            if combined and len(combined) + 2 + len(snippet) > MAX_KNOWLEDGE_CHARS:
+                combined += "\n[...additional knowledge via tool]"
+                break
+            if combined:
+                combined += "\n\n"
+            combined += snippet
+        if combined:
+            parts.append(f"## Knowledge Reference\n{combined}")
 
     return "\n\n".join(parts)
 
