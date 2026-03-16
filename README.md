@@ -215,6 +215,29 @@ demo/             — Video script, blog post, submission docs
 
 ---
 
+## Testing
+
+**Live instance:** https://expertlens-frontend-pk4kcjevqa-uc.a.run.app
+
+Test credentials: `testuser` / `testpass123`
+
+Log in, select a coach, start a session, share your screen, and speak naturally. The coach responds in real-time audio.
+
+### Running Tests Locally
+
+```bash
+# Backend tests
+uv run pytest tests/ -q
+
+# Frontend lint + typecheck
+cd app/web && bun run lint && bun run typecheck
+
+# E2E tests (requires both services running)
+cd app/web && bun run test:e2e
+```
+
+---
+
 ## Hackathon
 
 **Competition:** [Gemini Live Agent Challenge](https://googleai.devpost.com/)
