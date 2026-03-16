@@ -79,10 +79,7 @@ export class WsClient {
       } else {
         // Unexpected close — auto-reconnect with exponential backoff
         this.options.onStatusChange("reconnecting");
-        const delay = Math.min(
-          RECONNECT_BASE_MS * 2 ** this._reconnectAttempt,
-          RECONNECT_MAX_MS,
-        );
+        const delay = Math.min(RECONNECT_BASE_MS * 2 ** this._reconnectAttempt, RECONNECT_MAX_MS);
         this._reconnectAttempt++;
         setTimeout(() => {
           if (!this.stopped) this.connect();
