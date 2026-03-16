@@ -11,13 +11,13 @@ export type SceneTiming = {
 
 export const VOICEOVER_TIMINGS: Record<SceneId, SceneTiming> = {
   "problem": {
-    "durationFrames": 731,
+    "durationFrames": 721,
     "phraseOffsets": [
       0
     ]
   },
   "demo": {
-    "durationFrames": 2700,
+    "durationFrames": 2756,
     "phraseOffsets": []
   },
   "coach-builder": {
@@ -29,12 +29,12 @@ export const VOICEOVER_TIMINGS: Record<SceneId, SceneTiming> = {
     ]
   },
   "prefs-memory": {
-    "durationFrames": 788,
+    "durationFrames": 1026,
     "phraseOffsets": [
       0,
-      281,
-      464,
-      640
+      420,
+      701,
+      877
     ]
   },
   "mobile": {

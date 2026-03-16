@@ -2,9 +2,9 @@ import { AbsoluteFill, Sequence, interpolate, useCurrentFrame } from "remotion";
 import { ActLabel } from "./ActLabel";
 
 const APPS = [
-  { category: "Browser Apps", examples: "Figma, Canva, Google Docs", aiAction: "Automate with Playwright", color: "#34a853", icon: "🌐" },
-  { category: "CLI Tools", examples: "git, ffmpeg, Google Cloud CLI", aiAction: "Call directly via tool use", color: "#4285f4", icon: "⌨️" },
-  { category: "Desktop GUI Apps", examples: "Blender, Affinity, Unreal Engine", aiAction: "No API. Coaching is the only option.", color: "#7c6af7", icon: "🖥️", highlight: true },
+  { category: "Browser Apps", examples: "Figma, Canva, Google Docs", aiAction: "Access via MCP and Playwright", color: "#34a853" },
+  { category: "CLI Tools", examples: "git, ffmpeg, Google Cloud CLI", aiAction: "Call directly via tool use", color: "#4285f4" },
+  { category: "Desktop GUI Apps / Mobile Apps", examples: "Blender, Affinity, Unreal Engine", aiAction: "No API. Coaching is the only option.", color: "#7c6af7", highlight: true },
 ];
 
 export const SceneProblem: React.FC = () => {
@@ -16,9 +16,9 @@ export const SceneProblem: React.FC = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: "#0f0f1a" }}>
       <Sequence from={0} durationInFrames={900} layout="none"><ActLabel text="The Problem" /></Sequence>
-      <AbsoluteFill style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", paddingBottom: 160 }}>
+      <AbsoluteFill style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", paddingTop: 100 }}>
         <h1 style={{ fontSize: 64, fontWeight: 800, color: "#ffffff", fontFamily: "system-ui, sans-serif", textAlign: "center", lineHeight: 1.15, maxWidth: 1400, margin: 0, opacity: titleOpacity, transform: `translateY(${titleY}px)` }}>
-          Professional software is hard.{"\n"}AI <span style={{ color: "#7c6af7" }}>can't control it</span> for you.
+          Professional software is hard.<br />AI <span style={{ color: "#7c6af7" }}>can't control it</span> for you.
         </h1>
         <p style={{ fontSize: 26, color: "rgba(255,255,255,0.5)", fontFamily: "system-ui, sans-serif", textAlign: "center", maxWidth: 800, lineHeight: 1.6, marginTop: 24, opacity: subtitleOpacity }}>
           GUI-heavy desktop and mobile apps have steep learning curves and no automation API. Coaching is the only way to accelerate.
@@ -35,15 +35,14 @@ export const SceneProblem: React.FC = () => {
 };
 
 const ComparisonCards: React.FC<{ frame: number }> = ({ frame }) => (
-  <div style={{ position: "absolute", bottom: 180, left: 100, right: 100, display: "flex", gap: 32 }}>
+  <div style={{ position: "absolute", top: "50%", left: 100, right: 100, transform: "translateY(-50%)", display: "flex", gap: 32, marginTop: 40 }}>
     {APPS.map((app, i) => {
       const localFrame = Math.max(0, frame - i * 15);
       const opacity = interpolate(localFrame, [0, 20], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
       const translateY = interpolate(localFrame, [0, 25], [30, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
       return (
-        <div key={app.category} style={{ flex: 1, backgroundColor: app.highlight ? "rgba(124,106,247,0.12)" : "rgba(20,24,50,0.9)", border: `2px solid ${app.highlight ? app.color : `${app.color}33`}`, borderRadius: 20, padding: "36px 40px", opacity, transform: `translateY(${translateY}px) scale(${app.highlight ? 1.03 : 1})`, boxShadow: app.highlight ? "0 0 40px rgba(124,106,247,0.2)" : "none" }}>
-          <div style={{ fontSize: 36, marginBottom: 12 }}>{app.icon}</div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: app.color, letterSpacing: "0.1em", textTransform: "uppercase" as const, fontFamily: "system-ui, sans-serif", marginBottom: 8 }}>{app.category}</div>
+        <div key={app.category} style={{ flex: 1, backgroundColor: app.highlight ? "rgba(124,106,247,0.12)" : "rgba(20,24,50,0.9)", border: `2px solid ${app.highlight ? app.color : `${app.color}33`}`, borderRadius: 20, padding: "32px 36px", opacity, transform: `translateY(${translateY}px) scale(${app.highlight ? 1.03 : 1})`, boxShadow: app.highlight ? "0 0 40px rgba(124,106,247,0.2)" : "none" }}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: app.color, letterSpacing: "0.1em", textTransform: "uppercase" as const, fontFamily: "system-ui, sans-serif", marginBottom: 12 }}>{app.category}</div>
           <div style={{ fontSize: 22, color: "#e8eaf6", fontWeight: 600, fontFamily: "system-ui, sans-serif", marginBottom: 12 }}>{app.examples}</div>
           <div style={{ fontSize: 16, color: app.highlight ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.45)", fontFamily: "system-ui, sans-serif", lineHeight: 1.4, fontWeight: app.highlight ? 600 : 400 }}>{app.aiAction}</div>
         </div>
@@ -55,8 +54,8 @@ const ComparisonCards: React.FC<{ frame: number }> = ({ frame }) => (
 const Punchline: React.FC<{ frame: number }> = ({ frame }) => {
   const opacity = interpolate(frame, [0, 20], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   return (
-    <div style={{ position: "absolute", bottom: 100, left: 0, right: 0, textAlign: "center", opacity }}>
-      <p style={{ fontSize: 22, color: "#7c6af7", fontWeight: 600, fontFamily: "system-ui, sans-serif", letterSpacing: "0.05em" }}>ExpertLens is built for this gap.</p>
+    <div style={{ position: "absolute", bottom: 140, left: 0, right: 0, textAlign: "center", opacity }}>
+      <p style={{ fontSize: 40, color: "#7c6af7", fontWeight: 700, fontFamily: "system-ui, sans-serif", letterSpacing: "0.03em" }}>ExpertLens is built for this gap.</p>
     </div>
   );
 };

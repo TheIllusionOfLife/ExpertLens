@@ -43,7 +43,7 @@ export const Closing: React.FC = () => {
             letterSpacing: "-0.02em",
           }}
         >
-          ExpertLens
+          Expert<span style={{ color: "#7c6af7" }}>Lens</span>
         </h1>
         <p
           style={{
@@ -53,7 +53,7 @@ export const Closing: React.FC = () => {
             fontFamily: "system-ui, -apple-system, sans-serif",
           }}
         >
-          Expert coaching for the apps AI cannot automate.
+          Expert coaching for the software only you can operate.
         </p>
       </div>
     </AbsoluteFill>

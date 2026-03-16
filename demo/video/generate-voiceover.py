@@ -42,13 +42,13 @@ SCENES = [
     {
         "id": "problem",
         "phrases": [
-            "Professional software has a steep learning curve. "
-            "Blender, Affinity Photo, Unreal Engine, DaVinci Resolve. "
-            "AI can automate browsers with Playwright. "
+            "Professional software is hard. "
+            "Blender, Affinity, Unreal Engine, DaVinci Resolve. "
+            "AI can access browser apps via MCP and Playwright. "
             "AI can call CLI tools directly. "
-            "But these GUI-heavy applications? AI cannot control them for you. "
+            "But desktop GUI apps and mobile apps? AI can't control it for you. "
             "You have to operate them yourself. "
-            "That's where ExpertLens comes in. "
+            "ExpertLens is built for this gap. "
             "It watches your screen, listens to your voice, and coaches you in real time.",
         ],
     },
@@ -71,10 +71,11 @@ SCENES = [
     {
         "id": "prefs-memory",
         "phrases": [
+            "Software changes constantly. ExpertLens uses Google Search grounding "
+            "to build knowledge from the latest documentation, shortcuts, and UI changes. "
+            "Stale knowledge means wrong guidance, so every coach rebuild pulls fresh data.",
             "Every user is different. ExpertLens lets you customize four dimensions: "
             "interaction style, coaching tone, response depth, and proactivity.",
-            "A shortcuts-first power user gets a completely different experience "
-            "from someone learning their first 3D tool.",
             "And the coach remembers. After each session, the transcript is summarized "
             "and stored in Firestore.",
             "Next time you connect, the coach loads your last three sessions "

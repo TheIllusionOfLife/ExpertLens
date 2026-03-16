@@ -19,7 +19,7 @@ export const ActLabel: React.FC<ActLabelProps> = ({ text }) => {
         top: 32,
         left: 80,
         opacity,
-        fontSize: 13,
+        fontSize: 36,
         color: "#7c6af7",
         fontWeight: 600,
         letterSpacing: "0.1em",
