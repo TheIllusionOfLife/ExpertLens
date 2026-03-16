@@ -124,7 +124,8 @@ See `infra/terraform/cloudbuild.tf` for the trigger and IAM configuration.
 
 ## Architecture
 
-![Architecture](demo/architecture.png)
+<img width="1610" height="732" alt="expertlens-architecture" src="https://github.com/user-attachments/assets/2ad166bb-b86b-4941-8643-2d542ea6577a" />
+
 
 **Grounding strategy (two-layer):**
 1. **Context stuffing** — Curated shortcuts, workflows, and common errors pre-loaded into system instruction at session start. Zero latency.
