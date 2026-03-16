@@ -311,6 +311,8 @@ class SessionHandler:
 
     def _notify_text_response(self, text: str, finished: bool) -> None:
         """Called by GeminiSession when output transcription text arrives."""
+        if not self._current_turn_text and text.strip():
+            logger.debug(f"Output transcription started: {text[:80]!r}")
         self._current_turn_text += text
         if finished:
             if self._current_turn_text.strip():
@@ -394,7 +396,14 @@ class SessionHandler:
                 pass
 
         if self._firestore_session_id:
+            # Flush any pending turn text that never received a finished=True event
+            if self._current_turn_text.strip():
+                turn = self._current_turn_text[:_MAX_TURN_CHARS]
+                self._transcript.append(f"Coach: {turn}")
+                self._current_turn_text = ""
+
             summary, last_topics = "", []
+            logger.info(f"Session cleanup: {len(self._transcript)} transcript turns accumulated")
             if self._transcript:
                 try:
                     summary, last_topics = await asyncio.wait_for(

@@ -1,8 +1,8 @@
 "use client";
 
-import { updatePreferences } from "@/lib/api-client";
+import { getPreferences, updatePreferences } from "@/lib/api-client";
 import type { UserPreferences } from "@/types/coach";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Props {
   coachId: string;
@@ -59,6 +59,15 @@ export function PreferencesForm({ coachId, initial }: Props) {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-fetch when coach changes
+  useEffect(() => {
+    getPreferences()
+      .then((saved) => setPrefs(saved))
+      .catch(() => {
+        // Fall back to coach defaults (already set via initial)
+      });
+  }, [coachId]);
 
   async function handleSave() {
     setSaving(true);
