@@ -112,8 +112,6 @@ const Arrow: React.FC<ArrowProps> = ({ x1, y1, x2, y2, color, label, thick, dash
   const midX = (x1 + x2) / 2;
   const midY = (y1 + y2) / 2;
   const angle = Math.atan2(y2 - y1, x2 - x1);
-  const len = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-
   return (
     <>
       <svg

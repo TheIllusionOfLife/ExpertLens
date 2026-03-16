@@ -108,6 +108,7 @@
 <div class="slide video-slide" id="s2">
   <div class="video-label">Live Blender Session: Screen Share + Voice</div>
   <video id="v-session" controls>
+    <source src="../clip1-blender-session.mp4" type="video/mp4">
     <source src="../clip1-blender-session.mov" type="video/quicktime">
   </video>
 </div>
@@ -276,6 +277,8 @@
 
 <div id="slide-counter"></div>
 <div id="nav-hint">← → to navigate · F for fullscreen</div>
+<button id="btn-prev" onclick="show(current-1)" style="position:fixed;left:16px;top:50%;transform:translateY(-50%);z-index:100;background:rgba(255,255,255,0.1);border:none;color:var(--muted);font-size:28px;padding:12px 16px;border-radius:8px;cursor:pointer">←</button>
+<button id="btn-next" onclick="show(current+1)" style="position:fixed;right:16px;top:50%;transform:translateY(-50%);z-index:100;background:rgba(255,255,255,0.1);border:none;color:var(--muted);font-size:28px;padding:12px 16px;border-radius:8px;cursor:pointer">→</button>
 
 <script>
   const slides = document.querySelectorAll('.slide');

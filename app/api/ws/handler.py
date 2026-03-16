@@ -37,6 +37,14 @@ _MAX_TURN_CHARS = 500  # truncate a single very long turn
 _MAX_TRANSCRIPT_TURNS = 30  # cap total turns stored
 
 
+def _append_transcript(transcript: list[str], speaker: str, text: str) -> None:
+    """Append a turn to transcript with truncation and cap."""
+    turn = text[:_MAX_TURN_CHARS]
+    transcript.append(f"{speaker}: {turn}")
+    if len(transcript) > _MAX_TRANSCRIPT_TURNS:
+        transcript.pop(0)
+
+
 class SessionHandler:
     """Handles a single WebSocket session between browser and Gemini."""
 
@@ -316,10 +324,7 @@ class SessionHandler:
         self._current_turn_text += text
         if finished:
             if self._current_turn_text.strip():
-                turn = self._current_turn_text[:_MAX_TURN_CHARS]
-                self._transcript.append(f"Coach: {turn}")
-                if len(self._transcript) > _MAX_TRANSCRIPT_TURNS:
-                    self._transcript.pop(0)
+                _append_transcript(self._transcript, "Coach", self._current_turn_text)
             self._current_turn_text = ""
         task = asyncio.create_task(
             self._ws_send(
@@ -360,10 +365,7 @@ class SessionHandler:
     def _notify_input_text(self, text: str) -> None:
         """Called by GeminiSession when input transcription completes."""
         if text.strip():
-            turn = text[:_MAX_TURN_CHARS]
-            self._transcript.append(f"User: {turn}")
-            if len(self._transcript) > _MAX_TRANSCRIPT_TURNS:
-                self._transcript.pop(0)
+            _append_transcript(self._transcript, "User", text)
 
     async def _send_error(self, message: str) -> None:
         """Send error message to client."""
@@ -398,10 +400,7 @@ class SessionHandler:
         if self._firestore_session_id:
             # Flush any pending turn text that never received a finished=True event
             if self._current_turn_text.strip():
-                turn = self._current_turn_text[:_MAX_TURN_CHARS]
-                self._transcript.append(f"Coach: {turn}")
-                if len(self._transcript) > _MAX_TRANSCRIPT_TURNS:
-                    self._transcript.pop(0)
+                _append_transcript(self._transcript, "Coach", self._current_turn_text)
                 self._current_turn_text = ""
 
             summary, last_topics = "", []

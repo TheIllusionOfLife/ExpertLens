@@ -248,7 +248,12 @@ export default function LiveSessionPage() {
             <div className="relative mx-auto w-16 h-16 sm:w-24 sm:h-24">
               <div className="absolute inset-0 rounded-2xl bg-(--accent-glow) blur-xl" />
               <div className="relative w-16 h-16 sm:w-24 sm:h-24 rounded-2xl bg-(--surface-elevated) border border-(--border) flex items-center justify-center">
-                <CoachIcon coachId={coachId} iconKey={coach?.icon} size={36} />
+                <span className="sm:hidden">
+                  <CoachIcon coachId={coachId} iconKey={coach?.icon} size={32} />
+                </span>
+                <span className="hidden sm:inline">
+                  <CoachIcon coachId={coachId} iconKey={coach?.icon} size={52} />
+                </span>
               </div>
             </div>
 
