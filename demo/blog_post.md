@@ -22,9 +22,15 @@ When deciding what to build for this hackathon, I mapped the landscape of AI ass
 
 ExpertLens exists precisely in this gap. It watches your screen, listens to your voice, and advises you so you can command the application better. You stay in control. The AI makes you faster.
 
-### Mobile support
+### Mobile and cross-platform support
 
-ExpertLens works on mobile devices too. On iOS, `getDisplayMedia` is not available — but the rear camera works perfectly as a capture source. Point your phone at your screen or at a physical device, and ExpertLens can see exactly what you're looking at. On Android Chrome, full screen sharing works the same as desktop. The same agent, the same knowledge pipeline, the same live voice interaction — regardless of the device.
+ExpertLens works on every device:
+
+- **Desktop (Chrome):** Full screen sharing via `getDisplayMedia()` — the coach sees your entire workspace.
+- **Android (Chrome):** Full screen sharing via `getDisplayMedia()` — same as desktop, works natively. Users can share any app window.
+- **iOS (Safari):** `getDisplayMedia` is not available on iOS. ExpertLens detects this at runtime and falls back to `getUserMedia()` with `facingMode: "environment"` — the rear camera captures your physical screen. Point your phone at your monitor, and the coach sees exactly what you're looking at.
+
+All three paths feed the same agent pipeline — same knowledge, same voice interaction, same Gemini Live session. No code changes on the agent side.
 
 ---
 
