@@ -38,6 +38,9 @@ async def summarize_session(coach_id: str, lines: list[str]) -> tuple[str, list[
                 },
                 "required": ["summary", "topics"],
             },
+            thinking_config=types.ThinkingConfig(
+                thinking_level=types.ThinkingLevel.MINIMAL,
+            ),
         ),
     )
     data = json.loads(response.text or "{}")
