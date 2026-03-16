@@ -1,6 +1,6 @@
 # ExpertLens
 
-Real-time multimodal AI coaching agent. Share your screen or point your camera, speak naturally, and get expert coaching for any software you control directly — Blender, Affinity Photo, Unreal Engine, mobile apps, and more.
+Real-time multimodal AI coaching agent. Share your screen or point your camera, speak naturally, and get expert coaching for any software you control directly; Blender, Affinity Photo, Unreal Engine, mobile apps, and more.
 
 Built on [Gemini Live API](https://ai.google.dev/gemini-api/docs/live) for the **Gemini Live Agent Challenge**.
 
@@ -10,7 +10,7 @@ Built on [Gemini Live API](https://ai.google.dev/gemini-api/docs/live) for the *
 
 ## The Idea
 
-AI can automate browser apps with Playwright. AI can run CLI tools directly. But for the rest of software — desktop apps, mobile apps, professional tools — the human is the only operator. There is no API. The keyboard, mouse, or touchscreen is the only way in.
+AI can automate browser apps with Playwright. AI can run CLI tools directly. But for the rest of software; desktop apps, mobile apps, professional tools. The human is the only operator. There is no API. The keyboard, mouse, or touchscreen is the only way in.
 
 ExpertLens coaches you inside that space. It watches what you're doing and advises you on how to do it better. You stay in control. The AI makes you faster.
 
@@ -22,7 +22,7 @@ ExpertLens coaches you inside that space. It watches what you're doing and advis
 1. Open ExpertLens in your browser alongside your app
 2. Click **Share Screen** and select your application window
 3. Enable your microphone
-4. Ask questions or work naturally — ExpertLens watches and coaches in real time
+4. Ask questions or work naturally. ExpertLens watches and coaches in real time
 
 **iOS / Mobile:**
 1. Open ExpertLens in Safari
