@@ -57,6 +57,10 @@ export async function createCoach(data: Partial<Coach>): Promise<Coach> {
   });
 }
 
+export async function getPreferences(): Promise<UserPreferences> {
+  return apiFetch<UserPreferences>("/preferences");
+}
+
 export async function updatePreferences(prefs: Partial<UserPreferences>): Promise<UserPreferences> {
   return apiFetch<UserPreferences>("/preferences", {
     method: "PUT",
