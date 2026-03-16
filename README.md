@@ -230,10 +230,10 @@ Log in, select a coach, start a session, share your screen, and speak naturally.
 uv run pytest tests/ -q
 
 # Frontend lint + typecheck
-cd app/web && bun run lint && bun run typecheck
+(cd app/web && bun run lint && bun run typecheck)
 
 # E2E tests (requires both services running)
-cd app/web && bun run test:e2e
+(cd app/web && bun run test:e2e)
 ```
 
 ---

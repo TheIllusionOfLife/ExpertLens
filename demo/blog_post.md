@@ -88,7 +88,7 @@ config = LiveConnectConfig(
 
 Problem: Gemini Live API WebSocket connections terminate after approximately 10 minutes. Cloud Run also has connection timeouts. A coaching session for learning a complex tool easily exceeds 10 minutes.
 
-Solution: `sessionResumption`. When the server receives a `GoAway` signal, it stores the session handle and reconnects within 2 minutes (the handle's validity window). The client sees a brief "Reconnecting..." status and the session picks up with full context.
+Solution: `sessionResumption`. When the server receives a `GoAway` signal, it stores the session handle (valid for up to 2 hours) and reconnects promptly. The client sees a brief "Reconnecting..." status and the session picks up with full context.
 
 ```python
 config = LiveConnectConfig(
