@@ -5,10 +5,13 @@ import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, Request, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
 
 from app.api.config import settings
+from app.api.rate_limit import limiter
 from app.api.routers.auth import router as auth_router
 from app.api.routers.coaches import router as coaches_router
 from app.api.routers.preferences import router as preferences_router
@@ -62,6 +65,14 @@ app = FastAPI(
     redoc_url=None if _in_cloud_run else "/redoc",
     openapi_url=None if _in_cloud_run else "/openapi.json",
 )
+
+app.state.limiter = limiter
+
+
+@app.exception_handler(RateLimitExceeded)
+async def _rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"})
+
 
 app.add_middleware(
     CORSMiddleware,

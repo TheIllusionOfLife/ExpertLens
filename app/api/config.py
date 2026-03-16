@@ -33,23 +33,34 @@ class Settings(BaseSettings):
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
+    _JWT_PLACEHOLDER_SUBSTRINGS = frozenset(
+        {"change-me", "changeme", "replace", "placeholder", "example", "your-secret", "fixme"}
+    )
+
     def validate_required(self) -> None:
         """Log a CRITICAL message and exit if required settings are invalid.
 
         Called from the lifespan context manager so Cloud Run's structured JSON
         logger is already configured when the message fires. Intentionally not a
-        Pydantic model_validator — a validator at construction time fires before
+        Pydantic model_validator: a validator at construction time fires before
         the JSON formatter is installed, producing a raw ValidationError instead
         of a structured CRITICAL log entry.
         """
         if not self.gemini_api_key:
-            logger.critical("GEMINI_API_KEY is not set or empty — cannot start server")
+            logger.critical("GEMINI_API_KEY is not set or empty. Cannot start server.")
             raise SystemExit(1)
         if not self.jwt_secret_key:
-            logger.critical("JWT_SECRET_KEY is not set or empty — cannot start server")
+            logger.critical("JWT_SECRET_KEY is not set or empty. Cannot start server.")
             raise SystemExit(1)
         if len(self.jwt_secret_key) < 32:
-            logger.critical("JWT_SECRET_KEY must be at least 32 characters — cannot start server")
+            logger.critical("JWT_SECRET_KEY must be at least 32 characters. Cannot start server.")
+            raise SystemExit(1)
+        key_lower = self.jwt_secret_key.lower()
+        if any(p in key_lower for p in self._JWT_PLACEHOLDER_SUBSTRINGS):
+            logger.critical(
+                "JWT_SECRET_KEY contains a known placeholder value. "
+                "Set a real secret before starting the server."
+            )
             raise SystemExit(1)
 
 

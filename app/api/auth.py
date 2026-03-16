@@ -27,9 +27,11 @@ class UserRecord(BaseModel):
     hashed_password: str
 
 
-class RegisterRequest(BaseModel):
-    username: str = Field(min_length=1)
-    password: str = Field(min_length=1)
+class _AuthRequest(BaseModel):
+    """Shared validation for auth requests."""
+
+    username: str = Field(min_length=1, max_length=50)
+    password: str = Field(min_length=1, max_length=200)
 
     @field_validator("username", mode="before")
     @classmethod
@@ -47,24 +49,17 @@ class RegisterRequest(BaseModel):
         return v  # do not strip/lowercase passwords
 
 
-class LoginRequest(BaseModel):
-    username: str = Field(min_length=1)
-    password: str = Field(min_length=1)
-
-    @field_validator("username", mode="before")
-    @classmethod
-    def normalize_username(cls, v: str) -> str:
-        v = v.strip().lower()
-        if not v:
-            raise ValueError("username must not be blank")
-        return v
-
+class RegisterRequest(_AuthRequest):
     @field_validator("password", mode="before")
     @classmethod
-    def validate_password(cls, v: str) -> str:
-        if not v.strip():
-            raise ValueError("password must not be blank")
-        return v  # do not strip/lowercase passwords
+    def validate_password_strength(cls, v: str) -> str:
+        if len(v.strip()) < 8:
+            raise ValueError("password must be at least 8 characters")
+        return v
+
+
+class LoginRequest(_AuthRequest):
+    pass
 
 
 class TokenResponse(BaseModel):

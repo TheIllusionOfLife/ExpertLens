@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import time
 
 from fastapi import WebSocket, WebSocketDisconnect
 
@@ -35,6 +36,11 @@ logger = logging.getLogger(__name__)
 
 _MAX_TURN_CHARS = 500  # truncate a single very long turn
 _MAX_TRANSCRIPT_TURNS = 30  # cap total turns stored
+
+# Per-user WebSocket session rate limiter: tracks recent session start timestamps.
+_SESSION_RATE_WINDOW = 60.0  # seconds
+_SESSION_RATE_LIMIT = 3  # max sessions per window
+_user_session_starts: dict[str, list[float]] = {}
 
 
 def _append_transcript(transcript: list[str], speaker: str, text: str) -> None:
@@ -121,6 +127,16 @@ class SessionHandler:
         else:
             await self._ws.close(code=4001, reason="Authentication required")
             return
+
+        # Per-user session rate limiting
+        now = time.monotonic()
+        starts = _user_session_starts.get(user_id, [])
+        starts = [t for t in starts if now - t < _SESSION_RATE_WINDOW]
+        if len(starts) >= _SESSION_RATE_LIMIT:
+            await self._ws.close(code=4029, reason="Rate limited")
+            return
+        starts.append(now)
+        _user_session_starts[user_id] = starts
 
         # Authorization: verify user can access this coach. Fail-closed on error.
         try:
