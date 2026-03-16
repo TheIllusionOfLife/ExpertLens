@@ -1,6 +1,6 @@
 <mxfile host="Electron" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.1 Chrome/142.0.7444.265 Electron/39.8.0 Safari/537.36" version="29.6.1">
   <diagram id="expertlens-arch" name="Page-1">
-    <mxGraphModel dx="1884" dy="912" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1200" background="#ffffff" math="0" shadow="0">
+    <mxGraphModel dx="1665" dy="912" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1200" background="#ffffff" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -22,7 +22,7 @@
         <mxCell id="mic" parent="1" style="strokeColor=#dddddd;fillColor=#ffffff;shadow=1;strokeWidth=1;rounded=1;absoluteArcSize=1;arcSize=2;html=1;fontSize=12;fontColor=#999999;whiteSpace=wrap;align=center;verticalAlign=middle;" value="&lt;font color=&quot;#333&quot;&gt;&lt;b&gt;AudioCapture&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;getUserMedia()&lt;br&gt;PCM 16-bit 16kHz&lt;/font&gt;" vertex="1">
           <mxGeometry height="70" width="115" x="205" y="320" as="geometry" />
         </mxCell>
-        <mxCell id="ws" parent="1" style="strokeColor=#dddddd;fillColor=#ffffff;shadow=1;strokeWidth=1;rounded=1;absoluteArcSize=1;arcSize=2;html=1;fontSize=12;fontColor=#999999;whiteSpace=wrap;align=center;verticalAlign=middle;" value="&lt;font color=&quot;#333&quot;&gt;&lt;b&gt;WsClient&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;WebSocket Manager&lt;br&gt;Binary tags: 0x01=IMG, 0x02=AUDIO&lt;br&gt;Session handle caching&lt;/font&gt;" vertex="1">
+        <mxCell id="ws" parent="1" style="strokeColor=#dddddd;fillColor=#ffffff;shadow=1;strokeWidth=1;rounded=1;absoluteArcSize=1;arcSize=2;html=1;fontSize=12;fontColor=#999999;whiteSpace=wrap;align=center;verticalAlign=middle;" value="&lt;font color=&quot;#333&quot;&gt;&lt;b&gt;WsClient&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;WebSocket Manager&lt;br&gt;Binary tags: 0x01=IMG, 0x02=AUDIO&lt;br&gt;Exponential backoff reconnect&lt;/font&gt;" vertex="1">
           <mxGeometry height="80" width="210" x="90" y="440" as="geometry" />
         </mxCell>
         <mxCell id="spk" parent="1" style="strokeColor=#dddddd;fillColor=#ffffff;shadow=1;strokeWidth=1;rounded=1;absoluteArcSize=1;arcSize=2;html=1;fontSize=12;fontColor=#999999;whiteSpace=wrap;align=center;verticalAlign=middle;" value="&lt;font color=&quot;#333&quot;&gt;&lt;b&gt;AudioPlayback&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;24kHz PCM&lt;/font&gt;" vertex="1">
@@ -43,7 +43,7 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="gcp" parent="1" style="fillColor=#F6F6F6;strokeColor=#E0E0E0;shadow=0;fontSize=15;align=left;spacing=12;fontColor=#717171;verticalAlign=top;spacingTop=-4;spacingLeft=44;html=1;container=0;rounded=1;arcSize=4;" value="&lt;b&gt;Google&lt;/b&gt; Cloud Platform" vertex="1">
-          <mxGeometry height="640" width="1230" x="400" y="90" as="geometry" />
+          <mxGeometry height="640" width="1240" x="400" y="90" as="geometry" />
         </mxCell>
         <mxCell id="gcp_logo" parent="1" style="shape=mxgraph.gcp2.google_cloud_platform;fillColor=#F6F6F6;strokeColor=none;" value="" vertex="1">
           <mxGeometry height="20" width="23" x="422" y="99" as="geometry">
@@ -53,7 +53,7 @@
         <mxCell id="cr" parent="1" style="rounded=1;absoluteArcSize=1;arcSize=4;html=1;strokeColor=#B3D4FC;fillColor=#E3F2FD;shadow=0;fontSize=13;fontColor=#1565C0;align=left;verticalAlign=top;spacing=12;spacingTop=-2;container=0;" value="Cloud Run&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;FastAPI + ADK Runtime&lt;/font&gt;" vertex="1">
           <mxGeometry height="370" width="640" x="430" y="140" as="geometry" />
         </mxCell>
-        <mxCell id="sh" parent="1" style="strokeColor=#dddddd;fillColor=#ffffff;shadow=1;strokeWidth=1;rounded=1;absoluteArcSize=1;arcSize=2;html=1;fontSize=12;fontColor=#999999;whiteSpace=wrap;align=center;verticalAlign=middle;" value="&lt;font color=&quot;#333&quot;&gt;&lt;b&gt;SessionHandler&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;WebSocket Proxy&lt;br&gt;JWT Auth / Barge-in&lt;br&gt;Transcript Collection&lt;/font&gt;" vertex="1">
+        <mxCell id="sh" parent="1" style="strokeColor=#dddddd;fillColor=#ffffff;shadow=1;strokeWidth=1;rounded=1;absoluteArcSize=1;arcSize=2;html=1;fontSize=12;fontColor=#999999;whiteSpace=wrap;align=center;verticalAlign=middle;" value="&lt;font color=&quot;#333&quot;&gt;&lt;b&gt;SessionHandler&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;WebSocket Proxy&lt;br&gt;JWT Auth / Pre-auth Timeout&lt;br&gt;Rate Limit / Frame Throttle&lt;/font&gt;" vertex="1">
           <mxGeometry height="80" width="170" x="460" y="200" as="geometry" />
         </mxCell>
         <mxCell id="sib" parent="1" style="strokeColor=#dddddd;fillColor=#FFF9C4;shadow=1;strokeWidth=1;rounded=1;absoluteArcSize=1;arcSize=2;html=1;fontSize=12;fontColor=#999999;whiteSpace=wrap;align=center;verticalAlign=middle;" value="&lt;font color=&quot;#333&quot;&gt;&lt;b&gt;System Instruction Builder&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Base + Coach Persona +&lt;br&gt;Preferences + Knowledge&lt;br&gt;(Context Stuffing, ~40k chars)&lt;/font&gt;" vertex="1">
@@ -62,13 +62,13 @@
         <mxCell id="gls" parent="1" style="strokeColor=#dddddd;fillColor=#ffffff;shadow=1;strokeWidth=1;rounded=1;absoluteArcSize=1;arcSize=2;html=1;fontSize=12;fontColor=#999999;whiteSpace=wrap;align=center;verticalAlign=middle;" value="&lt;font color=&quot;#333&quot;&gt;&lt;b&gt;GeminiLiveSession&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;google-genai SDK&lt;br&gt;SlidingWindow Compression&lt;br&gt;Session Resumption (2h handle)&lt;/font&gt;" vertex="1">
           <mxGeometry height="80" width="200" x="680" y="200" as="geometry" />
         </mxCell>
-        <mxCell id="rest" parent="1" style="strokeColor=#dddddd;fillColor=#ffffff;shadow=1;strokeWidth=1;rounded=1;absoluteArcSize=1;arcSize=2;html=1;fontSize=12;fontColor=#999999;whiteSpace=wrap;align=center;verticalAlign=middle;" value="&lt;font color=&quot;#333&quot;&gt;&lt;b&gt;REST API&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Coaches CRUD&lt;br&gt;Sessions / Preferences&lt;br&gt;Auth (JWT + Argon2)&lt;/font&gt;" vertex="1">
+        <mxCell id="rest" parent="1" style="strokeColor=#dddddd;fillColor=#ffffff;shadow=1;strokeWidth=1;rounded=1;absoluteArcSize=1;arcSize=2;html=1;fontSize=12;fontColor=#999999;whiteSpace=wrap;align=center;verticalAlign=middle;" value="&lt;font color=&quot;#333&quot;&gt;&lt;b&gt;REST API&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Coaches CRUD / Sessions / Prefs&lt;br&gt;Auth (JWT + Argon2)&lt;br&gt;Rate Limiting / Input Validation&lt;/font&gt;" vertex="1">
           <mxGeometry height="70" width="170" x="690" y="340" as="geometry" />
         </mxCell>
         <mxCell id="tools" parent="1" style="strokeColor=#dddddd;fillColor=#ffffff;shadow=1;strokeWidth=1;rounded=1;absoluteArcSize=1;arcSize=2;html=1;fontSize=12;fontColor=#999999;whiteSpace=wrap;align=center;verticalAlign=middle;" value="&lt;font color=&quot;#333&quot;&gt;&lt;b&gt;Agent Tools&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;get_coach_knowledge(topic)&lt;br&gt;get_user_preferences(user_id)&lt;br&gt;NON_BLOCKING / WHEN_IDLE&lt;/font&gt;" vertex="1">
           <mxGeometry height="80" width="190" x="920" y="200" as="geometry" />
         </mxCell>
-        <mxCell id="summ" parent="1" style="strokeColor=#dddddd;fillColor=#FFF9C4;shadow=1;strokeWidth=1;rounded=1;absoluteArcSize=1;arcSize=2;html=1;fontSize=12;fontColor=#999999;whiteSpace=wrap;align=center;verticalAlign=middle;" value="&lt;font color=&quot;#333&quot;&gt;&lt;b&gt;Session Summarizer&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;gemini-2.0-flash&lt;br&gt;Cross-session memory&lt;/font&gt;" vertex="1">
+        <mxCell id="summ" parent="1" style="strokeColor=#dddddd;fillColor=#FFF9C4;shadow=1;strokeWidth=1;rounded=1;absoluteArcSize=1;arcSize=2;html=1;fontSize=12;fontColor=#999999;whiteSpace=wrap;align=center;verticalAlign=middle;" value="&lt;font color=&quot;#333&quot;&gt;&lt;b&gt;Session Summarizer&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;gemini-3-flash-preview&lt;br&gt;Cross-session memory&lt;/font&gt;" vertex="1">
           <mxGeometry height="70" width="170" x="920" y="340" as="geometry" />
         </mxCell>
         <mxCell id="e_sh_gls" edge="1" parent="1" source="sh" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=blockThin;startFill=1;startSize=4;endArrow=blockThin;endFill=1;endSize=4;strokeColor=#1a73e8;strokeWidth=2;fontSize=10;fontColor=#1a73e8;" target="gls" value="&lt;font style=&quot;font-size:10px&quot;&gt;frames + audio&lt;/font&gt;">
@@ -119,7 +119,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="fs" parent="1" style="strokeColor=#dddddd;fillColor=#ffffff;shadow=1;strokeWidth=1;rounded=1;absoluteArcSize=1;arcSize=2;html=1;fontSize=12;fontColor=#999999;whiteSpace=wrap;align=center;verticalAlign=middle;shape=cylinder3;size=12;" value="&lt;font color=&quot;#333&quot;&gt;&lt;b&gt;Cloud Firestore&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;coaches / sessions&lt;br&gt;user_preferences&lt;br&gt;knowledge_chunks / users&lt;/font&gt;" vertex="1">
+        <mxCell id="fs" parent="1" style="strokeColor=#dddddd;fillColor=#ffffff;shadow=1;strokeWidth=1;rounded=1;absoluteArcSize=1;arcSize=2;html=1;fontSize=12;fontColor=#999999;whiteSpace=wrap;align=center;verticalAlign=middle;shape=cylinder3;size=12;" value="&lt;font color=&quot;#333&quot;&gt;&lt;b&gt;Cloud Firestore&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;coaches / sessions&lt;br&gt;user_preferences / users&lt;br&gt;usernames / knowledge_chunks&lt;/font&gt;" vertex="1">
           <mxGeometry height="120" width="190" x="1160" y="160" as="geometry" />
         </mxCell>
         <mxCell id="cs" parent="1" style="strokeColor=#dddddd;fillColor=#ffffff;shadow=1;strokeWidth=1;rounded=1;absoluteArcSize=1;arcSize=2;html=1;fontSize=12;fontColor=#999999;whiteSpace=wrap;align=center;verticalAlign=middle;shape=cylinder3;size=12;" value="&lt;font color=&quot;#333&quot;&gt;&lt;b&gt;Cloud Storage&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Curated docs&lt;br&gt;Demo assets&lt;/font&gt;" vertex="1">
@@ -181,7 +181,7 @@
         <mxCell id="note3" parent="1" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontColor=#666666;spacing=6;" value="&lt;font style=&quot;font-size:11px;color:#F9A825&quot;&gt;&lt;b&gt;Two-Layer Design&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;1. Coach Builder: generates expert coaches&lt;br&gt;   (knowledge + persona + style)&lt;br&gt;2. Live Coaching Runtime: real-time&lt;br&gt;   screen + voice via Gemini Live API&lt;/font&gt;" vertex="1">
           <mxGeometry height="90" width="280" x="1400" y="370" as="geometry" />
         </mxCell>
-        <mxCell id="note4" parent="1" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontColor=#666666;spacing=6;" value="&lt;font style=&quot;font-size:11px;color:#7B1FA2&quot;&gt;&lt;b&gt;AI Models Used&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Live: gemini-2.5-flash-native-audio-latest&lt;br&gt;Knowledge: gemini-3-flash-preview + Search&lt;br&gt;Summary: gemini-2.0-flash&lt;/font&gt;" vertex="1">
+        <mxCell id="note4" parent="1" style="text;html=1;align=left;verticalAlign=middle;strokeColor=none;fillColor=none;fontColor=#666666;spacing=6;" value="&lt;font style=&quot;font-size:11px;color:#7B1FA2&quot;&gt;&lt;b&gt;AI Models Used&lt;/b&gt;&lt;/font&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Live: gemini-2.5-flash-native-audio-latest&lt;br&gt;Knowledge: gemini-3-flash-preview + Search&lt;br&gt;Summary: gemini-3-flash-preview (minimal thinking)&lt;/font&gt;" vertex="1">
           <mxGeometry height="70" width="280" x="1400" y="490" as="geometry" />
         </mxCell>
         <mxCell id="e_kb_cs" edge="1" parent="1" source="kb" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=blockThin;endFill=1;endSize=3;strokeColor=#1a73e8;strokeWidth=1;fontSize=10;fontColor=#999999;exitX=1;exitY=0.7;entryX=0;entryY=0.5;" target="cs" value="&lt;font style=&quot;font-size:10px&quot;&gt;curated docs&lt;/font&gt;">
