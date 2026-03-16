@@ -209,9 +209,11 @@ demo/             — Video script, blog post, submission docs
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `GEMINI_API_KEY` | Yes | Gemini API key from AI Studio |
+| `JWT_SECRET_KEY` | Yes | Secret for signing JWTs (min 32 chars, no placeholders) |
 | `GCP_PROJECT_ID` | No | GCP project ID (Firestore; auto-detected on Cloud Run) |
 | `GEMINI_LIVE_MODEL` | No | Defaults to `gemini-2.5-flash-native-audio-latest` |
 | `CORS_ORIGINS` | No | Defaults to `http://localhost:3000` |
+| `ENABLE_API_DOCS` | No | Set to `true` to enable `/docs` and `/redoc` endpoints |
 
 ---
 

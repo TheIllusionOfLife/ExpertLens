@@ -19,6 +19,16 @@ JPEG_MIME = "image/jpeg"
 MAX_RECONNECT_ATTEMPTS = 3
 RECONNECT_DELAY_SECONDS = 1.0
 
+# Module-level cached Gemini client to avoid re-creating gRPC channels per session.
+_gemini_client: genai.Client | None = None
+
+
+def _get_gemini_client() -> genai.Client:
+    global _gemini_client
+    if _gemini_client is None:
+        _gemini_client = genai.Client(api_key=settings.gemini_api_key)
+    return _gemini_client
+
 
 @dataclass
 class SessionState:
@@ -66,7 +76,7 @@ class GeminiLiveSession:
         self._on_text_response = on_text_response
         self._on_input_text = on_input_text
 
-        self._client = genai.Client(api_key=settings.gemini_api_key)
+        self._client = _get_gemini_client()
         self._session: Any = None
         self._state = SessionState()
         self._send_lock = asyncio.Lock()
@@ -244,7 +254,7 @@ class GeminiLiveSession:
             if hasattr(update, "new_handle") and update.new_handle:
                 new_handle: str = update.new_handle
                 self._state.handle = new_handle
-                logger.debug(f"Session handle updated: {new_handle[:8]}...")
+                logger.debug("Session handle updated: %.8s...", new_handle)
                 if self._on_session_handle:
                     self._on_session_handle(new_handle)
 

@@ -22,11 +22,15 @@ export interface WsClientOptions {
   onStatusChange: (status: ConnectionStatus) => void;
 }
 
+const RECONNECT_BASE_MS = 2000;
+const RECONNECT_MAX_MS = 30000;
+
 export class WsClient {
   private ws: WebSocket | null = null;
   private options: WsClientOptions;
   private stopped = false;
   private _currentHandle: string | undefined;
+  private _reconnectAttempt = 0;
 
   constructor(options: WsClientOptions) {
     this.options = options;
@@ -73,11 +77,16 @@ export class WsClient {
         this.stopped = true;
         this.options.onStatusChange("error");
       } else {
-        // Unexpected close — auto-reconnect after 2s
+        // Unexpected close — auto-reconnect with exponential backoff
         this.options.onStatusChange("reconnecting");
+        const delay = Math.min(
+          RECONNECT_BASE_MS * 2 ** this._reconnectAttempt,
+          RECONNECT_MAX_MS,
+        );
+        this._reconnectAttempt++;
         setTimeout(() => {
           if (!this.stopped) this.connect();
-        }, 2000);
+        }, delay);
       }
     };
 
@@ -95,6 +104,7 @@ export class WsClient {
       }
       this.options.onMessage(msg);
       if (msg.type === "session_started" || msg.type === "reconnected") {
+        this._reconnectAttempt = 0;
         this.options.onStatusChange("connected");
       } else if (msg.type === "reconnecting") {
         this.options.onStatusChange("reconnecting");

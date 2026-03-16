@@ -44,7 +44,9 @@ PREF_INSTRUCTIONS: dict[str, dict[str, str]] = {
 
 # Context budget: system instruction knowledge capped to preserve token budget
 # for image frames + conversation. 128k total; ~8 000 chars (~2 000 tokens at 4 chars/token) for knowledge.
-MAX_KNOWLEDGE_CHARS = 40_000  # was 8_000 — see context budget analysis in CLAUDE.md
+# 40k chars (~10k tokens at 4 chars/token) balances knowledge density vs leaving
+# headroom in the 128k-token context for image frames + conversation history.
+MAX_KNOWLEDGE_CHARS = 40_000
 
 
 def build_system_instruction(

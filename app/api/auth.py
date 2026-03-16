@@ -126,8 +126,8 @@ async def create_user(username: str, password: str) -> UserRecord:
 
     # Atomically reserve the username. Fails with AlreadyExists if taken.
     try:
-        await client.collection(USERNAMES_COLLECTION).document(username).create(
-            {"user_id": user_id}
+        await (
+            client.collection(USERNAMES_COLLECTION).document(username).create({"user_id": user_id})
         )
     except AlreadyExists:
         raise HTTPException(status_code=409, detail="Username already taken")

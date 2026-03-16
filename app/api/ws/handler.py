@@ -34,8 +34,11 @@ from app.api.ws.protocol import (
 
 logger = logging.getLogger(__name__)
 
-_MAX_TURN_CHARS = 500  # truncate a single very long turn
-_MAX_TRANSCRIPT_TURNS = 30  # cap total turns stored
+# Transcript limits: 500 chars/turn keeps individual entries readable in summaries.
+# 30 turns total (~15 exchanges) is enough context for the summarizer without
+# exceeding Gemini's token budget during the end-of-session summary call.
+_MAX_TURN_CHARS = 500
+_MAX_TRANSCRIPT_TURNS = 30
 
 # Per-user WebSocket session rate limiter: tracks recent session start timestamps.
 _SESSION_RATE_WINDOW = 60.0  # seconds
@@ -281,7 +284,7 @@ class SessionHandler:
                 logger.warning(f"Audio frame too large ({len(payload)} bytes), dropping")
                 return
         else:
-            logger.debug(f"Unknown media tag: {tag:#04x}")
+            logger.debug("Unknown media tag: %#04x", tag)
             return
 
         if not self._gemini or not self._gemini.is_connected:
@@ -323,7 +326,7 @@ class SessionHandler:
                 else:
                     await self._ws.send_bytes(payload)  # type: ignore[arg-type]
             except Exception as e:
-                logger.debug(f"WebSocket send error: {e}")
+                logger.debug("WebSocket send error: %s", e)
 
     def _notify_session_handle(self, handle: str) -> None:
         """Emit the latest session handle to the client for cross-reconnect persistence."""
