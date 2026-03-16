@@ -137,10 +137,14 @@ class SessionHandler:
         starts = _user_session_starts.get(user_id, [])
         starts = [t for t in starts if now - t < _SESSION_RATE_WINDOW]
         if len(starts) >= _SESSION_RATE_LIMIT:
+            _user_session_starts[user_id] = starts  # persist pruned list
             await self._ws.close(code=4029, reason="Rate limited")
             return
         starts.append(now)
-        _user_session_starts[user_id] = starts
+        if starts:
+            _user_session_starts[user_id] = starts
+        else:
+            _user_session_starts.pop(user_id, None)  # evict empty keys
 
         # Authorization: verify user can access this coach. Fail-closed on error.
         try:

@@ -117,18 +117,19 @@ async def get_user_by_username(username: str) -> UserRecord | None:
 async def create_user(username: str, password: str) -> UserRecord:
     """Create a user with atomic username uniqueness via a reservation document.
 
-    The usernames/{username} doc is created atomically. If it already exists,
-    Firestore raises AlreadyExists, guaranteeing no two users share a username
-    even under concurrent registration.
+    Both the username reservation and user document are written atomically.
+    If the username is already taken, Firestore raises AlreadyExists on the
+    reservation create(), guaranteeing no two users share a username even
+    under concurrent registration. If the user doc write fails, the reservation
+    is cleaned up to prevent orphaned usernames.
     """
     client = get_client()
     user_id = str(uuid.uuid4())
 
     # Atomically reserve the username. Fails with AlreadyExists if taken.
+    username_ref = client.collection(USERNAMES_COLLECTION).document(username)
     try:
-        await (
-            client.collection(USERNAMES_COLLECTION).document(username).create({"user_id": user_id})
-        )
+        await username_ref.create({"user_id": user_id})
     except AlreadyExists:
         raise HTTPException(status_code=409, detail="Username already taken")
 
@@ -137,7 +138,12 @@ async def create_user(username: str, password: str) -> UserRecord:
         username=username,
         hashed_password=hash_password(password),
     )
-    await client.collection(USERS_COLLECTION).document(user_id).set(record.model_dump())
+    try:
+        await client.collection(USERS_COLLECTION).document(user_id).set(record.model_dump())
+    except Exception:
+        # Roll back the username reservation to prevent orphaned usernames
+        await username_ref.delete()
+        raise
     return record
 
 
