@@ -100,13 +100,17 @@ def build_system_instruction(
     # Curated knowledge snippets (budget accumulation to avoid loading excess data)
     if knowledge_snippets:
         combined = ""
+        _truncation_marker = "\n[...additional knowledge via tool]"
         for snippet in knowledge_snippets:
-            if combined and len(combined) + 2 + len(snippet) > MAX_KNOWLEDGE_CHARS:
-                combined += "\n[...additional knowledge via tool]"
+            separator = "\n\n" if combined else ""
+            available = MAX_KNOWLEDGE_CHARS - len(combined) - len(separator)
+            if available <= 0:
+                combined += _truncation_marker
                 break
-            if combined:
-                combined += "\n\n"
-            combined += snippet
+            if len(snippet) > available:
+                combined += separator + snippet[:available] + _truncation_marker
+                break
+            combined += separator + snippet
         if combined:
             parts.append(f"## Knowledge Reference\n{combined}")
 

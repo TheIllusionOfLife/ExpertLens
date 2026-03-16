@@ -4,6 +4,7 @@ import asyncio
 import logging
 import time
 
+from cachetools import TTLCache
 from fastapi import WebSocket, WebSocketDisconnect
 
 from agent.memory.summarize import summarize_session
@@ -41,9 +42,12 @@ _MAX_TURN_CHARS = 500
 _MAX_TRANSCRIPT_TURNS = 30
 
 # Per-user WebSocket session rate limiter: tracks recent session start timestamps.
+# TTLCache auto-evicts entries after _SESSION_RATE_WINDOW seconds and caps at 10k users.
 _SESSION_RATE_WINDOW = 60.0  # seconds
 _SESSION_RATE_LIMIT = 3  # max sessions per window
-_user_session_starts: dict[str, list[float]] = {}
+_user_session_starts: TTLCache[str, list[float]] = TTLCache(
+    maxsize=10_000, ttl=_SESSION_RATE_WINDOW
+)
 
 
 def _append_transcript(transcript: list[str], speaker: str, text: str) -> None:
@@ -104,12 +108,16 @@ class SessionHandler:
             await self._cleanup()
 
     async def _wait_for_start(self) -> None:
-        """Wait for start_session control message, open Gemini session, confirm to client."""
+        """Wait for start_session control message, open Gemini session, confirm to client.
+
+        Raises WebSocketDisconnect on timeout or auth/rate-limit rejection so
+        run() does not proceed to _run_media_loop() on a closed socket.
+        """
         try:
             raw = await asyncio.wait_for(self._ws.receive_text(), timeout=10.0)
         except TimeoutError:
             await self._ws.close(code=4008, reason="Start message timeout")
-            return
+            raise WebSocketDisconnect(code=4008)
         try:
             msg = StartSessionMessage.model_validate_json(raw)
         except Exception as e:
@@ -127,24 +135,21 @@ class SessionHandler:
                 user_id = payload.sub
             except Exception:
                 await self._ws.close(code=4001, reason="Invalid token")
-                return
+                raise WebSocketDisconnect(code=4001)
         else:
             await self._ws.close(code=4001, reason="Authentication required")
-            return
+            raise WebSocketDisconnect(code=4001)
 
-        # Per-user session rate limiting
+        # Per-user session rate limiting (TTLCache auto-evicts stale entries)
         now = time.monotonic()
         starts = _user_session_starts.get(user_id, [])
         starts = [t for t in starts if now - t < _SESSION_RATE_WINDOW]
         if len(starts) >= _SESSION_RATE_LIMIT:
-            _user_session_starts[user_id] = starts  # persist pruned list
-            await self._ws.close(code=4029, reason="Rate limited")
-            return
-        starts.append(now)
-        if starts:
             _user_session_starts[user_id] = starts
-        else:
-            _user_session_starts.pop(user_id, None)  # evict empty keys
+            await self._ws.close(code=4029, reason="Rate limited")
+            raise WebSocketDisconnect(code=4029)
+        starts.append(now)
+        _user_session_starts[user_id] = starts
 
         # Authorization: verify user can access this coach. Fail-closed on error.
         try:
@@ -156,11 +161,11 @@ class SessionHandler:
 
         if not coach:
             await self._ws.close(code=4003, reason="Coach not found")
-            return
+            raise WebSocketDisconnect(code=4003)
 
         if coach.owner_id is not None and coach.owner_id != user_id:
             await self._ws.close(code=4003, reason="Not authorized")
-            return
+            raise WebSocketDisconnect(code=4003)
 
         # Non-blocking knowledge status checks (informational only)
         if coach.knowledge_status == "building":
