@@ -1,5 +1,6 @@
 """JWT authentication: token creation/validation, password hashing, user management."""
 
+import logging
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -7,11 +8,14 @@ import jwt
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from google.api_core.exceptions import AlreadyExists
+from google.cloud.firestore_v1.base_query import FieldFilter
 from pwdlib import PasswordHash
 from pydantic import BaseModel, Field, field_validator
 
 from app.api.config import settings
 from app.api.db.firestore import USERNAMES_COLLECTION, USERS_COLLECTION, get_client
+
+logger = logging.getLogger(__name__)
 
 _ph = PasswordHash.recommended()
 _bearer = HTTPBearer(auto_error=False)
@@ -99,19 +103,46 @@ def decode_token(token: str) -> TokenPayload:
 
 
 async def get_user_by_username(username: str) -> UserRecord | None:
-    """Look up a user via the usernames reservation collection, then fetch the full record."""
+    """Look up a user via the usernames reservation collection, then fetch the full record.
+
+    Falls back to querying the users collection directly for pre-migration users
+    and backfills the usernames reservation doc on first successful fallback lookup.
+    """
     client = get_client()
+
+    # Fast path: look up via usernames reservation collection
     reservation = await client.collection(USERNAMES_COLLECTION).document(username).get()
-    if not reservation.exists:
-        return None
-    data = reservation.to_dict()
-    if not data or "user_id" not in data:
-        return None
-    user_doc = await client.collection(USERS_COLLECTION).document(data["user_id"]).get()
-    if not user_doc.exists:
-        return None
-    user_data = user_doc.to_dict()
-    return UserRecord(**user_data) if user_data else None
+    if reservation.exists:
+        data = reservation.to_dict()
+        if data and "user_id" in data:
+            user_doc = await client.collection(USERS_COLLECTION).document(data["user_id"]).get()
+            if user_doc.exists:
+                user_data = user_doc.to_dict()
+                if user_data:
+                    return UserRecord(**user_data)
+
+    # Fallback: query users collection directly (pre-migration users)
+    docs = (
+        client.collection(USERS_COLLECTION)
+        .where(filter=FieldFilter("username", "==", username))
+        .stream()
+    )
+    async for doc in docs:
+        user_data = doc.to_dict()
+        if user_data:
+            record = UserRecord(**user_data)
+            # Backfill the usernames reservation for future fast-path lookups
+            try:
+                await (
+                    client.collection(USERNAMES_COLLECTION)
+                    .document(username)
+                    .set({"user_id": record.user_id})
+                )
+            except Exception as e:
+                logger.warning("Failed to backfill username reservation for %s: %s", username, e)
+            return record
+
+    return None
 
 
 async def create_user(username: str, password: str) -> UserRecord:
