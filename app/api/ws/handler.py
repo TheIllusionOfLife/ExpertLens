@@ -312,7 +312,7 @@ class SessionHandler:
     def _notify_text_response(self, text: str, finished: bool) -> None:
         """Called by GeminiSession when output transcription text arrives."""
         if not self._current_turn_text and text.strip():
-            logger.debug(f"Output transcription started: {text[:80]!r}")
+            logger.debug("Output transcription started (chunk_len=%d)", len(text))
         self._current_turn_text += text
         if finished:
             if self._current_turn_text.strip():
@@ -400,6 +400,8 @@ class SessionHandler:
             if self._current_turn_text.strip():
                 turn = self._current_turn_text[:_MAX_TURN_CHARS]
                 self._transcript.append(f"Coach: {turn}")
+                if len(self._transcript) > _MAX_TRANSCRIPT_TURNS:
+                    self._transcript.pop(0)
                 self._current_turn_text = ""
 
             summary, last_topics = "", []

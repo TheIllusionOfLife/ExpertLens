@@ -62,12 +62,19 @@ export function PreferencesForm({ coachId, initial }: Props) {
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-fetch when coach changes
   useEffect(() => {
+    let active = true;
     getPreferences()
-      .then((saved) => setPrefs(saved))
-      .catch(() => {
-        // Fall back to coach defaults (already set via initial)
+      .then((saved) => {
+        if (active) setPrefs(saved);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch preferences:", err);
+        if (active) setPrefs(initial);
       });
-  }, [coachId]);
+    return () => {
+      active = false;
+    };
+  }, [coachId, initial]);
 
   async function handleSave() {
     setSaving(true);
