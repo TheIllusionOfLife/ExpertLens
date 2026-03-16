@@ -10,10 +10,10 @@ export const ScenePrefsMemory: React.FC = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: "#0f0f1a", opacity }}>
       <Sequence from={0} durationInFrames={900} layout="none"><ActLabel text="Preferences + Memory" /></Sequence>
-      <AbsoluteFill style={{ display: "flex", padding: "100px 100px", gap: 60 }}>
+      <AbsoluteFill style={{ display: "flex", padding: "90px 80px 120px", gap: 48 }}>
         {/* Left: Preferences */}
         <div style={{ flex: 1 }}>
-          <h2 style={{ fontSize: 40, fontWeight: 700, color: "#fff", fontFamily: font, marginBottom: 32 }}>Personalized Coaching</h2>
+          <h2 style={{ fontSize: 38, fontWeight: 700, color: "#fff", fontFamily: font, marginBottom: 28 }}>Personalized Coaching</h2>
           {[
             { label: "Interaction Style", desc: "Shortcuts-first vs mouse/menu guided", color: "#7c6af7" },
             { label: "Coaching Tone", desc: "Concise expert vs calm mentor vs enthusiastic", color: "#4285f4" },
@@ -33,9 +33,10 @@ export const ScenePrefsMemory: React.FC = () => {
             );
           })}
         </div>
-        {/* Right: Memory */}
-        <div style={{ flex: 1 }}>
-          <h2 style={{ fontSize: 40, fontWeight: 700, color: "#fff", fontFamily: font, marginBottom: 32 }}>Cross-Session Memory</h2>
+        {/* Right: Memory + Knowledge */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 24 }}>
+          <div>
+          <h2 style={{ fontSize: 38, fontWeight: 700, color: "#fff", fontFamily: font, marginBottom: 28 }}>Cross-Session Memory</h2>
           {[
             { step: "1", text: "Session ends", detail: "Coach transcript accumulated during session" },
             { step: "2", text: "Gemini summarizes", detail: "Structured JSON summary via gemini-2.0-flash" },
@@ -54,8 +55,25 @@ export const ScenePrefsMemory: React.FC = () => {
               </div>
             );
           })}
+          </div>
+          <UpToDateKnowledge frame={frame} />
         </div>
       </AbsoluteFill>
     </AbsoluteFill>
+  );
+};
+
+const UpToDateKnowledge: React.FC<{ frame: number }> = ({ frame }) => {
+  const fadeIn = interpolate(frame, [390, 410], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  return (
+    <div style={{ opacity: fadeIn, background: "rgba(52,168,83,0.1)", border: "1px solid rgba(52,168,83,0.3)", borderRadius: 14, padding: "16px 20px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+        <div style={{ fontSize: 18 }}>🔍</div>
+        <div style={{ fontSize: 20, fontWeight: 700, color: "#34a853", fontFamily: font }}>Up-to-Date Knowledge</div>
+      </div>
+      <div style={{ fontSize: 15, color: "rgba(255,255,255,0.7)", fontFamily: font, lineHeight: 1.5 }}>
+        Google Search grounding ensures coaches have the latest shortcuts, UI changes, and workflows. Critical for guiding ever-evolving desktop UIs.
+      </div>
+    </div>
   );
 };

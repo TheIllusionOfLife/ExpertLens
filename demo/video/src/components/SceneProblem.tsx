@@ -3,8 +3,8 @@ import { ActLabel } from "./ActLabel";
 
 const APPS = [
   { category: "Browser Apps", examples: "Figma, Canva, Google Docs", aiAction: "Automate with Playwright", color: "#34a853", icon: "🌐" },
-  { category: "CLI Tools", examples: "git, ffmpeg, AWS CLI", aiAction: "Call directly via tool use", color: "#4285f4", icon: "⌨️" },
-  { category: "Desktop GUI Apps", examples: "Blender, Affinity Photo, Unreal Engine", aiAction: "No API. Coaching is the only option.", color: "#7c6af7", icon: "🖥️", highlight: true },
+  { category: "CLI Tools", examples: "git, ffmpeg, Google Cloud CLI", aiAction: "Call directly via tool use", color: "#4285f4", icon: "⌨️" },
+  { category: "Desktop GUI Apps", examples: "Blender, Affinity, Unreal Engine", aiAction: "No API. Coaching is the only option.", color: "#7c6af7", icon: "🖥️", highlight: true },
 ];
 
 export const SceneProblem: React.FC = () => {
@@ -16,7 +16,7 @@ export const SceneProblem: React.FC = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: "#0f0f1a" }}>
       <Sequence from={0} durationInFrames={900} layout="none"><ActLabel text="The Problem" /></Sequence>
-      <AbsoluteFill style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", paddingTop: 120 }}>
+      <AbsoluteFill style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", paddingBottom: 160 }}>
         <h1 style={{ fontSize: 64, fontWeight: 800, color: "#ffffff", fontFamily: "system-ui, sans-serif", textAlign: "center", lineHeight: 1.15, maxWidth: 1400, margin: 0, opacity: titleOpacity, transform: `translateY(${titleY}px)` }}>
           Professional software is hard.{"\n"}AI <span style={{ color: "#7c6af7" }}>can't control it</span> for you.
         </h1>
@@ -35,7 +35,7 @@ export const SceneProblem: React.FC = () => {
 };
 
 const ComparisonCards: React.FC<{ frame: number }> = ({ frame }) => (
-  <div style={{ position: "absolute", bottom: 140, left: 100, right: 100, display: "flex", gap: 32 }}>
+  <div style={{ position: "absolute", bottom: 180, left: 100, right: 100, display: "flex", gap: 32 }}>
     {APPS.map((app, i) => {
       const localFrame = Math.max(0, frame - i * 15);
       const opacity = interpolate(localFrame, [0, 20], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
@@ -55,7 +55,7 @@ const ComparisonCards: React.FC<{ frame: number }> = ({ frame }) => (
 const Punchline: React.FC<{ frame: number }> = ({ frame }) => {
   const opacity = interpolate(frame, [0, 20], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   return (
-    <div style={{ position: "absolute", bottom: 60, left: 0, right: 0, textAlign: "center", opacity }}>
+    <div style={{ position: "absolute", bottom: 100, left: 0, right: 0, textAlign: "center", opacity }}>
       <p style={{ fontSize: 22, color: "#7c6af7", fontWeight: 600, fontFamily: "system-ui, sans-serif", letterSpacing: "0.05em" }}>ExpertLens is built for this gap.</p>
     </div>
   );

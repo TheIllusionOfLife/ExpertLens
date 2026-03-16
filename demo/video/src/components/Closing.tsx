@@ -15,11 +15,6 @@ export const Closing: React.FC = () => {
     config: { damping: 200 },
   });
 
-  const urlOpacity = interpolate(frame, [20, 40], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-
   return (
     <AbsoluteFill
       style={{
@@ -59,19 +54,6 @@ export const Closing: React.FC = () => {
           }}
         >
           Expert coaching for the apps AI cannot automate.
-        </p>
-      </div>
-
-      <div style={{ opacity: urlOpacity, marginTop: 16 }}>
-        <p
-          style={{
-            fontSize: 20,
-            color: "#7c6af7",
-            fontFamily: "system-ui, -apple-system, sans-serif",
-            fontWeight: 500,
-          }}
-        >
-          expertlens-frontend-1085534867079.us-central1.run.app
         </p>
       </div>
     </AbsoluteFill>
