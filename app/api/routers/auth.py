@@ -1,6 +1,6 @@
 """Auth routes: register and login."""
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 
 from app.api.auth import (
     LoginRequest,
@@ -12,6 +12,7 @@ from app.api.auth import (
     hash_password,
     verify_password,
 )
+from app.api.rate_limit import limiter
 
 # Precomputed once to equalize response time regardless of whether username exists.
 # This prevents username enumeration via timing side-channel on the login endpoint.
@@ -21,7 +22,8 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/register", response_model=TokenResponse, status_code=201)
-async def register(body: RegisterRequest) -> TokenResponse:
+@limiter.limit("3/minute")
+async def register(request: Request, body: RegisterRequest) -> TokenResponse:
     user = await create_user(body.username, body.password)
     token = create_access_token(user.user_id)
     return TokenResponse(
@@ -32,7 +34,8 @@ async def register(body: RegisterRequest) -> TokenResponse:
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(body: LoginRequest) -> TokenResponse:
+@limiter.limit("5/minute")
+async def login(request: Request, body: LoginRequest) -> TokenResponse:
     user = await get_user_by_username(body.username)
     # Always call verify_password (even on unknown username) to equalize response time
     # and prevent username enumeration via timing side-channel.

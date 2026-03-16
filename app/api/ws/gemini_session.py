@@ -10,6 +10,7 @@ from google import genai
 from google.genai import types
 
 from app.api.config import settings
+from app.api.db.coach_repo import make_coach_slug
 from app.api.ws.audio import INPUT_MIME
 
 logger = logging.getLogger(__name__)
@@ -17,6 +18,16 @@ logger = logging.getLogger(__name__)
 JPEG_MIME = "image/jpeg"
 MAX_RECONNECT_ATTEMPTS = 3
 RECONNECT_DELAY_SECONDS = 1.0
+
+# Module-level cached Gemini client to avoid re-creating gRPC channels per session.
+_gemini_client: genai.Client | None = None
+
+
+def _get_gemini_client() -> genai.Client:
+    global _gemini_client
+    if _gemini_client is None:
+        _gemini_client = genai.Client(api_key=settings.gemini_api_key)
+    return _gemini_client
 
 
 @dataclass
@@ -65,7 +76,7 @@ class GeminiLiveSession:
         self._on_text_response = on_text_response
         self._on_input_text = on_input_text
 
-        self._client = genai.Client(api_key=settings.gemini_api_key)
+        self._client = _get_gemini_client()
         self._session: Any = None
         self._state = SessionState()
         self._send_lock = asyncio.Lock()
@@ -243,7 +254,7 @@ class GeminiLiveSession:
             if hasattr(update, "new_handle") and update.new_handle:
                 new_handle: str = update.new_handle
                 self._state.handle = new_handle
-                logger.debug(f"Session handle updated: {new_handle[:8]}...")
+                logger.debug("Session handle updated: %.8s...", new_handle)
                 if self._on_session_handle:
                     self._on_session_handle(new_handle)
 
@@ -293,8 +304,8 @@ class GeminiLiveSession:
         for fc in function_calls:
             args = fc.args or {}
             if fc.name == "get_coach_knowledge":
-                # Normalize to canonical software_name (same rules as base.py prompt builder)
-                software_name = self._coach_id.strip().lower().replace("-", "_").replace(" ", "_")
+                # Normalize to canonical software_name using shared slug logic
+                software_name = make_coach_slug(self._coach_id)
                 result = await get_coach_knowledge(
                     software_name=software_name,
                     topic=args.get("topic", ""),

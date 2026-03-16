@@ -19,6 +19,7 @@ export interface StartSessionMessage {
   type: "start_session";
   coach_id: string;
   session_handle?: string;
+  token?: string;
 }
 
 export interface EndSessionMessage {

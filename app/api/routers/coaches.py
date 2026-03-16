@@ -62,6 +62,12 @@ async def create_coach_endpoint(
             slug = make_coach_slug(data.software_name)  # re-derive from canonical name
         except ValueError as e:
             raise HTTPException(status_code=422, detail=str(e))
+    # Per-user coach quota: max 10 custom coaches
+    existing = await list_coaches(user_id=current_user.sub)
+    user_coaches = [c for c in existing if c.owner_id == current_user.sub]
+    if len(user_coaches) >= 10:
+        raise HTTPException(status_code=429, detail="Coach limit reached (max 10 per user)")
+
     coach = await create_coach(data, owner_id=current_user.sub)
     if not coach:
         raise HTTPException(

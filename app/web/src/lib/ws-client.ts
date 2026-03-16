@@ -22,11 +22,16 @@ export interface WsClientOptions {
   onStatusChange: (status: ConnectionStatus) => void;
 }
 
+const RECONNECT_BASE_MS = 2000;
+const RECONNECT_MAX_MS = 30000;
+
 export class WsClient {
   private ws: WebSocket | null = null;
   private options: WsClientOptions;
   private stopped = false;
   private _currentHandle: string | undefined;
+  private _reconnectAttempt = 0;
+  private _reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(options: WsClientOptions) {
     this.options = options;
@@ -38,6 +43,10 @@ export class WsClient {
   }
 
   connect(): void {
+    if (this._reconnectTimer) {
+      clearTimeout(this._reconnectTimer);
+      this._reconnectTimer = null;
+    }
     if (this.ws) this.disconnect();
     this.stopped = false;
     this.options.onStatusChange("connecting");
@@ -73,18 +82,20 @@ export class WsClient {
         this.stopped = true;
         this.options.onStatusChange("error");
       } else {
-        // Unexpected close — auto-reconnect after 2s
+        // Unexpected close — auto-reconnect with exponential backoff
         this.options.onStatusChange("reconnecting");
-        setTimeout(() => {
+        const delay = Math.min(RECONNECT_BASE_MS * 2 ** this._reconnectAttempt, RECONNECT_MAX_MS);
+        this._reconnectAttempt++;
+        this._reconnectTimer = setTimeout(() => {
+          this._reconnectTimer = null;
           if (!this.stopped) this.connect();
-        }, 2000);
+        }, delay);
       }
     };
 
-    this.ws.onerror = () => {
-      this.stopped = true; // prevent onclose from triggering reconnect loop
-      this.options.onStatusChange("error");
-    };
+    // Let transport errors fall through to onclose for reconnect handling.
+    // Do NOT set stopped=true here: that would block reconnects on transient failures.
+    this.ws.onerror = () => {};
   }
 
   private _handleText(raw: string): void {
@@ -95,6 +106,7 @@ export class WsClient {
       }
       this.options.onMessage(msg);
       if (msg.type === "session_started" || msg.type === "reconnected") {
+        this._reconnectAttempt = 0;
         this.options.onStatusChange("connected");
       } else if (msg.type === "reconnecting") {
         this.options.onStatusChange("reconnecting");
@@ -142,6 +154,10 @@ export class WsClient {
 
   disconnect(): void {
     this.stopped = true;
+    if (this._reconnectTimer) {
+      clearTimeout(this._reconnectTimer);
+      this._reconnectTimer = null;
+    }
     if (this.ws) {
       if (this.ws.readyState === WebSocket.OPEN) {
         this.sendText({ type: "end_session" });

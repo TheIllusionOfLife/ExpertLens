@@ -6,6 +6,7 @@ from agent.prompts.templates.affinity import AFFINITY_PROMPT
 from agent.prompts.templates.blender import BLENDER_PROMPT
 from agent.prompts.templates.system import SYSTEM_PROMPT
 from agent.prompts.templates.unreal import UNREAL_PROMPT
+from app.api.db.coach_repo import make_coach_slug
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +44,9 @@ PREF_INSTRUCTIONS: dict[str, dict[str, str]] = {
 
 # Context budget: system instruction knowledge capped to preserve token budget
 # for image frames + conversation. 128k total; ~8 000 chars (~2 000 tokens at 4 chars/token) for knowledge.
-MAX_KNOWLEDGE_CHARS = 40_000  # was 8_000 — see context budget analysis in CLAUDE.md
+# 40k chars (~10k tokens at 4 chars/token) balances knowledge density vs leaving
+# headroom in the 128k-token context for image frames + conversation history.
+MAX_KNOWLEDGE_CHARS = 40_000
 
 
 def build_system_instruction(
@@ -62,8 +65,11 @@ def build_system_instruction(
     """
     parts = [SYSTEM_PROMPT]
 
-    # Coach-specific context
-    software_key = coach_id.strip().lower().replace("-", "_").replace(" ", "_")
+    # Coach-specific context (reuse canonical slug normalization)
+    try:
+        software_key = make_coach_slug(coach_id)
+    except ValueError:
+        software_key = ""
     coach_template = COACH_TEMPLATES.get(software_key, "")
     if coach_template:
         parts.append(coach_template)
@@ -91,12 +97,22 @@ def build_system_instruction(
         if note_lines:
             parts.append("## Previous Session Notes\n" + "\n".join(note_lines))
 
-    # Curated knowledge snippets (capped for context budget)
+    # Curated knowledge snippets (budget accumulation to avoid loading excess data)
     if knowledge_snippets:
-        combined = "\n\n".join(knowledge_snippets)
-        if len(combined) > MAX_KNOWLEDGE_CHARS:
-            combined = combined[:MAX_KNOWLEDGE_CHARS] + "\n[...additional knowledge via tool]"
-        parts.append(f"## Knowledge Reference\n{combined}")
+        combined = ""
+        _truncation_marker = "\n[...additional knowledge via tool]"
+        for snippet in knowledge_snippets:
+            separator = "\n\n" if combined else ""
+            available = MAX_KNOWLEDGE_CHARS - len(combined) - len(separator)
+            if available <= 0:
+                combined += _truncation_marker
+                break
+            if len(snippet) > available:
+                combined += separator + snippet[:available] + _truncation_marker
+                break
+            combined += separator + snippet
+        if combined:
+            parts.append(f"## Knowledge Reference\n{combined}")
 
     return "\n\n".join(parts)
 

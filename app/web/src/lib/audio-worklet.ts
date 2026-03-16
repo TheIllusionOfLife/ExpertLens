@@ -5,7 +5,6 @@ export const AUDIO_WORKLET_PROCESSOR = `
 class PCMExtractorProcessor extends AudioWorkletProcessor {
   constructor(options) {
     super();
-    this._buffer = [];
     // Use runtime sampleRate (AudioWorklet global) for correct flush size.
     // processorOptions.sampleRate is passed as a fallback for environments
     // where the global may differ from the AudioContext's actual rate.
@@ -15,6 +14,12 @@ class PCMExtractorProcessor extends AudioWorkletProcessor {
     }
     // Flush every ~100ms
     this._flushSize = Math.round(rate * 0.1);
+    // Pre-allocated ring buffer (1s capacity) to avoid O(n) splice on every flush.
+    // _count tracks occupancy to distinguish full from empty (both have equal indices).
+    this._ringBuf = new Float32Array(rate);
+    this._writeIdx = 0;
+    this._readIdx = 0;
+    this._count = 0;
   }
 
   process(inputs) {
@@ -22,18 +27,30 @@ class PCMExtractorProcessor extends AudioWorkletProcessor {
     if (!input || !input[0]) return true;
 
     const samples = input[0]; // Float32Array, mono
+    const buf = this._ringBuf;
+    const len = buf.length;
     for (let i = 0; i < samples.length; i++) {
-      this._buffer.push(samples[i]);
+      if (this._count >= len) {
+        // Buffer full: advance read pointer (drop oldest sample)
+        this._readIdx = (this._readIdx + 1) % len;
+        this._count--;
+      }
+      buf[this._writeIdx] = samples[i];
+      this._writeIdx = (this._writeIdx + 1) % len;
+      this._count++;
     }
 
-    while (this._buffer.length >= this._flushSize) {
-      const chunk = this._buffer.splice(0, this._flushSize);
-      // Convert Float32 → Int16
-      const int16 = new Int16Array(chunk.length);
-      for (let i = 0; i < chunk.length; i++) {
-        const clamped = Math.max(-1, Math.min(1, chunk[i]));
+    while (this._count >= this._flushSize) {
+      const int16 = new Int16Array(this._flushSize);
+      const rbuf = this._ringBuf;
+      const rlen = rbuf.length;
+      for (let i = 0; i < this._flushSize; i++) {
+        const s = rbuf[this._readIdx];
+        this._readIdx = (this._readIdx + 1) % rlen;
+        const clamped = Math.max(-1, Math.min(1, s));
         int16[i] = clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff;
       }
+      this._count -= this._flushSize;
       this.port.postMessage(int16.buffer, [int16.buffer]);
     }
     return true;

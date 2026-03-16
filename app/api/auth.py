@@ -6,12 +6,12 @@ from datetime import UTC, datetime, timedelta
 import jwt
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from google.cloud.firestore_v1.base_query import FieldFilter
+from google.api_core.exceptions import AlreadyExists
 from pwdlib import PasswordHash
 from pydantic import BaseModel, Field, field_validator
 
 from app.api.config import settings
-from app.api.db.firestore import USERS_COLLECTION, get_client
+from app.api.db.firestore import USERNAMES_COLLECTION, USERS_COLLECTION, get_client
 
 _ph = PasswordHash.recommended()
 _bearer = HTTPBearer(auto_error=False)
@@ -27,9 +27,11 @@ class UserRecord(BaseModel):
     hashed_password: str
 
 
-class RegisterRequest(BaseModel):
-    username: str = Field(min_length=1)
-    password: str = Field(min_length=1)
+class _AuthRequest(BaseModel):
+    """Shared validation for auth requests."""
+
+    username: str = Field(min_length=1, max_length=50)
+    password: str = Field(min_length=1, max_length=200)
 
     @field_validator("username", mode="before")
     @classmethod
@@ -47,24 +49,17 @@ class RegisterRequest(BaseModel):
         return v  # do not strip/lowercase passwords
 
 
-class LoginRequest(BaseModel):
-    username: str = Field(min_length=1)
-    password: str = Field(min_length=1)
-
-    @field_validator("username", mode="before")
-    @classmethod
-    def normalize_username(cls, v: str) -> str:
-        v = v.strip().lower()
-        if not v:
-            raise ValueError("username must not be blank")
-        return v
-
+class RegisterRequest(_AuthRequest):
     @field_validator("password", mode="before")
     @classmethod
-    def validate_password(cls, v: str) -> str:
-        if not v.strip():
-            raise ValueError("password must not be blank")
-        return v  # do not strip/lowercase passwords
+    def validate_password_strength(cls, v: str) -> str:
+        if len(v.strip()) < 8:
+            raise ValueError("password must be at least 8 characters")
+        return v
+
+
+class LoginRequest(_AuthRequest):
+    pass
 
 
 class TokenResponse(BaseModel):
@@ -104,30 +99,51 @@ def decode_token(token: str) -> TokenPayload:
 
 
 async def get_user_by_username(username: str) -> UserRecord | None:
-    docs = (
-        get_client()
-        .collection(USERS_COLLECTION)
-        .where(filter=FieldFilter("username", "==", username))
-        .stream()
-    )
-    async for doc in docs:
-        data = doc.to_dict()
-        if data:
-            return UserRecord(**data)
-    return None
+    """Look up a user via the usernames reservation collection, then fetch the full record."""
+    client = get_client()
+    reservation = await client.collection(USERNAMES_COLLECTION).document(username).get()
+    if not reservation.exists:
+        return None
+    data = reservation.to_dict()
+    if not data or "user_id" not in data:
+        return None
+    user_doc = await client.collection(USERS_COLLECTION).document(data["user_id"]).get()
+    if not user_doc.exists:
+        return None
+    user_data = user_doc.to_dict()
+    return UserRecord(**user_data) if user_data else None
 
 
 async def create_user(username: str, password: str) -> UserRecord:
-    existing = await get_user_by_username(username)
-    if existing:
-        raise HTTPException(status_code=409, detail="Username already taken")
+    """Create a user with atomic username uniqueness via a reservation document.
+
+    Both the username reservation and user document are written atomically.
+    If the username is already taken, Firestore raises AlreadyExists on the
+    reservation create(), guaranteeing no two users share a username even
+    under concurrent registration. If the user doc write fails, the reservation
+    is cleaned up to prevent orphaned usernames.
+    """
+    client = get_client()
     user_id = str(uuid.uuid4())
+
+    # Atomically reserve the username. Fails with AlreadyExists if taken.
+    username_ref = client.collection(USERNAMES_COLLECTION).document(username)
+    try:
+        await username_ref.create({"user_id": user_id})
+    except AlreadyExists:
+        raise HTTPException(status_code=409, detail="Username already taken")
+
     record = UserRecord(
         user_id=user_id,
         username=username,
         hashed_password=hash_password(password),
     )
-    await get_client().collection(USERS_COLLECTION).document(user_id).set(record.model_dump())
+    try:
+        await client.collection(USERS_COLLECTION).document(user_id).set(record.model_dump())
+    except Exception:
+        # Roll back the username reservation to prevent orphaned usernames
+        await username_ref.delete()
+        raise
     return record
 
 

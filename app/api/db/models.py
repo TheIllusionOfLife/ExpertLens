@@ -58,24 +58,24 @@ class KnowledgeChunk(BaseModel):
 
 class CoachCreate(BaseModel):
     software_name: str = Field(..., min_length=1, max_length=100)
-    display_name: str | None = None
-    persona: str | None = None
-    focus_areas: list[str] = Field(default_factory=list)
-    icon: str = "🎯"
+    display_name: str | None = Field(default=None, max_length=200)
+    persona: str | None = Field(default=None, max_length=2000)
+    focus_areas: list[str] = Field(default_factory=list, max_length=20)
+    icon: str = Field(default="🎯", max_length=10)
 
 
 class CoachUpdate(BaseModel):
     """Only the fields callers are permitted to change on an existing coach."""
 
-    display_name: str | None = None
-    persona: str | None = None
-    focus_areas: list[str] | None = None
-    icon: str | None = None
+    display_name: str | None = Field(default=None, max_length=200)
+    persona: str | None = Field(default=None, max_length=2000)
+    focus_areas: list[str] | None = Field(default=None, max_length=20)
+    icon: str | None = Field(default=None, max_length=10)
 
 
 class PreferencesUpdate(BaseModel):
-    interaction_style: str | None = None
-    tone: str | None = None
-    depth: str | None = None
-    proactivity: str | None = None
-    response_language: str | None = None
+    interaction_style: str | None = Field(default=None, max_length=50)
+    tone: str | None = Field(default=None, max_length=50)
+    depth: str | None = Field(default=None, max_length=50)
+    proactivity: str | None = Field(default=None, max_length=50)
+    response_language: str | None = Field(default=None, max_length=50)

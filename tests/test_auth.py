@@ -2,6 +2,9 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
+from google.api_core.exceptions import AlreadyExists
+
 
 async def test_register_creates_user(async_client, monkeypatch):
     from app.api.auth import UserRecord
@@ -16,7 +19,7 @@ async def test_register_creates_user(async_client, monkeypatch):
         AsyncMock(return_value=mock_record),
     )
     response = await async_client.post(
-        "/auth/register", json={"username": "newuser", "password": "pass123"}
+        "/auth/register", json={"username": "newuser", "password": "pass1234"}
     )
     assert response.status_code == 201
     data = response.json()
@@ -33,9 +36,25 @@ async def test_register_duplicate_username(async_client, monkeypatch):
         AsyncMock(side_effect=HTTPException(status_code=409, detail="Username already taken")),
     )
     response = await async_client.post(
-        "/auth/register", json={"username": "existing", "password": "pass"}
+        "/auth/register", json={"username": "existing", "password": "pass1234"}
     )
     assert response.status_code == 409
+
+
+async def test_register_atomic_uniqueness(mock_firestore, monkeypatch):
+    """Concurrent registration: AlreadyExists on username reservation returns 409."""
+    from app.api.auth import create_user
+
+    # Simulate AlreadyExists on the username reservation document
+    mock_firestore.collection.return_value.document.return_value.create = AsyncMock(
+        side_effect=AlreadyExists("Document already exists")
+    )
+
+    from fastapi import HTTPException
+
+    with pytest.raises(HTTPException) as exc_info:
+        await create_user("takenuser", "password123")
+    assert exc_info.value.status_code == 409
 
 
 async def test_login_valid_credentials(async_client, monkeypatch):

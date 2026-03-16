@@ -2,7 +2,9 @@
 
 import asyncio
 import logging
+import time
 
+from cachetools import TTLCache
 from fastapi import WebSocket, WebSocketDisconnect
 
 from agent.memory.summarize import summarize_session
@@ -33,8 +35,19 @@ from app.api.ws.protocol import (
 
 logger = logging.getLogger(__name__)
 
-_MAX_TURN_CHARS = 500  # truncate a single very long turn
-_MAX_TRANSCRIPT_TURNS = 30  # cap total turns stored
+# Transcript limits: 500 chars/turn keeps individual entries readable in summaries.
+# 30 turns total (~15 exchanges) is enough context for the summarizer without
+# exceeding Gemini's token budget during the end-of-session summary call.
+_MAX_TURN_CHARS = 500
+_MAX_TRANSCRIPT_TURNS = 30
+
+# Per-user WebSocket session rate limiter: tracks recent session start timestamps.
+# TTLCache auto-evicts entries after _SESSION_RATE_WINDOW seconds and caps at 10k users.
+_SESSION_RATE_WINDOW = 60.0  # seconds
+_SESSION_RATE_LIMIT = 3  # max sessions per window
+_user_session_starts: TTLCache[str, list[float]] = TTLCache(
+    maxsize=10_000, ttl=_SESSION_RATE_WINDOW
+)
 
 
 def _append_transcript(transcript: list[str], speaker: str, text: str) -> None:
@@ -62,6 +75,7 @@ class SessionHandler:
         self._current_turn_text: str = ""
         self._transcript: list[str] = []  # interleaved User/Coach turns
         self._timeout_task: asyncio.Task | None = None
+        self._last_image_time: float = 0.0
 
     async def run(self) -> None:
         """Main session loop."""
@@ -94,8 +108,16 @@ class SessionHandler:
             await self._cleanup()
 
     async def _wait_for_start(self) -> None:
-        """Wait for start_session control message, open Gemini session, confirm to client."""
-        raw = await self._ws.receive_text()
+        """Wait for start_session control message, open Gemini session, confirm to client.
+
+        Raises WebSocketDisconnect on timeout or auth/rate-limit rejection so
+        run() does not proceed to _run_media_loop() on a closed socket.
+        """
+        try:
+            raw = await asyncio.wait_for(self._ws.receive_text(), timeout=10.0)
+        except TimeoutError:
+            await self._ws.close(code=4008, reason="Start message timeout")
+            raise WebSocketDisconnect(code=4008)
         try:
             msg = StartSessionMessage.model_validate_json(raw)
         except Exception as e:
@@ -113,10 +135,21 @@ class SessionHandler:
                 user_id = payload.sub
             except Exception:
                 await self._ws.close(code=4001, reason="Invalid token")
-                return
+                raise WebSocketDisconnect(code=4001)
         else:
             await self._ws.close(code=4001, reason="Authentication required")
-            return
+            raise WebSocketDisconnect(code=4001)
+
+        # Per-user session rate limiting (TTLCache auto-evicts stale entries)
+        now = time.monotonic()
+        starts = _user_session_starts.get(user_id, [])
+        starts = [t for t in starts if now - t < _SESSION_RATE_WINDOW]
+        if len(starts) >= _SESSION_RATE_LIMIT:
+            _user_session_starts[user_id] = starts
+            await self._ws.close(code=4029, reason="Rate limited")
+            raise WebSocketDisconnect(code=4029)
+        starts.append(now)
+        _user_session_starts[user_id] = starts
 
         # Authorization: verify user can access this coach. Fail-closed on error.
         try:
@@ -126,14 +159,18 @@ class SessionHandler:
             await self._ws.close(code=4003, reason="Authorization check failed")
             return
 
-        if coach and coach.owner_id is not None and coach.owner_id != user_id:
+        if not coach:
+            await self._ws.close(code=4003, reason="Coach not found")
+            raise WebSocketDisconnect(code=4003)
+
+        if coach.owner_id is not None and coach.owner_id != user_id:
             await self._ws.close(code=4003, reason="Not authorized")
-            return
+            raise WebSocketDisconnect(code=4003)
 
         # Non-blocking knowledge status checks (informational only)
-        if coach and coach.knowledge_status == "building":
+        if coach.knowledge_status == "building":
             logger.info(f"Session started while knowledge is still building (coach={coach_id})")
-        elif coach and coach.knowledge_status == "error":
+        elif coach.knowledge_status == "error":
             await self._send_error(
                 "Knowledge generation failed; session will use base model training only"
             )
@@ -244,6 +281,10 @@ class SessionHandler:
         payload = data[1:]
 
         if tag == MEDIA_TAG_IMAGE:
+            now = time.monotonic()
+            if now - self._last_image_time < 0.5:
+                return  # throttle: drop frames faster than 2fps
+            self._last_image_time = now
             if len(payload) > MAX_IMAGE_BYTES:
                 logger.warning(f"Image frame too large ({len(payload)} bytes), dropping")
                 return
@@ -252,7 +293,7 @@ class SessionHandler:
                 logger.warning(f"Audio frame too large ({len(payload)} bytes), dropping")
                 return
         else:
-            logger.debug(f"Unknown media tag: {tag:#04x}")
+            logger.debug("Unknown media tag: %#04x", tag)
             return
 
         if not self._gemini or not self._gemini.is_connected:
@@ -294,7 +335,7 @@ class SessionHandler:
                 else:
                     await self._ws.send_bytes(payload)  # type: ignore[arg-type]
             except Exception as e:
-                logger.debug(f"WebSocket send error: {e}")
+                logger.debug("WebSocket send error: %s", e)
 
     def _notify_session_handle(self, handle: str) -> None:
         """Emit the latest session handle to the client for cross-reconnect persistence."""

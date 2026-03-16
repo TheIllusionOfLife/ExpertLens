@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from app.api.db.coach_repo import make_coach_slug, make_user_coach_id
 from app.api.db.models import Coach, UserPreferences
 
 # ---------------------------------------------------------------------------
@@ -251,3 +252,28 @@ async def test_rebuild_knowledge_idempotent_while_building(authed_client, monkey
     assert response.status_code == 202
     assert response.json()["status"] == "building"
     builder_mock.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# Coach ID scoping (Phase 1d)
+# ---------------------------------------------------------------------------
+
+
+def test_user_coach_id_prefixes_owner():
+    """User-created coaches get owner_id prefix to avoid cross-user slug collisions."""
+    cid = make_user_coach_id("user-abc", "Blender")
+    assert cid == "user-abc_blender"
+
+
+def test_user_coach_id_different_users_same_software():
+    """Two different users can create coaches for the same software without collision."""
+    cid_a = make_user_coach_id("user-a", "Photoshop")
+    cid_b = make_user_coach_id("user-b", "Photoshop")
+    assert cid_a != cid_b
+    assert cid_a == "user-a_photoshop"
+    assert cid_b == "user-b_photoshop"
+
+
+def test_preset_coach_slug_unchanged():
+    """Preset coaches (no owner) still use the bare slug."""
+    assert make_coach_slug("Blender") == "blender"

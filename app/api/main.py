@@ -5,10 +5,15 @@ import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, Request, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 
 from app.api.config import settings
+from app.api.rate_limit import limiter
 from app.api.routers.auth import router as auth_router
 from app.api.routers.coaches import router as coaches_router
 from app.api.routers.preferences import router as preferences_router
@@ -53,16 +58,36 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 _in_cloud_run = bool(os.getenv("K_SERVICE"))
+_enable_docs = os.getenv("ENABLE_API_DOCS", "").lower() in ("1", "true", "yes")
 app = FastAPI(
     title="ExpertLens API",
     version="0.1.0",
     lifespan=lifespan,
-    # Disable interactive docs in production to reduce endpoint discoverability.
-    docs_url=None if _in_cloud_run else "/docs",
-    redoc_url=None if _in_cloud_run else "/redoc",
-    openapi_url=None if _in_cloud_run else "/openapi.json",
+    # Disable interactive docs unless explicitly enabled via ENABLE_API_DOCS env var.
+    docs_url="/docs" if _enable_docs else None,
+    redoc_url="/redoc" if _enable_docs else None,
+    openapi_url="/openapi.json" if _enable_docs else None,
 )
 
+app.state.limiter = limiter
+
+
+@app.exception_handler(RateLimitExceeded)
+async def _rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded"})
+
+
+class _SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next) -> Response:  # type: ignore[override]
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        if _in_cloud_run:
+            response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
+        return response
+
+
+app.add_middleware(_SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,

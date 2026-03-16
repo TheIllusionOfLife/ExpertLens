@@ -58,9 +58,18 @@ async def list_coaches(user_id: str = "") -> list[Coach]:
     return list(seen.values())
 
 
+def make_user_coach_id(owner_id: str, software_name: str) -> str:
+    """Compose a per-user coach ID: {owner_id}_{slug}."""
+    return f"{owner_id}_{make_coach_slug(software_name)}"
+
+
 async def create_coach(data: CoachCreate, owner_id: str | None = None) -> Coach | None:
     """Create a coach. Returns None if a coach with the same slug already exists."""
-    coach_id = make_coach_slug(data.software_name)
+    coach_id = (
+        make_user_coach_id(owner_id, data.software_name)
+        if owner_id
+        else make_coach_slug(data.software_name)
+    )
     ref = get_client().collection(COACHES_COLLECTION).document(coach_id)
     coach = Coach(
         coach_id=coach_id,

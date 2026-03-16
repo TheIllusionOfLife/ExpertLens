@@ -1,7 +1,7 @@
 """REST API routes for sessions."""
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
 from app.api.auth import TokenPayload, get_current_user
 from app.api.db.coach_repo import get_coach
@@ -10,10 +10,26 @@ from app.api.db.session_repo import create_session, end_session, get_session, ge
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 
+_MAX_SUMMARY_CHARS = 5000
+_MAX_TOPICS = 10
+_MAX_TOPIC_CHARS = 200
+
 
 class EndSessionRequest(BaseModel):
     summary: str = ""
-    last_topics: list[str] = []
+    last_topics: list[str] = Field(default_factory=list)
+
+    @field_validator("summary", mode="before")
+    @classmethod
+    def truncate_summary(cls, v: str) -> str:
+        return v[:_MAX_SUMMARY_CHARS] if isinstance(v, str) else v
+
+    @field_validator("last_topics", mode="before")
+    @classmethod
+    def truncate_topics(cls, v: list) -> list:
+        if not isinstance(v, list):
+            return v
+        return [t[:_MAX_TOPIC_CHARS] if isinstance(t, str) else t for t in v[:_MAX_TOPICS]]
 
 
 @router.post("", response_model=Session, status_code=201)
