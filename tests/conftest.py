@@ -63,6 +63,11 @@ def mock_firestore(monkeypatch):
     monkeypatch.setattr("app.api.db.knowledge_repo.get_client", _patch)
     monkeypatch.setattr("app.api.auth.get_client", _patch)
 
+    # Support .where().stream() chaining for query-based lookups
+    mock_client.collection.return_value.where.return_value.stream.return_value = (
+        _make_async_iter([])
+    )
+
     yield mock_client
 
     original_get_client.cache_clear()

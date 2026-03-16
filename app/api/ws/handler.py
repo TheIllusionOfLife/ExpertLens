@@ -95,7 +95,11 @@ class SessionHandler:
 
     async def _wait_for_start(self) -> None:
         """Wait for start_session control message, open Gemini session, confirm to client."""
-        raw = await self._ws.receive_text()
+        try:
+            raw = await asyncio.wait_for(self._ws.receive_text(), timeout=10.0)
+        except TimeoutError:
+            await self._ws.close(code=4008, reason="Start message timeout")
+            return
         try:
             msg = StartSessionMessage.model_validate_json(raw)
         except Exception as e:
@@ -126,14 +130,18 @@ class SessionHandler:
             await self._ws.close(code=4003, reason="Authorization check failed")
             return
 
-        if coach and coach.owner_id is not None and coach.owner_id != user_id:
+        if not coach:
+            await self._ws.close(code=4003, reason="Coach not found")
+            return
+
+        if coach.owner_id is not None and coach.owner_id != user_id:
             await self._ws.close(code=4003, reason="Not authorized")
             return
 
         # Non-blocking knowledge status checks (informational only)
-        if coach and coach.knowledge_status == "building":
+        if coach.knowledge_status == "building":
             logger.info(f"Session started while knowledge is still building (coach={coach_id})")
-        elif coach and coach.knowledge_status == "error":
+        elif coach.knowledge_status == "error":
             await self._send_error(
                 "Knowledge generation failed; session will use base model training only"
             )

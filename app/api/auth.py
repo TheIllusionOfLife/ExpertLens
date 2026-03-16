@@ -6,12 +6,12 @@ from datetime import UTC, datetime, timedelta
 import jwt
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from google.cloud.firestore_v1.base_query import FieldFilter
+from google.api_core.exceptions import AlreadyExists
 from pwdlib import PasswordHash
 from pydantic import BaseModel, Field, field_validator
 
 from app.api.config import settings
-from app.api.db.firestore import USERS_COLLECTION, get_client
+from app.api.db.firestore import USERNAMES_COLLECTION, USERS_COLLECTION, get_client
 
 _ph = PasswordHash.recommended()
 _bearer = HTTPBearer(auto_error=False)
@@ -104,30 +104,45 @@ def decode_token(token: str) -> TokenPayload:
 
 
 async def get_user_by_username(username: str) -> UserRecord | None:
-    docs = (
-        get_client()
-        .collection(USERS_COLLECTION)
-        .where(filter=FieldFilter("username", "==", username))
-        .stream()
-    )
-    async for doc in docs:
-        data = doc.to_dict()
-        if data:
-            return UserRecord(**data)
-    return None
+    """Look up a user via the usernames reservation collection, then fetch the full record."""
+    client = get_client()
+    reservation = await client.collection(USERNAMES_COLLECTION).document(username).get()
+    if not reservation.exists:
+        return None
+    data = reservation.to_dict()
+    if not data or "user_id" not in data:
+        return None
+    user_doc = await client.collection(USERS_COLLECTION).document(data["user_id"]).get()
+    if not user_doc.exists:
+        return None
+    user_data = user_doc.to_dict()
+    return UserRecord(**user_data) if user_data else None
 
 
 async def create_user(username: str, password: str) -> UserRecord:
-    existing = await get_user_by_username(username)
-    if existing:
-        raise HTTPException(status_code=409, detail="Username already taken")
+    """Create a user with atomic username uniqueness via a reservation document.
+
+    The usernames/{username} doc is created atomically. If it already exists,
+    Firestore raises AlreadyExists, guaranteeing no two users share a username
+    even under concurrent registration.
+    """
+    client = get_client()
     user_id = str(uuid.uuid4())
+
+    # Atomically reserve the username. Fails with AlreadyExists if taken.
+    try:
+        await client.collection(USERNAMES_COLLECTION).document(username).create(
+            {"user_id": user_id}
+        )
+    except AlreadyExists:
+        raise HTTPException(status_code=409, detail="Username already taken")
+
     record = UserRecord(
         user_id=user_id,
         username=username,
         hashed_password=hash_password(password),
     )
-    await get_client().collection(USERS_COLLECTION).document(user_id).set(record.model_dump())
+    await client.collection(USERS_COLLECTION).document(user_id).set(record.model_dump())
     return record
 
 
