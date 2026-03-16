@@ -9,16 +9,8 @@ import { Act6Architecture } from "./components/Act6Architecture";
 import { Closing } from "./components/Closing";
 import { SCENE_IDS } from "./voiceover-config";
 
-// VO file mapping: new scene IDs -> old VO filenames where they exist
-const VO_FILE_MAP: Record<string, string | null> = {
-  "problem": "act1",
-  "demo": null, // raw clip audio, no VO
-  "coach-builder": "act5",
-  "prefs-memory": "act4",
-  "mobile": null, // no VO yet
-  "architecture": "act6",
-  "closing": "closing",
-};
+// Scenes without VO (raw clip audio plays instead)
+const NO_VO_SCENES = new Set(["demo"]);
 
 export type DemoProps = {
   sceneDurations: number[];
@@ -47,13 +39,12 @@ export const ExpertLensDemo: React.FC<DemoProps> = ({ sceneDurations }) => {
         <Series.Sequence durationInFrames={d7}><Closing /></Series.Sequence>
       </Series>
 
-      {/* Voiceover audio: only for scenes that have a VO file */}
+      {/* Voiceover audio: one track per scene, skip scenes with raw clip audio */}
       {SCENE_IDS.map((id, i) => {
-        const voFile = VO_FILE_MAP[id];
-        if (!voFile) return null;
+        if (NO_VO_SCENES.has(id)) return null;
         return (
           <Sequence key={id} from={offsets[i]} durationInFrames={sceneDurations[i]}>
-            <Audio src={staticFile(`voiceover/${voFile}.m4a`)} />
+            <Audio src={staticFile(`voiceover/${id}.m4a`)} />
           </Sequence>
         );
       })}

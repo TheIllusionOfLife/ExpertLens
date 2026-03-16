@@ -86,13 +86,13 @@
     <div class="card">
       <div class="card-icon">⌨️</div>
       <div class="card-label blue">CLI Tools</div>
-      <div class="card-title">git, ffmpeg, AWS CLI</div>
+      <div class="card-title">git, ffmpeg, Google Cloud CLI</div>
       <div class="card-body">AI can: Call directly via tool use</div>
     </div>
     <div class="card highlight">
       <div class="card-icon">🖥️</div>
       <div class="card-label accent">Desktop GUI Apps</div>
-      <div class="card-title">Blender, Affinity Photo, Unreal Engine</div>
+      <div class="card-title">Blender, Affinity, Unreal Engine</div>
       <div class="card-body" style="color:rgba(255,255,255,0.8); font-weight:600">No API. Coaching is the only option.</div>
     </div>
   </div>
@@ -108,8 +108,7 @@
 <div class="slide video-slide" id="s2">
   <div class="video-label">Live Blender Session: Screen Share + Voice</div>
   <video id="v-session" controls>
-    <source src="../clip1-blender-session.mp4" type="video/mp4">
-    <source src="../clip1-blender-session.mov" type="video/quicktime">
+    <source src="../video/public/footage/Expert Lens Clip.mp4" type="video/mp4">
   </video>
 </div>
 
@@ -217,50 +216,11 @@
      Firestore stores coaches, preferences, sessions, and knowledge.
      The knowledge builder uses gemini-3-flash-preview with Google Search grounding.
      Everything is provisioned with Terraform and auto-deployed via Cloud Build." -->
-<div class="slide" id="s6">
-  <h3 style="text-align:center; margin-bottom:4px">System Architecture</h3>
-  <div style="text-align:center; font-size:13px; color:var(--muted); margin-bottom:12px">Cloud Run · Gemini Live API · Firestore · ADK · Terraform IaC</div>
-  <div class="arch-grid">
-    <div class="arch-group" style="border-color:rgba(66,133,244,0.3)">
-      <div class="arch-group-label blue">User Device</div>
-      <div class="arch-box"><div class="arch-box-title">Desktop App</div><div class="arch-box-sub">Blender / Affinity Photo / Unreal Engine</div></div>
-      <div class="arch-box"><div class="arch-box-title blue">Browser</div><div class="arch-box-sub">getDisplayMedia (desktop/Android)<br>getUserMedia (iOS camera)<br>AudioContext (speaker)</div></div>
-      <div style="text-align:center; margin-top:auto; padding:10px; border:2px solid var(--accent); border-radius:10px; font-size:12px; font-weight:600; color:var(--accent)">
-        WebSocket ↕<br><span style="font-size:10px; color:var(--muted)">JPEG 1fps + PCM 16kHz ↑ · PCM 24kHz ↓</span>
-      </div>
-    </div>
-    <div class="arch-group" style="border-color:rgba(66,133,244,0.3)">
-      <div class="arch-group-label blue">Google Cloud</div>
-      <div class="arch-box"><div class="arch-box-title blue">Cloud Run: Frontend</div><div class="arch-box-sub">Next.js 15</div></div>
-      <div class="arch-box glow" style="flex:1">
-        <div class="arch-box-title accent">Cloud Run: Backend (FastAPI + ADK)</div>
-        <div class="arch-box-sub" style="margin-top:6px; line-height:1.6">
-          WebSocket Handler · System Instruction Builder<br>
-          Gemini Live Session Manager<br>
-          <span style="color:var(--accent)">ADK Tools:</span> get_coach_knowledge() · get_user_preferences()
-        </div>
-      </div>
-      <div style="display:flex; gap:8px">
-        <div class="arch-box" style="flex:1"><div class="arch-box-title orange">Firestore</div><div class="arch-box-sub">coaches · prefs · sessions · knowledge</div></div>
-        <div class="arch-box" style="flex:1"><div class="arch-box-title orange">Secret Manager</div><div class="arch-box-sub">API keys · JWT</div></div>
-      </div>
-      <div style="display:flex; gap:8px">
-        <div class="arch-box" style="flex:1"><div class="arch-box-title blue">Cloud Build + Artifact Registry</div><div class="arch-box-sub">CI/CD on main push</div></div>
-        <div class="arch-box" style="flex:1"><div class="arch-box-title" style="color:#623ce4">Terraform IaC</div><div class="arch-box-sub">Automated provisioning</div></div>
-      </div>
-    </div>
-    <div class="arch-group" style="border-color:rgba(124,106,247,0.3)">
-      <div class="arch-group-label accent">Gemini API</div>
-      <div class="arch-box glow" style="flex:1">
-        <div class="arch-box-title accent" style="font-size:16px">Gemini Live API</div>
-        <div style="font-size:14px; font-weight:700; color:#b8a9ff; margin-top:8px">gemini-2.5-flash-native-audio-latest</div>
-        <div class="arch-box-sub" style="margin-top:8px; line-height:1.6">
-          Audio + Vision · 128k context<br>Native barge-in (VAD)<br>SlidingWindow compression<br>sessionResumption
-        </div>
-      </div>
-      <div class="arch-box"><div class="arch-box-title green">Google Search</div><div class="arch-box-sub">Real-time grounding for knowledge</div></div>
-      <div class="arch-box"><div class="arch-box-title accent">gemini-3-flash-preview</div><div class="arch-box-sub">Knowledge builder · ThinkingLevel.MINIMAL</div></div>
-    </div>
+<div class="slide" id="s6" style="padding:40px 60px; justify-content:flex-start">
+  <h3 style="text-align:center; margin-bottom:12px; font-size:32px">System Architecture</h3>
+  <div style="flex:1; display:flex; align-items:center; justify-content:center">
+    <img src="../expertlens-architecture.png" alt="ExpertLens Architecture"
+         style="max-width:100%; max-height:72vh; object-fit:contain; border-radius:12px; border:1px solid rgba(255,255,255,0.1)">
   </div>
 </div>
 
@@ -269,7 +229,7 @@
 <div class="slide" id="s7" style="align-items:center; text-align:center">
   <h1>Expert<span class="accent">Lens</span></h1>
   <p class="subtitle" style="max-width:700px; text-align:center">Expert coaching for the software only you can operate.</p>
-  <div class="closing-url">https://expertlens-frontend-pk4kcjevqa-uc.a.run.app</div>
+  <!-- URL removed -->
   <div style="margin-top:24px; font-size:14px; color:var(--muted)">
     GitHub: github.com/TheIllusionOfLife/ExpertLens
   </div>
