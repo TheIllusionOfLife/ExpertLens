@@ -66,12 +66,17 @@ export const ExpertLensDemo: React.FC<DemoProps> = ({ sceneDurations }) => {
         </Series.Sequence>
       </Series>
 
-      {/* Voiceover audio — one track per scene, starting at each scene's offset */}
-      {SCENE_IDS.map((id, i) => (
-        <Sequence key={id} from={offsets[i]} durationInFrames={sceneDurations[i]}>
-          <Audio src={staticFile(`voiceover/${id}.m4a`)} />
-        </Sequence>
-      ))}
+      {/* Voiceover audio — only for scenes without real footage audio.
+          Acts 2a, 2b, 3, 4 use raw clips with live conversation — no VO. */}
+      {SCENE_IDS.map((id, i) => {
+        const hasFootageAudio = ["act2a", "act2b", "act3", "act4"].includes(id);
+        if (hasFootageAudio) return null;
+        return (
+          <Sequence key={id} from={offsets[i]} durationInFrames={sceneDurations[i]}>
+            <Audio src={staticFile(`voiceover/${id}.m4a`)} />
+          </Sequence>
+        );
+      })}
     </AbsoluteFill>
   );
 };
