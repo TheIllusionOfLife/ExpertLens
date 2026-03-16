@@ -65,3 +65,4 @@ htmlcov/
 # Playwright test artifacts
 app/web/test-results/
 app/web/playwright-report/
+clip1-blender-session.mov
