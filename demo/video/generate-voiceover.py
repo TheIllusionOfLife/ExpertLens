@@ -3,11 +3,11 @@
 Generate voiceover audio for the ExpertLens demo video.
 
 Workflow per scene:
-  1. say -o phrase.aiff      → AIFF via macOS built-in TTS
-  2. afconvert               → WAV (PCM 16-bit) for Python wave module
-  3. wave module             → concatenate phrases with 5-frame silence gaps
-  4. afconvert               → M4A (AAC) for Remotion consumption
-  5. afinfo                  → verify duration
+  1. say -o phrase.aiff      -> AIFF via macOS built-in TTS
+  2. afconvert               -> WAV (PCM 16-bit) for Python wave module
+  3. wave module             -> concatenate phrases with 5-frame silence gaps
+  4. afconvert               -> M4A (AAC) for Remotion consumption
+  5. afinfo                  -> verify duration
 
 After generating all scenes, writes src/voiceover-timings.ts with the
 exact per-phrase frame offsets so Remotion components can sync visuals
@@ -17,7 +17,7 @@ Usage:
   python3 generate-voiceover.py [--voice NAME] [--force]
 
 Output:
-  demo/video/public/voiceover/{scene_id}.m4a  (8 files)
+  demo/video/public/voiceover/{scene_id}.m4a  (6 files, demo scene has no VO)
   demo/video/src/voiceover-timings.ts
 """
 
@@ -36,88 +36,78 @@ TIMINGS_TS = SCRIPT_DIR / "src" / "voiceover-timings.ts"
 FPS = 30
 SILENCE_FRAMES = 5
 
+# New 7-scene narrative matching voiceover-config.ts.
+# "demo" scene has no VO (uses raw clip audio).
 SCENES = [
     {
-        "id": "act1",
+        "id": "problem",
         "phrases": [
-            "You could use Playwright to automate a browser app. "
-            "You could give an LLM a terminal and it will use your CLI tools directly. "
-            "But open Blender, Affinity Photo, or Unreal Engine — "
-            "and there is no API. No automation. The mouse is the only way in. "
-            "ExpertLens coaches you inside that gap.",
+            "Professional software has a steep learning curve. "
+            "Blender, Affinity Photo, Unreal Engine, DaVinci Resolve. "
+            "AI can automate browsers with Playwright. "
+            "AI can call CLI tools directly. "
+            "But these GUI-heavy applications? AI cannot control them for you. "
+            "You have to operate them yourself. "
+            "That's where ExpertLens comes in. "
+            "It watches your screen, listens to your voice, and coaches you in real time.",
         ],
     },
     {
-        "id": "act2a",
+        "id": "demo",
+        "phrases": [],  # No VO: raw clip audio plays
+    },
+    {
+        "id": "coach-builder",
         "phrases": [
-            "My mesh still looks faceted even after I added a Subdivision Surface modifier. "
-            "What am I doing wrong?",
-            "That's a normals issue. Select the object, right-click, choose Shade Smooth. "
-            "With Blender 4.x, you can also add a Smooth by Angle modifier — "
-            "it replaced Auto Smooth which was removed in version 4.1.",
-            "Perfect. What level should I use for the subdivision?",
-            "Level 2 is the sweet spot for most work — Control 2 applies it instantly. "
-            "Level 3 for final render if topology is clean.",
+            "ExpertLens isn't limited to preset coaches. "
+            "Type any software name. Here, DaVinci Resolve.",
+            "Gemini validates it's real software using Google Search grounding. "
+            "Then it builds a six-section knowledge base: "
+            "shortcuts, workflows, common errors, deep concepts, "
+            "version-specific changes, and a quick reference card.",
+            "Two to four minutes, and the coach is ready for live sessions.",
         ],
     },
     {
-        "id": "act2b",
+        "id": "prefs-memory",
         "phrases": [
-            "Welcome back. Last session we covered subdivision surface modifiers "
-            "and normal smoothing — your faceted mesh issue. "
-            "Picking up from there, or something new?",
-            "That's not a script. After every session, ExpertLens summarizes what you "
-            "worked on and stores it in Firestore. The next session loads that summary "
-            "into the agent's system instruction. The coach actually remembers.",
+            "Every user is different. ExpertLens lets you customize four dimensions: "
+            "interaction style, coaching tone, response depth, and proactivity.",
+            "A shortcuts-first power user gets a completely different experience "
+            "from someone learning their first 3D tool.",
+            "And the coach remembers. After each session, the transcript is summarized "
+            "and stored in Firestore.",
+            "Next time you connect, the coach loads your last three sessions "
+            "and picks up where you left off.",
         ],
     },
     {
-        "id": "act3",
+        "id": "mobile",
         "phrases": [
-            "Google AI Studio has a built-in Live mode. "
-            "You can share your screen and talk to Gemini. "
-            "ExpertLens adds four things.",
-            "One: software-specific knowledge that is current — like the fact that "
-            "Auto Smooth was removed from Blender 4.1 and replaced with the "
-            "Smooth by Angle modifier.",
-            "Two: user preferences that change how the coach talks to you — "
-            "shortcut-first versus mouse-guided, concise expert versus calm mentor.",
-            "Three: memory of what you worked on last time.",
-            "Four: a coaching persona built specifically for your software.",
+            "This works on every device. "
+            "Desktop and Android get full screen sharing via getDisplayMedia.",
+            "On iOS, where screen sharing isn't available in the browser, "
+            "the rear camera activates instead. "
+            "Point it at your screen, and the same coaching pipeline works. "
+            "Same agent, same knowledge, same voice.",
         ],
     },
     {
-        "id": "act4",
+        "id": "architecture",
         "phrases": [
-            "Preferences customize how the coach talks to you.",
-            "How do I mirror an object?",
-            "Control M, choose axis.",
-            "Same knowledge. Half the words.",
-        ],
-    },
-    {
-        "id": "act5",
-        "phrases": [
-            "ExpertLens isn't limited to these three apps. "
-            "You can create a coach for any desktop software.",
-            "The software name is validated — ExpertLens uses Gemini with Google Search "
-            "grounding to confirm it's a real desktop application before building the coach.",
-            "Knowledge builds automatically. When complete, the coach is ready for live sessions.",
-        ],
-    },
-    {
-        "id": "act6",
-        "phrases": [
-            "ExpertLens runs on Google Cloud Run. The browser streams screen frames and audio "
-            "over WebSocket to a FastAPI backend, which relays to Gemini Live API in real time.",
-            "SlidingWindow compression keeps sessions running indefinitely. "
-            "Session resumption with stored handles survives the 10-minute WebSocket rotation.",
+            "Cloud Run hosts both services. "
+            "The browser streams screen frames and audio over WebSocket "
+            "to the backend, which proxies directly to Gemini Live API.",
+            "SlidingWindow compression lets sessions run indefinitely. "
+            "Session resumption handles WebSocket timeouts without losing context. "
+            "Knowledge is context-stuffed into the system instruction at zero latency. "
+            "Everything is provisioned with Terraform and auto-deployed via Cloud Build.",
         ],
     },
     {
         "id": "closing",
         "phrases": [
-            "ExpertLens. Expert coaching for the apps AI cannot automate.",
+            "ExpertLens. Expert coaching for the software only you can operate.",
         ],
     },
 ]
@@ -164,9 +154,7 @@ def concat_wavs(wav_paths: list[Path], output_path: Path) -> None:
                 all_params.framerate,
             ):
                 raise ValueError(
-                    f"{wav_path.name}: WAV params mismatch — "
-                    f"got {params.nchannels}ch/{params.sampwidth}b/{params.framerate}Hz, "
-                    f"expected {all_params.nchannels}ch/{all_params.sampwidth}b/{all_params.framerate}Hz"
+                    f"{wav_path.name}: WAV params mismatch"
                 )
             if i > 0:
                 silence_samples = int(SILENCE_FRAMES / FPS * params.framerate)
@@ -230,7 +218,7 @@ def process_scene(scene: dict, tmp_dir: Path, voice: str) -> tuple[float, list[i
 def write_timings_ts(timings: dict[str, dict]) -> None:
     """Write src/voiceover-timings.ts so Remotion components can import exact offsets."""
     lines = [
-        "// Auto-generated by generate-voiceover.py — do not edit manually.",
+        "// Auto-generated by generate-voiceover.py. Do not edit manually.",
         "// Re-run `python3 generate-voiceover.py --force` to update.",
         "",
         'import type { SceneId } from "./voiceover-config";',
@@ -250,11 +238,6 @@ def write_timings_ts(timings: dict[str, dict]) -> None:
 
 
 def load_existing_timings() -> dict[str, dict]:
-    """Load phrase offsets from the already-written voiceover-timings.ts.
-
-    Used to preserve cached scene offsets when --force is not passed.
-    Without this, cached scenes would fall back to phraseOffsets=[0].
-    """
     if not TIMINGS_TS.exists():
         return {}
     try:
@@ -270,7 +253,7 @@ def load_existing_timings() -> dict[str, dict]:
 def validate_scene_ids() -> None:
     """Assert Python SCENES matches the canonical SCENE_IDS in voiceover-config.ts."""
     python_ids = tuple(scene["id"] for scene in SCENES)
-    canonical_ids = ("act1", "act2a", "act2b", "act3", "act4", "act5", "act6", "closing")
+    canonical_ids = ("problem", "demo", "coach-builder", "prefs-memory", "mobile", "architecture", "closing")
     if python_ids != canonical_ids:
         raise SystemExit(
             f"Scene ID mismatch!\n  Python SCENES:        {python_ids}\n"
@@ -289,7 +272,6 @@ def main() -> None:
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Seed with existing timings so cached scenes keep their real phrase offsets.
     timings: dict[str, dict] = load_existing_timings()
     total_seconds = 0.0
 
@@ -297,15 +279,19 @@ def main() -> None:
         tmp_dir = Path(tmp)
         for scene in SCENES:
             scene_id = scene["id"]
+            phrases = scene["phrases"]
             m4a_path = OUTPUT_DIR / f"{scene_id}.m4a"
+
+            # Skip scenes with no VO (e.g. demo uses raw clip audio)
+            if not phrases:
+                timings[scene_id] = {"durationFrames": 2700, "phraseOffsets": []}
+                print(f"  {scene_id}: no VO (raw clip audio)")
+                continue
+
             if m4a_path.exists() and not args.force:
-                # Cached: re-measure duration but phrase offsets need --force to recompute.
-                # Use phraseOffsets=[0] as a safe fallback.
                 duration = get_duration(m4a_path)
                 phrase_offsets = timings.get(scene_id, {}).get("phraseOffsets", [0])
-                print(
-                    f"  {scene_id}: {duration:.2f}s (cached — use --force to recompute phrase offsets)"
-                )
+                print(f"  {scene_id}: {duration:.2f}s (cached, use --force to regenerate)")
             else:
                 print(f"  {scene_id}: generating...", end=" ", flush=True)
                 duration, phrase_offsets = process_scene(scene, tmp_dir, args.voice)
@@ -319,12 +305,6 @@ def main() -> None:
     write_timings_ts(timings)
     print(f"\nTotal: {total_seconds:.1f}s  ({int(total_seconds * FPS)} frames)")
     print(f"Timings written to {TIMINGS_TS.relative_to(SCRIPT_DIR)}")
-    print("\nNext steps:")
-    print("  cd demo/video && bun install")
-    print("  bun x remotion preview src/index.ts   # preview with audio")
-    print(
-        "  bun x remotion render src/index.ts ExpertLensDemo out/expertlens-demo.mp4 --codec=h264"
-    )
 
 
 if __name__ == "__main__":
