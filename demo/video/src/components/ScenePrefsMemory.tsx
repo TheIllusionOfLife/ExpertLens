@@ -46,7 +46,7 @@ export const ScenePrefsMemory: React.FC = () => {
           <h2 style={{ fontSize: 36, fontWeight: 700, color: "#fff", fontFamily: font, marginBottom: 24 }}>Cross-Session Memory</h2>
           {[
             { label: "Session ends", desc: "Coach transcript accumulated during session" },
-            { label: "Gemini summarizes", desc: "Structured JSON summary via gemini-2.0-flash" },
+            { label: "Gemini summarizes", desc: "Structured JSON summary via gemini-3-flash-preview" },
             { label: "Stored in Firestore", desc: "Keyed by user_id + coach_id" },
             { label: "Injected at next start", desc: "Last 3 summaries loaded into system instruction" },
           ].map((item, i) => {

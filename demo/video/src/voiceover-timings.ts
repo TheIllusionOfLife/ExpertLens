@@ -17,15 +17,16 @@ export const VOICEOVER_TIMINGS: Record<SceneId, SceneTiming> = {
     ]
   },
   "demo": {
-    "durationFrames": 2756,
+    "durationFrames": 2628,
     "phraseOffsets": []
   },
   "coach-builder": {
-    "durationFrames": 703,
+    "durationFrames": 974,
     "phraseOffsets": [
       0,
-      187,
-      605
+      295,
+      458,
+      876
     ]
   },
   "prefs-memory": {

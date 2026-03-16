@@ -59,7 +59,10 @@ SCENES = [
     {
         "id": "coach-builder",
         "phrases": [
-            "ExpertLens isn't limited to preset coaches. "
+            "ExpertLens ships with five preset coaches "
+            "for Blender, Affinity Photo, Unreal Engine, Fusion, and ZBrush. "
+            "Each one is pre-loaded with curated knowledge.",
+            "But you're not limited to presets. "
             "Type any software name. Here, DaVinci Resolve.",
             "Gemini validates it's real software using Google Search grounding. "
             "Then it builds a six-section knowledge base: "
