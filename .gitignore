@@ -65,3 +65,8 @@ htmlcov/
 # Playwright test artifacts
 app/web/test-results/
 app/web/playwright-report/
+# Recording clips and footage
+clip*.mov
+clip*.mp4
+clip*.MP4
+demo/video/public/footage/

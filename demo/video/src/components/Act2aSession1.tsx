@@ -1,53 +1,25 @@
-import { AbsoluteFill, Sequence } from "remotion";
-import { Slide } from "./Slide";
-import { NarrationCard } from "./NarrationCard";
+import { AbsoluteFill, Sequence, staticFile } from "remotion";
+import { Video } from "@remotion/media";
 import { ActLabel } from "./ActLabel";
-import { VOICEOVER_TIMINGS } from "../voiceover-timings";
 
-// act2a: 4 phrases → 4 messages; card appears at phrase 0 (frame 0)
-const { phraseOffsets } = VOICEOVER_TIMINGS.act2a;
-const CARD_FROM = phraseOffsets[0]; // 0
-const MESSAGE_DELAYS = phraseOffsets.map((o) => o - CARD_FROM);
-
+/**
+ * Act 2a — Live Blender Session.
+ * Uses raw footage from clip1-blender-session.mov.
+ * startFrom trims into the clip to skip the setup and land on the coaching exchange.
+ * Adjust startFrom (in frames at 30fps) after reviewing the raw footage.
+ */
 export const Act2aSession1: React.FC = () => {
   return (
     <AbsoluteFill>
-      <Sequence from={0} durationInFrames={1200}>
-        <Slide
-          imageSrc="assets/03-session-idle.png"
-          headline="Live Coaching Session"
-          body="Screen + voice, real-time. Coach watches your work and responds as a colleague would."
-          dimImage
-        />
-      </Sequence>
+      <Video
+        src={staticFile("footage/clip1-blender-session.mov")}
+        startFrom={0}
+        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        volume={1}
+      />
 
-      <Sequence from={0} durationInFrames={1200} layout="none">
-        <ActLabel text="Act 2a — Session 1" />
-      </Sequence>
-
-      <Sequence from={CARD_FROM} durationInFrames={1200}>
-        <NarrationCard
-          title="Live Session — Blender Expert"
-          messageDelayFrames={MESSAGE_DELAYS}
-          messages={[
-            {
-              speaker: "User",
-              text: "My mesh looks faceted even after I added a Subdivision Surface. What am I doing wrong?",
-            },
-            {
-              speaker: "Coach",
-              text: "That's a normals issue. Right-click the object, choose Shade Smooth. In Blender 4.x, also try the Smooth by Angle modifier — Auto Smooth was removed in 4.1.",
-            },
-            {
-              speaker: "User",
-              text: "What subdivision level should I use?",
-            },
-            {
-              speaker: "Coach",
-              text: "Ctrl+2 for level 2 — sweet spot for most work. Ctrl+3 for final render if topology is clean.",
-            },
-          ]}
-        />
+      <Sequence from={0} durationInFrames={90} layout="none">
+        <ActLabel text="Live Blender Session" />
       </Sequence>
     </AbsoluteFill>
   );

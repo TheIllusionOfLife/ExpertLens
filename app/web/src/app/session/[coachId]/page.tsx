@@ -218,14 +218,15 @@ export default function LiveSessionPage() {
   return (
     <div className="min-h-screen bg-(--background) flex flex-col">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 sm:px-8 md:px-16 py-5 border-b border-(--border) bg-(--surface)">
+      <header className="flex items-center justify-between px-3 sm:px-8 md:px-16 py-3 sm:py-5 border-b border-(--border) bg-(--surface) gap-2">
         <button
           type="button"
           onClick={() => router.push("/")}
           aria-label="Back to dashboard"
-          className="text-(--muted) hover:text-(--foreground) text-sm transition-colors"
+          className="text-(--muted) hover:text-(--foreground) text-sm transition-colors flex-shrink-0"
         >
-          ← Dashboard
+          <span className="hidden sm:inline">← Dashboard</span>
+          <span className="sm:hidden">←</span>
         </button>
         <SessionStatus coachName={coachName} status={status} elapsed={elapsed} />
         <SessionControls
@@ -242,34 +243,28 @@ export default function LiveSessionPage() {
       <main className="flex-1 flex flex-col items-center justify-center p-8 gap-6">
         {/* Pre-session launch pad */}
         {status === "disconnected" && (
-          <div className="text-center max-w-sm w-full space-y-8">
+          <div className="text-center max-w-sm w-full space-y-4 sm:space-y-8">
             {/* Coach avatar with glow */}
-            <div className="relative mx-auto w-24 h-24">
+            <div className="relative mx-auto w-16 h-16 sm:w-24 sm:h-24">
               <div className="absolute inset-0 rounded-2xl bg-(--accent-glow) blur-xl" />
-              <div className="relative w-24 h-24 rounded-2xl bg-(--surface-elevated) border border-(--border) flex items-center justify-center">
-                <CoachIcon coachId={coachId} iconKey={coach?.icon} size={52} />
+              <div className="relative w-16 h-16 sm:w-24 sm:h-24 rounded-2xl bg-(--surface-elevated) border border-(--border) flex items-center justify-center">
+                <span className="sm:hidden">
+                  <CoachIcon coachId={coachId} iconKey={coach?.icon} size={32} />
+                </span>
+                <span className="hidden sm:inline">
+                  <CoachIcon coachId={coachId} iconKey={coach?.icon} size={52} />
+                </span>
               </div>
             </div>
 
             <div>
-              <h1 className="text-2xl font-bold mb-3">{coachName}</h1>
-              <p className="text-(--muted) text-sm leading-relaxed max-w-xs mx-auto">
+              <h1 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-3">{coachName}</h1>
+              <p className="text-(--muted) text-sm leading-relaxed max-w-xs mx-auto line-clamp-2">
                 {coach?.persona ?? "Your AI coaching session"}
               </p>
             </div>
 
-            {/* Steps */}
-            <div className="text-left space-y-4 bg-(--surface-elevated) rounded-xl p-6 border border-(--border)">
-              {STEPS(softwareName).map((step, i) => (
-                <div key={step} className="flex items-start gap-4 text-sm">
-                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-(--accent-glow) border border-(--accent)/20 text-(--accent) text-xs flex items-center justify-center font-semibold mt-0.5">
-                    {i + 1}
-                  </span>
-                  <span className="text-(--foreground)/80 leading-relaxed">{step}</span>
-                </div>
-              ))}
-            </div>
-
+            {/* Start Session — placed before steps on mobile so it's always visible */}
             <button
               type="button"
               onClick={startSession}
@@ -278,6 +273,18 @@ export default function LiveSessionPage() {
               <PlayIcon />
               Start Session
             </button>
+
+            {/* Steps */}
+            <div className="text-left space-y-3 sm:space-y-4 bg-(--surface-elevated) rounded-xl p-4 sm:p-6 border border-(--border)">
+              {STEPS(softwareName).map((step, i) => (
+                <div key={step} className="flex items-start gap-3 sm:gap-4 text-sm">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-(--accent-glow) border border-(--accent)/20 text-(--accent) text-xs flex items-center justify-center font-semibold mt-0.5">
+                    {i + 1}
+                  </span>
+                  <span className="text-(--foreground)/80 leading-relaxed">{step}</span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

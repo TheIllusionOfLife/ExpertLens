@@ -1,24 +1,24 @@
 import { AbsoluteFill, Sequence, Series, staticFile } from "remotion";
 import { Audio } from "@remotion/media";
-import { Act1DesktopGap } from "./components/Act1DesktopGap";
-import { Act2aSession1 } from "./components/Act2aSession1";
-import { Act2bMemory } from "./components/Act2bMemory";
-import { Act3VsGeminiLive } from "./components/Act3VsGeminiLive";
-import { Act4Preferences } from "./components/Act4Preferences";
-import { Act5CoachBuilder } from "./components/Act5CoachBuilder";
+import { SceneProblem } from "./components/SceneProblem";
+import { SceneDemo } from "./components/SceneDemo";
+import { SceneCoachBuilder } from "./components/SceneCoachBuilder";
+import { ScenePrefsMemory } from "./components/ScenePrefsMemory";
+import { SceneMobile } from "./components/SceneMobile";
 import { Act6Architecture } from "./components/Act6Architecture";
 import { Closing } from "./components/Closing";
 import { SCENE_IDS } from "./voiceover-config";
 
-// Frame budget (30fps) — overridden at render time by calculateMetadata:
-// Act 1  — Desktop GUI Gap   :   0–899   (30s)
-// Act 2a — Session 1         : 900–2099  (40s)
-// Act 2b — Memory Demo       : 2100–3299 (40s)
-// Act 3  — vs Gemini Live    : 3300–4499 (40s)
-// Act 4  — Preferences       : 4500–5399 (30s)
-// Act 5  — Coach Builder     : 5400–6299 (30s)
-// Act 6  — Architecture      : 6300–6899 (20s)
-// Closing                    : 6900–7199 (10s)
+// VO file mapping: new scene IDs -> old VO filenames where they exist
+const VO_FILE_MAP: Record<string, string | null> = {
+  "problem": "act1",
+  "demo": null, // raw clip audio, no VO
+  "coach-builder": "act5",
+  "prefs-memory": "act4",
+  "mobile": null, // no VO yet
+  "architecture": "act6",
+  "closing": "closing",
+};
 
 export type DemoProps = {
   sceneDurations: number[];
@@ -28,9 +28,8 @@ export const ExpertLensDemo: React.FC<DemoProps> = ({ sceneDurations }) => {
   if (sceneDurations.length !== SCENE_IDS.length) {
     throw new Error(`Expected ${SCENE_IDS.length} scene durations, got ${sceneDurations.length}`);
   }
-  const [d1, d2, d3, d4, d5, d6, d7, d8] = sceneDurations;
+  const [d1, d2, d3, d4, d5, d6, d7] = sceneDurations;
 
-  // Absolute start frame for each scene (cumulative sum of previous durations).
   const offsets = sceneDurations.reduce<number[]>((acc, _, i) => {
     acc.push(i === 0 ? 0 : acc[i - 1] + sceneDurations[i - 1]);
     return acc;
@@ -38,40 +37,26 @@ export const ExpertLensDemo: React.FC<DemoProps> = ({ sceneDurations }) => {
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#0f0f1a" }}>
-      {/* Visual sequences */}
       <Series>
-        <Series.Sequence durationInFrames={d1}>
-          <Act1DesktopGap />
-        </Series.Sequence>
-        <Series.Sequence durationInFrames={d2}>
-          <Act2aSession1 />
-        </Series.Sequence>
-        <Series.Sequence durationInFrames={d3}>
-          <Act2bMemory />
-        </Series.Sequence>
-        <Series.Sequence durationInFrames={d4}>
-          <Act3VsGeminiLive />
-        </Series.Sequence>
-        <Series.Sequence durationInFrames={d5}>
-          <Act4Preferences />
-        </Series.Sequence>
-        <Series.Sequence durationInFrames={d6}>
-          <Act5CoachBuilder />
-        </Series.Sequence>
-        <Series.Sequence durationInFrames={d7}>
-          <Act6Architecture />
-        </Series.Sequence>
-        <Series.Sequence durationInFrames={d8}>
-          <Closing />
-        </Series.Sequence>
+        <Series.Sequence durationInFrames={d1}><SceneProblem /></Series.Sequence>
+        <Series.Sequence durationInFrames={d2}><SceneDemo /></Series.Sequence>
+        <Series.Sequence durationInFrames={d3}><SceneCoachBuilder /></Series.Sequence>
+        <Series.Sequence durationInFrames={d4}><ScenePrefsMemory /></Series.Sequence>
+        <Series.Sequence durationInFrames={d5}><SceneMobile /></Series.Sequence>
+        <Series.Sequence durationInFrames={d6}><Act6Architecture /></Series.Sequence>
+        <Series.Sequence durationInFrames={d7}><Closing /></Series.Sequence>
       </Series>
 
-      {/* Voiceover audio — one track per scene, starting at each scene's offset */}
-      {SCENE_IDS.map((id, i) => (
-        <Sequence key={id} from={offsets[i]} durationInFrames={sceneDurations[i]}>
-          <Audio src={staticFile(`voiceover/${id}.m4a`)} />
-        </Sequence>
-      ))}
+      {/* Voiceover audio: only for scenes that have a VO file */}
+      {SCENE_IDS.map((id, i) => {
+        const voFile = VO_FILE_MAP[id];
+        if (!voFile) return null;
+        return (
+          <Sequence key={id} from={offsets[i]} durationInFrames={sceneDurations[i]}>
+            <Audio src={staticFile(`voiceover/${voFile}.m4a`)} />
+          </Sequence>
+        );
+      })}
     </AbsoluteFill>
   );
 };

@@ -53,18 +53,18 @@ export default function DashboardPage() {
               Beta
             </span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link
               href="/coaches/new"
               aria-label="Create new coach"
-              className="px-4 py-2 bg-(--accent) hover:bg-(--accent-hover) text-white rounded-lg text-sm font-semibold transition-all shadow-[0_0_20px_rgba(124,106,247,0.35)]"
+              className="px-3 sm:px-4 py-2 bg-(--accent) hover:bg-(--accent-hover) text-white rounded-lg text-sm font-semibold transition-all shadow-[0_0_20px_rgba(124,106,247,0.35)] whitespace-nowrap"
             >
               + New Coach
             </Link>
             <button
               type="button"
               onClick={handleLogout}
-              className="px-3 py-2 text-sm text-(--muted) hover:text-(--foreground) transition-colors"
+              className="px-2 sm:px-3 py-2 text-sm text-(--muted) hover:text-(--foreground) transition-colors whitespace-nowrap"
             >
               Log out
             </button>
@@ -72,13 +72,15 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <main className="px-4 sm:px-8 md:px-16 py-16 max-w-[64rem] mx-auto">
+      <main className="px-4 sm:px-8 md:px-16 py-8 sm:py-16 max-w-[64rem] mx-auto">
         {/* Hero */}
-        <div className="mb-16">
-          <p className="font-mono text-sm text-(--accent) tracking-[0.18em] uppercase mb-5 opacity-90">
+        <div className="mb-8 sm:mb-16">
+          <p className="font-mono text-sm text-(--accent) tracking-[0.18em] uppercase mb-3 sm:mb-5 opacity-90">
             AI Expert Coaching
           </p>
-          <h1 className="text-5xl font-black tracking-tight leading-none mb-6">Your Coaches.</h1>
+          <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-none mb-4 sm:mb-6">
+            Your Coaches.
+          </h1>
           <p className="text-(--muted) text-sm max-w-sm leading-relaxed">
             Select a coach to start a live session. Share your screen, speak naturally, and get
             real-time expert guidance.

@@ -64,7 +64,7 @@ ExpertLens was built for this space. It watches your screen or camera, listens t
 
 ExpertLens is a real-time AI coaching agent for any software where the human is the operator:
 
-- **Multimodal capture**: On desktop and Android, the browser captures your screen via `getDisplayMedia()`. On iOS Safari, it uses the rear camera via `getUserMedia()` — point it at your screen or device. Both paths feed JPEG frames at ~1fps to the Gemini Live agent.
+- **Multimodal capture across all platforms**: On desktop (Chrome) and Android (Chrome), the browser captures your screen via `getDisplayMedia()` — full screen sharing with any app window. On iOS Safari, where `getDisplayMedia` is unavailable, ExpertLens detects this at runtime and falls back to `getUserMedia()` with `facingMode: "environment"` (rear camera) — point it at your screen. All three paths feed JPEG frames at ~1fps to the Gemini Live agent through the same pipeline.
 - **Live voice coaching**: Speak naturally while you work. The agent sees what you're doing, hears your question, and responds in audio — in real time, with native barge-in (VAD).
 - **Curated knowledge**: Each coach has software-specific knowledge loaded into the system instruction at session start — Blender 4.x breaking changes, Affinity Photo layer shortcuts, Unreal Engine Blueprint patterns. Zero additional latency.
 - **User preferences**: Interaction style (shortcuts-first vs. mouse-guided), tone (concise expert vs. calm mentor), response depth, and proactivity — all injected into every session.
@@ -104,7 +104,7 @@ ExpertLens is a real-time AI coaching agent for any software where the human is 
 
 **Non-blocking tool calls.** ADK tool calls pause audio by default. Solution: `NON_BLOCKING` mode with `scheduling='WHEN_IDLE'` — tools execute between turns without interrupting the voice stream.
 
-**Mobile capture.** iOS Safari does not support `getDisplayMedia`. Solution: detect `getDisplayMedia` availability at runtime and fall back to `getUserMedia` with `facingMode: "environment"` (rear camera). The same agent pipeline handles both paths.
+**Cross-platform capture.** iOS Safari does not support `getDisplayMedia`, and Android Chrome requires user gesture handling. Solution: detect `getDisplayMedia` availability at runtime — use it on desktop and Android (full screen sharing), fall back to `getUserMedia` with `facingMode: "environment"` (rear camera) on iOS. The same agent pipeline handles all three platform paths with zero code changes on the backend.
 
 ---
 
@@ -115,7 +115,7 @@ ExpertLens is a real-time AI coaching agent for any software where the human is 
 - **~2 second reconnection** on WebSocket rotation — users see "Reconnecting…" briefly and continue with full context via `sessionResumption` (measured on US-central1 Cloud Run)
 - **2–4 minutes per coach** to build a complete six-section knowledge base using `gemini-3-flash-preview` with Google Search grounding (measured across 5 preset coaches)
 - **<1 second memory injection overhead** — session summaries loaded from Firestore and injected into system instruction at session start (measured with warm Firestore instances)
-- Mobile support: screen share on desktop/Android, camera capture on iOS — same agent, same pipeline
+- **Cross-platform support**: screen share on desktop and Android via `getDisplayMedia`, camera capture on iOS via `getUserMedia` fallback — same agent, same pipeline, zero backend changes
 - Fully automated CD: push to main → Cloud Build trigger → both services deployed, CORS set
 
 ---

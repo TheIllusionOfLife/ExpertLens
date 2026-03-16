@@ -1,44 +1,88 @@
-import { AbsoluteFill, Sequence } from "remotion";
-import { Slide } from "./Slide";
-import { NarrationCard } from "./NarrationCard";
+import { AbsoluteFill, Img, interpolate, Sequence, staticFile, useCurrentFrame } from "remotion";
 import { ActLabel } from "./ActLabel";
 import { VOICEOVER_TIMINGS } from "../voiceover-timings";
 
-// act5: phrase 0 = intro (slide-only); phrases 1-2 → 2 NarrationCard messages
-const { phraseOffsets } = VOICEOVER_TIMINGS.act5;
-const CARD_FROM = phraseOffsets[1]; // 169 — card appears when specific details start
-const MESSAGE_DELAYS = phraseOffsets.slice(1).map((o) => o - CARD_FROM);
+/**
+ * Act 5 — Coach Builder.
+ * Slideshow of 5 Playwright screenshots showing the full workflow:
+ * dashboard → form → name filled → building → complete.
+ */
+
+const { durationFrames } = VOICEOVER_TIMINGS.act5;
+
+const SCREENSHOTS = [
+  { src: "assets/coach-builder-01-dashboard.png", caption: "Dashboard — 5 preset coaches ready" },
+  { src: "assets/coach-builder-02-form.png", caption: "Click '+ New Coach' — choose software" },
+  { src: "assets/coach-builder-03-name-filled.png", caption: "Type 'DaVinci Resolve'" },
+  { src: "assets/coach-builder-04-building.png", caption: "Gemini validates + builds knowledge base" },
+  { src: "assets/coach-builder-05-complete.png", caption: "Knowledge built — ready for live sessions" },
+];
+
+// Each screenshot gets equal screen time
+const FRAMES_PER_SLIDE = Math.floor(durationFrames / SCREENSHOTS.length);
+
+const SlideshowImage: React.FC<{ src: string; caption: string }> = ({ src, caption }) => {
+  const frame = useCurrentFrame();
+
+  const opacity = interpolate(frame, [0, 12], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+
+  return (
+    <AbsoluteFill style={{ opacity }}>
+      <Img
+        src={staticFile(src)}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "contain",
+          backgroundColor: "#0f0f1a",
+        }}
+      />
+      {/* Caption bar at bottom */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: "16px 40px",
+          background: "linear-gradient(transparent, rgba(15,15,26,0.95))",
+        }}
+      >
+        <p
+          style={{
+            fontSize: 24,
+            color: "rgba(255,255,255,0.9)",
+            fontFamily: "system-ui, -apple-system, sans-serif",
+            fontWeight: 600,
+            margin: 0,
+            textAlign: "center",
+          }}
+        >
+          {caption}
+        </p>
+      </div>
+    </AbsoluteFill>
+  );
+};
 
 export const Act5CoachBuilder: React.FC = () => {
   return (
-    <AbsoluteFill>
-      <Sequence from={0} durationInFrames={900}>
-        <Slide
-          imageSrc="assets/02-create-coach.png"
-          headline="Coach Builder"
-          body="Create a coach for any desktop software. The software name is validated via Gemini + Google Search before building."
-        />
-      </Sequence>
+    <AbsoluteFill style={{ backgroundColor: "#0f0f1a" }}>
+      {SCREENSHOTS.map((shot, i) => (
+        <Sequence
+          key={shot.src}
+          from={i * FRAMES_PER_SLIDE}
+          durationInFrames={FRAMES_PER_SLIDE}
+        >
+          <SlideshowImage src={shot.src} caption={shot.caption} />
+        </Sequence>
+      ))}
 
-      <Sequence from={0} durationInFrames={900} layout="none">
-        <ActLabel text="Act 5 — Coach Builder" />
-      </Sequence>
-
-      <Sequence from={CARD_FROM} durationInFrames={900}>
-        <NarrationCard
-          title="Custom Coach — DaVinci Resolve"
-          messageDelayFrames={MESSAGE_DELAYS}
-          messages={[
-            {
-              speaker: "Narrator",
-              text: "Type 'DaVinci Resolve'. Gemini validates it is a real desktop application via Google Search grounding.",
-            },
-            {
-              speaker: "Narrator",
-              text: "Knowledge builds automatically. When complete, the coach is ready for live sessions.",
-            },
-          ]}
-        />
+      <Sequence from={0} durationInFrames={durationFrames} layout="none">
+        <ActLabel text="Coach Builder" />
       </Sequence>
     </AbsoluteFill>
   );

@@ -37,6 +37,14 @@ _MAX_TURN_CHARS = 500  # truncate a single very long turn
 _MAX_TRANSCRIPT_TURNS = 30  # cap total turns stored
 
 
+def _append_transcript(transcript: list[str], speaker: str, text: str) -> None:
+    """Append a turn to transcript with truncation and cap."""
+    turn = text[:_MAX_TURN_CHARS]
+    transcript.append(f"{speaker}: {turn}")
+    if len(transcript) > _MAX_TRANSCRIPT_TURNS:
+        transcript.pop(0)
+
+
 class SessionHandler:
     """Handles a single WebSocket session between browser and Gemini."""
 
@@ -110,22 +118,24 @@ class SessionHandler:
             await self._ws.close(code=4001, reason="Authentication required")
             return
 
-        # Authorization: verify user can access this coach, then check knowledge status.
+        # Authorization: verify user can access this coach. Fail-closed on error.
         try:
             coach = await get_coach(coach_id)
-            if coach and coach.owner_id is not None and coach.owner_id != user_id:
-                await self._ws.close(code=4003, reason="Not authorized")
-                return
-            if coach and coach.knowledge_status == "building":
-                logger.info(f"Session started while knowledge is still building (coach={coach_id})")
-            elif coach and coach.knowledge_status == "error":
-                await self._send_error(
-                    "Knowledge generation failed; session will use base model training only"
-                )
-                # Non-fatal: session continues with whatever knowledge exists in context
         except Exception as e:
-            logger.warning(
-                f"Could not load coach knowledge_status (coach={coach_id}), continuing: {e}"
+            logger.error(f"Failed to load coach for auth check (coach={coach_id}): {e}")
+            await self._ws.close(code=4003, reason="Authorization check failed")
+            return
+
+        if coach and coach.owner_id is not None and coach.owner_id != user_id:
+            await self._ws.close(code=4003, reason="Not authorized")
+            return
+
+        # Non-blocking knowledge status checks (informational only)
+        if coach and coach.knowledge_status == "building":
+            logger.info(f"Session started while knowledge is still building (coach={coach_id})")
+        elif coach and coach.knowledge_status == "error":
+            await self._send_error(
+                "Knowledge generation failed; session will use base model training only"
             )
 
         # Build system instruction and create Firestore session record in parallel.
@@ -312,14 +322,11 @@ class SessionHandler:
     def _notify_text_response(self, text: str, finished: bool) -> None:
         """Called by GeminiSession when output transcription text arrives."""
         if not self._current_turn_text and text.strip():
-            logger.debug(f"Output transcription started: {text[:80]!r}")
+            logger.debug("Output transcription started (chunk_len=%d)", len(text))
         self._current_turn_text += text
         if finished:
             if self._current_turn_text.strip():
-                turn = self._current_turn_text[:_MAX_TURN_CHARS]
-                self._transcript.append(f"Coach: {turn}")
-                if len(self._transcript) > _MAX_TRANSCRIPT_TURNS:
-                    self._transcript.pop(0)
+                _append_transcript(self._transcript, "Coach", self._current_turn_text)
             self._current_turn_text = ""
         task = asyncio.create_task(
             self._ws_send(
@@ -360,10 +367,7 @@ class SessionHandler:
     def _notify_input_text(self, text: str) -> None:
         """Called by GeminiSession when input transcription completes."""
         if text.strip():
-            turn = text[:_MAX_TURN_CHARS]
-            self._transcript.append(f"User: {turn}")
-            if len(self._transcript) > _MAX_TRANSCRIPT_TURNS:
-                self._transcript.pop(0)
+            _append_transcript(self._transcript, "User", text)
 
     async def _send_error(self, message: str) -> None:
         """Send error message to client."""
@@ -398,8 +402,7 @@ class SessionHandler:
         if self._firestore_session_id:
             # Flush any pending turn text that never received a finished=True event
             if self._current_turn_text.strip():
-                turn = self._current_turn_text[:_MAX_TURN_CHARS]
-                self._transcript.append(f"Coach: {turn}")
+                _append_transcript(self._transcript, "Coach", self._current_turn_text)
                 self._current_turn_text = ""
 
             summary, last_topics = "", []

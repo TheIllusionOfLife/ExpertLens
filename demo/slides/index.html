@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ExpertLens Demo Presentation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #0f0f1a; --surface: #161625; --accent: #7c6af7; --accent-dim: rgba(124,106,247,0.15);
+    --blue: #4285f4; --orange: #e37400; --green: #34a853; --text: #e8eaf6; --muted: rgba(255,255,255,0.5);
+  }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; width: 100vw; height: 100vh; }
+  .slide { display: none; width: 100vw; height: 100vh; padding: 60px 80px; flex-direction: column; justify-content: center; position: relative; }
+  .slide.active { display: flex; }
+  #nav-hint { position: fixed; bottom: 16px; right: 24px; font-size: 12px; color: var(--muted); z-index: 100; }
+  #slide-counter { position: fixed; bottom: 16px; left: 24px; font-size: 12px; color: var(--muted); z-index: 100; }
+  h1 { font-size: 72px; font-weight: 800; line-height: 1.1; }
+  h2 { font-size: 52px; font-weight: 700; line-height: 1.2; }
+  h3 { font-size: 36px; font-weight: 700; line-height: 1.3; }
+  .subtitle { font-size: 28px; color: var(--muted); margin-top: 20px; line-height: 1.5; max-width: 900px; }
+  .accent { color: var(--accent); }
+  .blue { color: var(--blue); }
+  .green { color: var(--green); }
+  .orange { color: var(--orange); }
+
+  .cards { display: flex; gap: 32px; margin-top: 48px; }
+  .card { flex: 1; background: var(--surface); border: 2px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 36px; }
+  .card.highlight { border-color: var(--accent); background: var(--accent-dim); box-shadow: 0 0 40px rgba(124,106,247,0.15); }
+  .card-icon { font-size: 36px; margin-bottom: 12px; }
+  .card-label { font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .card-title { font-size: 22px; font-weight: 600; margin-bottom: 12px; }
+  .card-body { font-size: 15px; color: var(--muted); line-height: 1.5; }
+
+  .video-slide { padding: 0; }
+  .video-slide video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+  .video-label { position: absolute; top: 20px; left: 30px; font-size: 14px; font-weight: 700; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; background: rgba(15,15,26,0.85); padding: 8px 16px; border-radius: 8px; z-index: 10; }
+
+  .feature { display: flex; align-items: flex-start; gap: 20px; margin-bottom: 28px; }
+  .feature-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 8px; }
+  .feature-text { font-size: 24px; line-height: 1.4; }
+  .feature-sub { font-size: 16px; color: var(--muted); margin-top: 4px; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 32px; align-items: start; }
+  .screenshot { border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); max-width: 100%; max-height: 50vh; object-fit: contain; }
+  .three-screenshots { display: flex; gap: 16px; margin-top: 24px; }
+  .three-screenshots img { flex: 1; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); object-fit: cover; max-height: 50vh; }
+
+  /* Architecture */
+  .arch-grid { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 20px; margin-top: 24px; height: 65vh; }
+  .arch-group { border: 2px dashed rgba(255,255,255,0.15); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .arch-group-label { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+  .arch-box { background: var(--surface); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 16px; }
+  .arch-box.glow { border-color: var(--accent); background: var(--accent-dim); }
+  .arch-box-title { font-size: 14px; font-weight: 700; }
+  .arch-box-sub { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
+
+  .punchline { position: absolute; bottom: 60px; left: 0; right: 0; text-align: center; font-size: 22px; font-weight: 600; color: var(--accent); }
+  .closing-url { font-size: 24px; color: var(--blue); margin-top: 32px; font-style: italic; }
+
+  /* Mobile pair layout */
+  .mobile-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; margin-top: 32px; align-items: start; }
+  .mobile-card { background: var(--surface); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 28px; }
+  .mobile-card h4 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .mobile-card p { font-size: 14px; color: var(--muted); line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<!-- ============= SLIDE 1: PROBLEM (0:00 - 0:30) ============= -->
+<!-- SCRIPT: "Six hours into a client model in Blender. The mesh won't shade correctly.
+     Normally you'd search forums for 20 minutes. Playwright can automate a browser.
+     An LLM can run your CLI. But Blender has no API. The mouse is the only way in —
+     and only you can use it. ExpertLens is built for this gap." -->
+<div class="slide" id="s1">
+  <h2>Professional software is hard.<br>AI <span class="accent">can't control it</span> for you.</h2>
+  <p class="subtitle">GUI-heavy desktop and mobile apps have steep learning curves and no automation API. You must operate them yourself. Coaching is the only way to accelerate.</p>
+  <div class="cards">
+    <div class="card">
+      <div class="card-icon">🌐</div>
+      <div class="card-label green">Browser Apps</div>
+      <div class="card-title">Figma, Canva, Google Docs</div>
+      <div class="card-body">AI can: Automate with Playwright</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">⌨️</div>
+      <div class="card-label blue">CLI Tools</div>
+      <div class="card-title">git, ffmpeg, AWS CLI</div>
+      <div class="card-body">AI can: Call directly via tool use</div>
+    </div>
+    <div class="card highlight">
+      <div class="card-icon">🖥️</div>
+      <div class="card-label accent">Desktop GUI Apps</div>
+      <div class="card-title">Blender, Affinity Photo, Unreal Engine</div>
+      <div class="card-body" style="color:rgba(255,255,255,0.8); font-weight:600">No API. Coaching is the only option.</div>
+    </div>
+  </div>
+  <div class="punchline">ExpertLens is built for this gap.</div>
+</div>
+
+<!-- ============= SLIDE 2: LIVE DEMO (0:30 - 2:00) ============= -->
+<!-- SCRIPT: "Here's ExpertLens coaching me through a real Blender problem.
+     I share my screen, speak naturally ·the coach sees my mesh, hears my question,
+     and responds in real time. Watch ·I apply Shade Smooth and the mesh fixes instantly.
+     And when I interrupt mid-sentence ·native barge-in ·the coach stops and answers
+     the new question immediately. No push-to-talk, no turn-taking." -->
+<div class="slide video-slide" id="s2">
+  <div class="video-label">Live Blender Session: Screen Share + Voice</div>
+  <video id="v-session" controls>
+    <source src="../clip1-blender-session.mp4" type="video/mp4">
+    <source src="../clip1-blender-session.mov" type="video/quicktime">
+  </video>
+</div>
+
+<!-- ============= SLIDE 3: COACH BUILDER (2:00 - 2:30) ============= -->
+<!-- SCRIPT: "ExpertLens works with any software. Type a name ·DaVinci Resolve.
+     Gemini validates it's a real application using Google Search grounding.
+     Then it builds a six-section knowledge base: shortcuts, workflows, common errors,
+     deep concepts, version changes, and a quick reference card. Two to four minutes,
+     and the coach is ready for live sessions." -->
+<div class="slide" id="s3">
+  <h3>Coach Builder: Any Software in Minutes</h3>
+  <p class="subtitle" style="font-size:20px; margin-top:12px">Type any software name → validated with Gemini + Google Search → 6-section knowledge base built in 2-4 minutes</p>
+  <div class="three-screenshots">
+    <img src="assets/coach-builder-02-form.png" alt="New coach form">
+    <img src="assets/coach-builder-03-name-filled.png" alt="DaVinci Resolve entered">
+    <img src="assets/coach-builder-05-complete.png" alt="Knowledge built">
+  </div>
+</div>
+
+<!-- ============= SLIDE 4: PREFERENCES + MEMORY (2:30 - 3:00) ============= -->
+<!-- SCRIPT: "Every user is different. ExpertLens supports four preference dimensions:
+     interaction style ·shortcuts-first or mouse-guided. Tone ·concise expert or calm mentor.
+     Response depth. And proactivity. These are injected into every session's system instruction.
+
+     Cross-session memory: after each session, the coach's transcript is summarized by Gemini
+     and stored in Firestore. The next session loads the last three summaries ·the coach
+     picks up where you left off, without any effort from you." -->
+<div class="slide" id="s4">
+  <h3>Personalized Coaching + Memory</h3>
+  <div class="two-col">
+    <div>
+      <h4 style="font-size:20px; margin-bottom:16px; color:var(--accent)">User Preferences</h4>
+      <div class="feature" style="margin-bottom:20px">
+        <div class="feature-dot"></div>
+        <div>
+          <div class="feature-text" style="font-size:20px">Interaction Style</div>
+          <div class="feature-sub">Shortcuts-first vs mouse/menu guided</div>
+        </div>
+      </div>
+      <div class="feature" style="margin-bottom:20px">
+        <div class="feature-dot" style="background:var(--blue)"></div>
+        <div>
+          <div class="feature-text" style="font-size:20px">Coaching Tone</div>
+          <div class="feature-sub">Concise expert vs calm mentor vs enthusiastic</div>
+        </div>
+      </div>
+      <div class="feature" style="margin-bottom:20px">
+        <div class="feature-dot" style="background:var(--green)"></div>
+        <div>
+          <div class="feature-text" style="font-size:20px">Response Depth + Proactivity</div>
+          <div class="feature-sub">Short/medium/detailed · reactive/balanced/proactive</div>
+        </div>
+      </div>
+      <div style="margin-top:24px; padding:20px; background:var(--surface); border:1px solid rgba(255,255,255,0.1); border-radius:12px">
+        <h4 style="font-size:16px; color:var(--green); margin-bottom:8px">Cross-Session Memory</h4>
+        <p style="font-size:14px; color:var(--muted); line-height:1.5">
+          After each session → summarized by Gemini → stored in Firestore<br>
+          Next session loads last 3 summaries → coach picks up where you left off
+        </p>
+      </div>
+    </div>
+    <div>
+      <img class="screenshot" src="assets/prefs-settings.png" alt="Preferences UI"
+           onerror="this.style.display='none'">
+    </div>
+  </div>
+</div>
+
+<!-- ============= SLIDE 5: MOBILE (3:00 - 3:20) ============= -->
+<!-- SCRIPT: "ExpertLens works on mobile too. On Android, full screen sharing works
+     just like desktop via getDisplayMedia. On iOS Safari, screen sharing isn't available —
+     so the rear camera activates instead. Point your phone at your screen, and the same
+     coaching pipeline works. Same agent, same knowledge, same voice interaction." -->
+<div class="slide" id="s5">
+  <h3>Works on Every Device</h3>
+  <div class="mobile-grid">
+    <div class="mobile-card">
+      <h4 class="blue">Desktop (Chrome)</h4>
+      <p><code>getDisplayMedia()</code><br>Full screen sharing. Coach sees your entire workspace.</p>
+    </div>
+    <div class="mobile-card" style="border-color:var(--green)">
+      <h4 class="green">Android (Chrome)</h4>
+      <p><code>getDisplayMedia()</code><br>Full screen sharing. Same as desktop, works natively.</p>
+    </div>
+    <div class="mobile-card" style="border-color:var(--orange)">
+      <h4 class="orange">iOS (Safari)</h4>
+      <p><code>getUserMedia()</code> fallback<br>Rear camera captures your screen. Point and coach.</p>
+    </div>
+  </div>
+  <div style="margin-top:32px; display:flex; gap:24px; align-items:center; justify-content:center">
+    <img class="screenshot" src="assets/mobile-dashboard.png" alt="Mobile dashboard"
+         style="max-height:40vh; border-radius:16px"
+         onerror="this.style.display='none'">
+    <img class="screenshot" src="assets/mobile-session.png" alt="Mobile session"
+         style="max-height:40vh; border-radius:16px"
+         onerror="this.style.display='none'">
+  </div>
+</div>
+
+<!-- ============= SLIDE 6: ARCHITECTURE (3:20 - 3:50) ============= -->
+<!-- SCRIPT: "Cloud Run hosts both frontend and backend. The browser streams JPEG frames
+     and audio over WebSocket directly to the backend, which proxies to Gemini Live API.
+     SlidingWindow compression means sessions run indefinitely ·no 2-minute cutoff.
+     Session resumption handles WebSocket rotation without losing context.
+     Firestore stores coaches, preferences, sessions, and knowledge.
+     The knowledge builder uses gemini-3-flash-preview with Google Search grounding.
+     Everything is provisioned with Terraform and auto-deployed via Cloud Build." -->
+<div class="slide" id="s6">
+  <h3 style="text-align:center; margin-bottom:4px">System Architecture</h3>
+  <div style="text-align:center; font-size:13px; color:var(--muted); margin-bottom:12px">Cloud Run · Gemini Live API · Firestore · ADK · Terraform IaC</div>
+  <div class="arch-grid">
+    <div class="arch-group" style="border-color:rgba(66,133,244,0.3)">
+      <div class="arch-group-label blue">User Device</div>
+      <div class="arch-box"><div class="arch-box-title">Desktop App</div><div class="arch-box-sub">Blender / Affinity Photo / Unreal Engine</div></div>
+      <div class="arch-box"><div class="arch-box-title blue">Browser</div><div class="arch-box-sub">getDisplayMedia (desktop/Android)<br>getUserMedia (iOS camera)<br>AudioContext (speaker)</div></div>
+      <div style="text-align:center; margin-top:auto; padding:10px; border:2px solid var(--accent); border-radius:10px; font-size:12px; font-weight:600; color:var(--accent)">
+        WebSocket ↕<br><span style="font-size:10px; color:var(--muted)">JPEG 1fps + PCM 16kHz ↑ · PCM 24kHz ↓</span>
+      </div>
+    </div>
+    <div class="arch-group" style="border-color:rgba(66,133,244,0.3)">
+      <div class="arch-group-label blue">Google Cloud</div>
+      <div class="arch-box"><div class="arch-box-title blue">Cloud Run: Frontend</div><div class="arch-box-sub">Next.js 15</div></div>
+      <div class="arch-box glow" style="flex:1">
+        <div class="arch-box-title accent">Cloud Run: Backend (FastAPI + ADK)</div>
+        <div class="arch-box-sub" style="margin-top:6px; line-height:1.6">
+          WebSocket Handler · System Instruction Builder<br>
+          Gemini Live Session Manager<br>
+          <span style="color:var(--accent)">ADK Tools:</span> get_coach_knowledge() · get_user_preferences()
+        </div>
+      </div>
+      <div style="display:flex; gap:8px">
+        <div class="arch-box" style="flex:1"><div class="arch-box-title orange">Firestore</div><div class="arch-box-sub">coaches · prefs · sessions · knowledge</div></div>
+        <div class="arch-box" style="flex:1"><div class="arch-box-title orange">Secret Manager</div><div class="arch-box-sub">API keys · JWT</div></div>
+      </div>
+      <div style="display:flex; gap:8px">
+        <div class="arch-box" style="flex:1"><div class="arch-box-title blue">Cloud Build + Artifact Registry</div><div class="arch-box-sub">CI/CD on main push</div></div>
+        <div class="arch-box" style="flex:1"><div class="arch-box-title" style="color:#623ce4">Terraform IaC</div><div class="arch-box-sub">Automated provisioning</div></div>
+      </div>
+    </div>
+    <div class="arch-group" style="border-color:rgba(124,106,247,0.3)">
+      <div class="arch-group-label accent">Gemini API</div>
+      <div class="arch-box glow" style="flex:1">
+        <div class="arch-box-title accent" style="font-size:16px">Gemini Live API</div>
+        <div style="font-size:14px; font-weight:700; color:#b8a9ff; margin-top:8px">gemini-2.5-flash-native-audio-latest</div>
+        <div class="arch-box-sub" style="margin-top:8px; line-height:1.6">
+          Audio + Vision · 128k context<br>Native barge-in (VAD)<br>SlidingWindow compression<br>sessionResumption
+        </div>
+      </div>
+      <div class="arch-box"><div class="arch-box-title green">Google Search</div><div class="arch-box-sub">Real-time grounding for knowledge</div></div>
+      <div class="arch-box"><div class="arch-box-title accent">gemini-3-flash-preview</div><div class="arch-box-sub">Knowledge builder · ThinkingLevel.MINIMAL</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============= SLIDE 7: CLOSING (3:50 - 4:00) ============= -->
+<!-- SCRIPT: "ExpertLens. Expert coaching for the software only you can operate." -->
+<div class="slide" id="s7" style="align-items:center; text-align:center">
+  <h1>Expert<span class="accent">Lens</span></h1>
+  <p class="subtitle" style="max-width:700px; text-align:center">Expert coaching for the software only you can operate.</p>
+  <div class="closing-url">https://expertlens-frontend-pk4kcjevqa-uc.a.run.app</div>
+  <div style="margin-top:24px; font-size:14px; color:var(--muted)">
+    GitHub: github.com/TheIllusionOfLife/ExpertLens
+  </div>
+</div>
+
+<div id="slide-counter"></div>
+<div id="nav-hint">← → to navigate · F for fullscreen</div>
+<button id="btn-prev" onclick="show(current-1)" style="position:fixed;left:16px;top:50%;transform:translateY(-50%);z-index:100;background:rgba(255,255,255,0.1);border:none;color:var(--muted);font-size:28px;padding:12px 16px;border-radius:8px;cursor:pointer">←</button>
+<button id="btn-next" onclick="show(current+1)" style="position:fixed;right:16px;top:50%;transform:translateY(-50%);z-index:100;background:rgba(255,255,255,0.1);border:none;color:var(--muted);font-size:28px;padding:12px 16px;border-radius:8px;cursor:pointer">→</button>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let current = 0;
+  function show(i) {
+    slides[current].querySelectorAll('video').forEach(v => v.pause());
+    slides.forEach(s => s.classList.remove('active'));
+    current = Math.max(0, Math.min(i, slides.length - 1));
+    slides[current].classList.add('active');
+    document.getElementById('slide-counter').textContent = `${current + 1} / ${slides.length}`;
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); show(current + 1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); show(current - 1); }
+    if (e.key === 'f' || e.key === 'F') { document.documentElement.requestFullscreen(); }
+  });
+  show(0);
+</script>
+</body>
+</html>
