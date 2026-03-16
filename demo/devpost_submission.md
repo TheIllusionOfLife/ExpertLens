@@ -26,8 +26,6 @@ Real-time AI coaching for any software only you can operate. Desktop, mobile, or
 
 https://expertlens-frontend-pk4kcjevqa-uc.a.run.app/
 
-Login: testuser / testpass123
-
 ---
 
 ## GitHub Repo
