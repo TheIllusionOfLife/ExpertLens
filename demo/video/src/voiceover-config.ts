@@ -1,13 +1,15 @@
 // Scene IDs in composition order — must match the Series.Sequence order in
 // ExpertLensDemo.tsx and the filenames written by generate-voiceover.py.
+//
+// New 7-scene narrative:
+//   problem → demo → coach-builder → prefs-memory → mobile → architecture → closing
 export const SCENE_IDS = [
-  "act1",
-  "act2a",
-  "act2b",
-  "act3",
-  "act4",
-  "act5",
-  "act6",
+  "problem",
+  "demo",
+  "coach-builder",
+  "prefs-memory",
+  "mobile",
+  "architecture",
   "closing",
 ] as const;
 
