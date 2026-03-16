@@ -118,22 +118,24 @@ class SessionHandler:
             await self._ws.close(code=4001, reason="Authentication required")
             return
 
-        # Authorization: verify user can access this coach, then check knowledge status.
+        # Authorization: verify user can access this coach. Fail-closed on error.
         try:
             coach = await get_coach(coach_id)
-            if coach and coach.owner_id is not None and coach.owner_id != user_id:
-                await self._ws.close(code=4003, reason="Not authorized")
-                return
-            if coach and coach.knowledge_status == "building":
-                logger.info(f"Session started while knowledge is still building (coach={coach_id})")
-            elif coach and coach.knowledge_status == "error":
-                await self._send_error(
-                    "Knowledge generation failed; session will use base model training only"
-                )
-                # Non-fatal: session continues with whatever knowledge exists in context
         except Exception as e:
-            logger.warning(
-                f"Could not load coach knowledge_status (coach={coach_id}), continuing: {e}"
+            logger.error(f"Failed to load coach for auth check (coach={coach_id}): {e}")
+            await self._ws.close(code=4003, reason="Authorization check failed")
+            return
+
+        if coach and coach.owner_id is not None and coach.owner_id != user_id:
+            await self._ws.close(code=4003, reason="Not authorized")
+            return
+
+        # Non-blocking knowledge status checks (informational only)
+        if coach and coach.knowledge_status == "building":
+            logger.info(f"Session started while knowledge is still building (coach={coach_id})")
+        elif coach and coach.knowledge_status == "error":
+            await self._send_error(
+                "Knowledge generation failed; session will use base model training only"
             )
 
         # Build system instruction and create Firestore session record in parallel.
